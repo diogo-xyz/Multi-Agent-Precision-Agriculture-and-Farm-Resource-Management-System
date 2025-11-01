@@ -1,0 +1,155 @@
+# 1.Inform Crop 
+
+O Drone envia um inform ao agente Logistic a dizer se é preciso colher ou plantar
+
+**Performative:** `inform_crop` 
+
+```json
+{   
+    "sender_id",
+    "receiver_id",
+
+    "inform_id": "inform_crop_time.time()",
+    "zone": [1,1],
+    "state": "0 -> not planted      1 -> Ready for harvasting",
+    "checked_at": "time.time()"
+}
+``` 
+
+
+# 2. CFP (Call For Proposal)
+
+Usado por agentes de monitorização (Drone, SoilSensor) e pelo agente Logistic para solicitar a execução de uma tarefa 
+
+**Performative:** `cfp_task`
+
+
+``` json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_task_time.time()",
+    "task_type": "irrigation_aplication", // enum: irrigation_application | fertilize_application |harvest_application | plant_application
+    "seed_type": 1, // int que identifica o tipo de seed
+    "zone": [1,1],
+    "required_resources": [
+        {"type":"water", "amount":120 (L)},
+        {"type":"fertilizer", "amount": 1.5 (KG)}
+        {"type":"seed", "amount":5 (g)}],
+    "priority": "High", // ou Medium, Low, Urgent
+}
+``` 
+
+Usado pelos agentes Drone, SoilSensor, Fertelizer, Irrigation e Harvester para solicitar reabastecimento
+
+**Performative:** `cfp_recharge`
+
+``` json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_recharge_time.time()",
+    "task_type": "water", // enum: battery | fuel | seeds | pesticides | fertilizer | water
+    "required_resources": 10, //enum: 80 %  | 20 L | 10 g  |   1 KG     |   1 Kg     | 10 L
+    "seed_type": 1, // int que identifica o tipo de seed
+    "priority": "High", // ou Medium, Low, Urgent
+}
+```
+
+
+# 3. Propose 
+
+Usado por agentes executores (Irrigation, Harvester, Fertilizer) para responder a um CFP
+
+**Performative:** `propose_task`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_propose_task_time.time()",
+    "eta_ticks": 6 (Estimated Time of Arrival),
+    "battery_lost": 10 ,
+    "available_resources": [
+        {"type":"water", "amount":120 (L)},
+        {"type":"fertilizer", "amount": 1.5 (KG)}
+        {"type":"seed", "amount":5 (g)}],
+}
+```
+
+
+Usado pelo Agente Logistic para responder a um CFP de reabastecimento
+
+**Performative:** `propose_recharge`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_propose_recharge_time.time()"
+    "eta_ticks": 6 (Estimated Time of Arrival),
+}
+```
+
+
+# 3. Accept / Reject Proposal
+
+Usado pelos agentes para aceitar ou rejeitar uma proposta.
+
+**Performative:** `accept-proposal`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+
+    "cfp_id": "cfp_accept_time.time()",
+    "decision": "accept",  
+}
+```
+
+**Performative:** `reject-proposal`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_reject_time.time()",
+    "decision": "reject",
+}
+```
+
+# 4. Done / Failure
+
+Usado por agentes executores para informar o sobre a conclusão ou falha da tarefa.
+
+**Performative:** `Done`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_done_time.time()",
+    "status": "done",
+    "details": {"water_used": 50, "time_taken": 6}
+}
+```
+
+**Performative:** `failure`
+
+```json
+{
+    "sender_id",
+    "receiver_id",
+
+    "cfp_id": "cfp_failure_time.time()",
+    "status": "failed",
+}
+```
