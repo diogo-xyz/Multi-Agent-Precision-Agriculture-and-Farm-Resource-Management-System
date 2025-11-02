@@ -45,6 +45,31 @@ class Crop():
         # Dias desde que atingiu maturação (para controlar apodrecimento)
         self.crop_days_mature = np.zeros((rows, cols), dtype=float)
 
+    def plant_seed(self, row, col, plant_type):
+        """
+        Planta uma semente na posição (row, col).
+        """
+        self.crop_stage[row, col] = 1  # Estágio 1: Semente
+        self.crop_type[row, col] = plant_type
+        self.crop_health[row, col] = 100.0
+        # Duração do primeiro estágio (Semente)
+        self.crop_hours_remaining[row, col] = STAGE_DURATIONS[plant_type][0]
+        self.crop_days_mature[row, col] = 0.0
+        return True
+
+    def harvest(self, row, col):
+        """
+        Colhe a planta na posição (row, col) e limpa a célula.
+        Retorna a saúde da planta colhida.
+        """
+        health = self.crop_health[row, col]
+        self.crop_stage[row, col] = 0
+        self.crop_type[row, col] = 0
+        self.crop_health[row, col] = 0.0
+        self.crop_hours_remaining[row, col] = 0.0
+        self.crop_days_mature[row, col] = 0.0
+        return health
+
     def _calculate_moisture_stress(self, moisture, crop_type_matrix):
         """
         Calcula o stress hídrico das plantas (0.0 = stress máximo, 1.0 = sem stress).
@@ -172,10 +197,19 @@ class Crop():
         stress_damage = (1.0 - combined_stress) * 1.0 * dt_hours
         
         # Perda total de saúde
+        # Regeneração de saúde (se o stress for baixo, a planta recupera)
+        # Se combined_stress = 1.0, regeneração = 2% por hora
+        # Se combined_stress < 0.5, regeneração = 0
+        regeneration_rate = np.clip((combined_stress - 0.5) * 2.0, 0.0, 1.0) * 2 * dt_hours
+        
+        # Perda total de saúde
         total_damage = stress_damage + pest_damage * dt_hours
         
-        # Aplicar dano apenas onde há plantas
-        self.crop_health[has_plant] -= total_damage[has_plant]
+        # Alteração líquida na saúde (regeneração - dano)
+        health_change = regeneration_rate - total_damage
+        
+        # Aplicar alteração líquida apenas onde há plantas
+        self.crop_health[has_plant] += health_change[has_plant]
         
         # --- 3. Processar apodrecimento (plantas maduras) ---
         mature_mask = (self.crop_stage == 4)

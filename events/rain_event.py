@@ -22,9 +22,9 @@ class Rain:
         self.rain = 0
         self._rain_hours_remaining = 0.0
 
-    def aply_rain(self,intensity):
-        self.rain.rain = intensity
-        self._rain_hours_remaining = MEAN_DURATION_HOURS_BASE[self.season_from_day][intensity]
+    def apply_rain(self,intensity,day):
+        self.rain = intensity
+        self._rain_hours_remaining = MEAN_DURATION_HOURS_BASE[self.season_from_day(day)][intensity]
 
     def season_from_day(self, day: int) -> str:
         """

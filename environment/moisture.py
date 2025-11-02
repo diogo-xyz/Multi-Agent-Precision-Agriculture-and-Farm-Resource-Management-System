@@ -6,7 +6,7 @@ class Moisture():
 
     def __init__(self, num_linhas, num_colunas):
         # Inicializa a humidade do solo com valores triangulares aleatórios (50-70%)
-        self.moisture = np.random.triangular(50, 60, 70, size=(num_linhas, num_colunas))
+        self.moisture = np.random.triangular(60, 65, 70, size=(num_linhas, num_colunas))
 
     def _rain_mm_per_hour(self, nivel_chuva):
         """
@@ -136,3 +136,52 @@ class Moisture():
         new_moisture = np.clip(new_moisture, 0.0, 100.0)
 
         return new_moisture, new_nutrients
+
+    def apply_irrigation(self, row, col, flow_rate_lph):
+        """
+        Aplica água na célula (row, col) e difunde a humidade para os vizinhos.
+
+        :param row: Índice da linha da célula a ser irrigada.
+        :param col: Índice da coluna da célula a ser irrigada.
+        :param flow_rate_lph: Caudal de água aplicado (Litros por hora).
+        """
+        
+        # 1. Conversão do Caudal para Aumento de Humidade (%)
+        # Assumindo a simplificação: 1 L/h aplicado a 1m² por 1h resulta em 1 mm de água.
+        # Caudal total aplicado em mm
+        
+        # Aumento de humidade em % (MM_TO_PCT deve ser importado do seu config)
+        irrigation_pct = flow_rate_lph * MM_TO_PCT
+        
+        # 2. Aplicação Inicial na Célula
+        delta_moisture = np.zeros_like(self.moisture)
+        
+        delta_moisture[row, col] = irrigation_pct
+
+        # 3. Humidade Temporária (Humidade Atual + Água Adicionada)
+        m_temp = self.moisture + delta_moisture
+        
+        # 4. Difusão Espacial (8-vizinhos)
+        # A difusão atua para suavizar as diferenças de humidade.
+        
+        # Soma da humidade dos 8 vizinhos para a matriz temporária
+        neigh_sum_temp = (
+            np.roll(m_temp, 1, axis=0) + np.roll(m_temp, -1, axis=0) +      # cima e baixo
+            np.roll(m_temp, 1, axis=1) + np.roll(m_temp, -1, axis=1) +      # esquerda e direita
+            np.roll(np.roll(m_temp, 1, axis=0), 1, axis=1) +            # diagonal superior esquerda
+            np.roll(np.roll(m_temp, 1, axis=0), -1, axis=1) +           # diagonal superior direita
+            np.roll(np.roll(m_temp, -1, axis=0), 1, axis=1) +           # diagonal inferior esquerda
+            np.roll(np.roll(m_temp, -1, axis=0), -1, axis=1)            # diagonal inferior direita
+        )
+        neigh_avg_temp = neigh_sum_temp / 8.0
+        
+        # Cálculo da difusão: fluxo de humidade (DIFFUSION_COEF_MOISTURE deve ser importado do seu config)
+        diffusion = DIFFUSION_COEF_MOISTURE * (neigh_avg_temp - m_temp)
+        
+        # 5. Composição
+        new_moisture = m_temp + diffusion
+        
+        # 6. Limites Absolutos
+        new_moisture = np.clip(new_moisture, 0.0, 100.0)
+        
+        self.moisture = new_moisture

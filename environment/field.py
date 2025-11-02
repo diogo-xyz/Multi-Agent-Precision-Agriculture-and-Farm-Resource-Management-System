@@ -39,8 +39,7 @@ class Field:
 
         self.rain.update_rain(self.day,self.drought,TICK_HOURS)
 
-        self.moisture.moisture, 
-        self.nutrients.nutrients = self.moisture.update_moisture(self.rain.rain,
+        self.moisture.moisture, self.nutrients.nutrients = self.moisture.update_moisture(self.rain.rain,
                                                                 self.temperature.temperature,
                                                                 self.nutrients.nutrients,
                                                                 self.crop.crop_stage,
@@ -54,7 +53,7 @@ class Field:
                                                                    self.crop.crop_stage,
                                                                    TICK_HOURS)
 
-        self.pest.update_pest()
+        if (self.isPestActive): self.pest.update_pest()
 
         self.crop.update_crop(
             self.moisture.moisture,
@@ -63,13 +62,17 @@ class Field:
             self.pest.pest,
             TICK_HOURS)
 
-    def aply_rain(self,intensity):
-        self.rain.aply_rain(intensity)
-    
+    def apply_rain(self,intensity):
+        self.rain.apply_rain(intensity,self.day)
+
+    def stop_rain(self):
+        self.rain.rain = 0
+        self.rain._rain_hours_remaining = 0.0
+
     def toggle_drought(self):
         self.drought = 0 if self.drought == 1 else 1
 
-    def aply_pest(self):
+    def apply_pest(self):
         self.isPestActive = 1
         row = np.random.randint(0, ROWS)
         col = np.random.randint(0, COLS)
@@ -79,14 +82,14 @@ class Field:
         self.isPestActive = 0
         self.pest.pest = np.zeros((ROWS,COLS))
 
-    def aply_pesticide(self,row,col):
+    def apply_pesticide(self,row,col):
         self.pest.apply_pesticide(row,col,neighbor_effect= 0.75)
 
-    def aply_irrigation(self,row,col,flow_rate_lph):
-        pass
+    def apply_irrigation(self,row,col,flow_rate_lph = 2):
+        self.moisture.apply_irrigation(row,col,flow_rate_lph)
 
-    def aply_fertilize(self,row,col,fertilzer_kg):
-        pass
+    def apply_fertilize(self,row,col,fertilzer_kg = 1):
+        self.nutrients.apply_fertilize(row,col,fertilzer_kg)
     
     def get_drone(self,row,col):
         return [self.crop.crop_stage[row,col],self.pest.pest[row,col]]
@@ -94,8 +97,8 @@ class Field:
     def get_soil(self,row,col):
         return [self.temperature.temperature,self.nutrients.nutrients[row,col],self.moisture.moisture[row,col]]
     
-    def teste_plantar(self,row,col,id_planta):
-        pass
+    def plant_seed(self, row, col, plant_type):
+        return self.crop.plant_seed(row, col, plant_type)
 
-    def teste_colher(self,row,col):
-        pass
+    def harvest(self, row, col):
+        return self.crop.harvest(row, col)

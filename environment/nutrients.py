@@ -7,14 +7,15 @@ from ..config import (
     NUTRIENT_CONCENTRATION_FACTOR,
     UPTAKE_RATES_MM_PER_HOUR,
     IDEAL_MOISTURE_TARGET,
-    DROUGHT_TOLERANCE
+    DROUGHT_TOLERANCE,
+    KG_TO_PCT
 )
 
 class Nutrients():
 
     def __init__(self, rows, cols):
         # Inicializa com valores aleatórios, como no original
-        self.nutrients = np.random.triangular(50, 60, 70, size=(rows, cols))
+        self.nutrients = np.random.triangular(60, 65, 70, size=(rows, cols))
         # Adicionar soil_pests para evitar erro na linha 63
         self.soil_pests = np.zeros((rows, cols)) # Assumir 0 pragas por defeito
 
@@ -159,3 +160,53 @@ class Nutrients():
         new_nutrients = np.clip(new_nutrients, 0.0, 100.0)
 
         return new_nutrients
+    
+    def apply_fertilize(self, row, col, fertilizer_kg, dt_hours=1.0):
+        """
+        Aplica fertilizante na célula (row, col) e difunde os nutrientes para os vizinhos.
+
+        :param row: Índice da linha da célula a ser fertilizada.
+        :param col: Índice da coluna da célula a ser fertilizada.
+        :param fertilizer_kg: Quantidade de fertilizante aplicada (em kg).
+        :param dt_hours: Duração da aplicação em horas (padrão 1.0).
+        """
+        
+        # 1. Conversão da Quantidade de Fertilizante para Aumento de Nutrientes (%)
+        # Aumento de nutrientes em %
+        fertilizer_pct = fertilizer_kg * KG_TO_PCT
+        
+        # 2. Aplicação Inicial na Célula
+        delta_nutrients = np.zeros_like(self.nutrients)
+        
+        delta_nutrients[row, col] = fertilizer_pct
+
+            
+        # 3. Nutrientes Temporários (Nutrientes Atuais + Nutrientes Adicionados)
+        n_temp = self.nutrients + delta_nutrients
+        
+        # 4. Difusão Espacial (8-vizinhos)
+        # A difusão atua para suavizar as diferenças de nutrientes.
+        
+        # Soma dos nutrientes dos 8 vizinhos para a matriz temporária
+        neigh_sum_temp = (
+            np.roll(n_temp, 1, axis=0) + np.roll(n_temp, -1, axis=0) +      # cima e baixo
+            np.roll(n_temp, 1, axis=1) + np.roll(n_temp, -1, axis=1) +      # esquerda e direita
+            np.roll(np.roll(n_temp, 1, axis=0), 1, axis=1) +            # diagonal superior esquerda
+            np.roll(np.roll(n_temp, 1, axis=0), -1, axis=1) +           # diagonal superior direita
+            np.roll(np.roll(n_temp, -1, axis=0), 1, axis=1) +           # diagonal inferior esquerda
+            np.roll(np.roll(n_temp, -1, axis=0), -1, axis=1)            # diagonal inferior direita
+        )
+        neigh_avg_temp = neigh_sum_temp / 8.0
+        
+        # Cálculo da difusão: fluxo de nutrientes (DIFFUSION_COEF_NUTRIENTS deve ser importado do seu config)
+        # Multiplicamos pelo dt_hours para simular a difusão ao longo do tempo
+        diffusion = DIFFUSION_COEF_NUTRIENTS * (neigh_avg_temp - n_temp) * dt_hours
+        
+        # 5. Composição
+        new_nutrients = n_temp + diffusion
+        
+        # 6. Limites Absolutos
+        new_nutrients = np.clip(new_nutrients, 0.0, 100.0)
+        
+        # Atualizar os nutrientes do objeto
+        self.nutrients = new_nutrients

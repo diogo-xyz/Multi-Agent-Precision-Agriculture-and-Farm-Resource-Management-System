@@ -2,8 +2,8 @@ import numpy as np
 # Variáveis de Simulação
 
 TICK_HOURS = 1
-ROWS = 4
-COLS = 4
+ROWS = 3
+COLS = 3
 
 
 # Parametros da humidade 
@@ -40,10 +40,11 @@ DIFFUSION_COEF_NUTRIENTS = 0.06 # Taxa de difusão espacial, redistribuição de
 
 PEST_LOSS_RATE = 0.02  # Taxa de perda de nutrientes causada por pragas no solo
 
-
+KG_TO_PCT = 10.0 # 1 kg de fertilizante aplicado 10% de aumento nos nutrientes
 
 
 #Parametros Chuva
+
 # Modificador de probabilidade de chuva quando em seca e não está a chover (0: none, 1: light, 2: moderate, 3: heavy)
 # Reduz drasticamente a chance de começar a chover
 DROUGHT_PROB_MOD = np.array([1.0, 0.15, 0.001, 0.0001])
