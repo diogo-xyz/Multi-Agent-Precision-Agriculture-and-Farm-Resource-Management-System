@@ -36,7 +36,8 @@ Usado por agentes de monitorização (Drone, SoilSensor) e pelo agente Logistic 
     "required_resources": [
         {"type":"water", "amount":120 (L)},
         {"type":"fertilizer", "amount": 1.5 (KG)}
-        {"type":"seed", "amount":5 (g)}],
+        {"type":"seed", "amount":5 (g)}
+        {"type":"storage", "amount": 5 (KG)}],
     "priority": "High", // ou Medium, Low, Urgent
 }
 ``` 
@@ -52,7 +53,7 @@ Usado pelos agentes Drone, SoilSensor, Fertelizer, Irrigation e Harvester para s
 
     "cfp_id": "cfp_recharge_time.time()",
     "task_type": "water", // enum: battery | fuel | seeds | pesticides | fertilizer | water
-    "required_resources": 10, //enum: 80 %  | 20 L | 10 g  |   1 KG     |   1 Kg     | 10 L
+    "required_resources": 10, //enum: 80 mA  | 20 L | 10 g  |   1 KG     |   1 Kg     | 10 L
     "seed_type": 1, // int que identifica o tipo de seed
     "priority": "High", // ou Medium, Low, Urgent
 }
@@ -90,8 +91,10 @@ Usado pelo Agente Logistic para responder a um CFP de reabastecimento
     "sender_id",
     "receiver_id",
 
-    "cfp_id": "cfp_propose_recharge_time.time()"
+    "cfp_id": "cfp_propose_recharge_time.time()",
     "eta_ticks": 6 (Estimated Time of Arrival),
+    "resources": 10,
+    "priority": "High", // ou Medium, Low, Urgent
 }
 ```
 

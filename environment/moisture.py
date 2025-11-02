@@ -1,0 +1,140 @@
+import numpy as np
+
+from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE
+
+class Moisture():
+
+    def __init__(self, num_linhas, num_colunas):
+        # Inicializa a humidade do solo com valores triangulares aleatórios (50-70%)
+        self.moisture = np.random.triangular(50, 60, 70, size=(num_linhas, num_colunas))
+
+    def _rain_mm_per_hour(self, nivel_chuva):
+        """
+        Mapeia o nível de chuva (0-3) para precipitação em mm/h.
+        0: Sem chuva (0.0 mm/h)
+        1: Chuva leve (4.0 mm/h)
+        2: Chuva moderada (20.0 mm/h)
+        3: Chuva forte (60.0 mm/h)
+        """
+        return {0: 0.0, 1: 4, 2: 20.0, 3: 60.0}.get(nivel_chuva, 0.0)
+
+    def _calculate_stress_plant(self, humidade_atual, tipo_planta):
+        """
+        Calcula o fator de stress da planta (0.0 a 1.0) baseado na humidade atual
+        e nas necessidades da planta. 1.0 = sem stress, 0.0 = stress máximo.
+        """
+        target = IDEAL_MOISTURE_TARGET[tipo_planta]
+        tolerancia = DROUGHT_TOLERANCE[tipo_planta]
+        
+        # Desvio absoluto da humidade ideal
+        desvio = np.abs(humidade_atual - target)
+        
+        # O stress aumenta linearmente quando o desvio excede a tolerância
+        # Fator de stress = 1.0 - (desvio / (tolerancia * 2))
+        # O fator de 2 na tolerância é para que o stress chegue a 0.0 quando o desvio for 2*tolerancia
+        stress_factor = 1.0 - np.clip(desvio - tolerancia, 0.0, tolerancia) / tolerancia
+        
+        # Se a humidade estiver muito alta (acima do target + tolerancia), também pode haver stress
+        # Para simplificar, vamos usar o fator de stress para modular o uptake
+        
+        # Se a humidade estiver abaixo do target, o stress é maior
+        stress_factor_uptake = np.where(humidade_atual < target, stress_factor, 1.0)
+        
+        return stress_factor_uptake
+
+    def update_moisture(self, rain, temperature, nutrients, crop_stage, crop_type, dt_hours=1.0):
+        """
+        Atualiza self.moisture (0-100) em função de:
+        - nivel_chuva (0..3)
+        - temperatura (único valor, °C)
+        - nutrients (para lixiviação)
+        - crop_stage (matriz de inteiros 0-3)
+        - crop_type (matriz de inteiros 0-5)
+        - dt_hours: quantas horas avança neste step 
+        """
+
+        # 1) Precipitação (Chuva) -> mm/h -> % pontos
+        rain_mm = self._rain_mm_per_hour(rain) * dt_hours
+        rain_pct = rain_mm * MM_TO_PCT
+        # Variação espacial na precipitação
+        rain_add = rain_pct * (1.0 + np.random.normal(0, RAIN_NOISE, size=self.moisture.shape))
+
+        # 2) Evaporação (mm -> %), depende da temperatura e da disponibilidade de água
+        temp_factor = max(0.0, temperature - EVAP_TEMP_THRESHOLD)
+        evap_mm = EVAP_BASE_COEFF * temp_factor * dt_hours
+        evap_pct = evap_mm * MM_TO_PCT
+        # Evaporação limitada pela água disponível (solo seco evapora menos)
+        evap_loss = evap_pct * (self.moisture / 100.0)
+
+        # 3) Absorção/Transpiração pelas Plantas (mm -> %)
+        
+        # Mapear estágios e tipos para as taxas de absorção
+        # estagio_cultura (0-4). 0 = Sem Plantação. 1-4 = Estágios 1-4.
+        # O índice da linha na matriz UPTAKE_RATES_MM_PER_HOUR será (estagio_cultura - 1).
+        # tipo_cultura (0-5) -> coluna
+        
+        # Usar np.take para obter a taxa de absorção correta para cada célula
+        # A indexação é feita de forma plana (flat)
+        rows, cols = self.moisture.shape
+        # Ajustar o estágio para a indexação da matriz (1->0, 2->1, 3->2, 4->3)
+        # O estágio 0 (Sem Plantação) será mapeado para um índice negativo (-1)
+        # que será tratado com np.clip para garantir que a taxa de absorção seja 0.0.
+        stage_index = crop_stage - 1
+        stage_index_clipped = np.clip(stage_index, 0, UPTAKE_RATES_MM_PER_HOUR.shape[0] - 1)
+
+        indices_flat = stage_index_clipped.flatten() * UPTAKE_RATES_MM_PER_HOUR.shape[1] + crop_type.flatten()
+
+        # Criar uma máscara para células com estágio 0 (Sem Plantação)
+        mascara_sem_plantacao = (crop_stage == 0)
+                
+        # Obter as taxas de absorção (mm/h) para cada célula
+        taxas_uptake_flat = np.take(UPTAKE_RATES_MM_PER_HOUR, indices_flat)
+        mm_uptake_base = taxas_uptake_flat.reshape(rows, cols) * dt_hours
+
+        # Aplicar taxa de absorção zero para células sem plantação (estágio 0)
+        mm_uptake_base[mascara_sem_plantacao] = 0.0
+                
+        # A transpiração aumenta com a temperatura (simples linear)
+        mm_uptake_temp_ajustado = mm_uptake_base * (1.0 + 0.03 * (temperature - 20.0))
+        pct_uptake_temp_ajustado = mm_uptake_temp_ajustado * MM_TO_PCT
+        
+        # Aplicar o fator de stress da planta (reduz o uptake se a humidade estiver baixa)
+        fator_stress = self._calculate_stress_plant(self.moisture, crop_type)
+        pct_uptake_stress_ajustado = pct_uptake_temp_ajustado * fator_stress
+        
+        # Não retirar mais humidade do que existe
+        uptake = np.minimum(pct_uptake_stress_ajustado, self.moisture)
+
+        # 4) Difusão Espacial (8-vizinhos)
+        m = self.moisture
+        neigh_avg = (
+            np.roll(m, 1, axis=0) + np.roll(m, -1, axis=0) +      # cima e baixo
+            np.roll(m, 1, axis=1) + np.roll(m, -1, axis=1) +      # esquerda e direita
+            np.roll(np.roll(m, 1, axis=0), 1, axis=1) +            # diagonal superior esquerda
+            np.roll(np.roll(m, 1, axis=0), -1, axis=1) +           # diagonal superior direita
+            np.roll(np.roll(m, -1, axis=0), 1, axis=1) +           # diagonal inferior esquerda
+            np.roll(np.roll(m, -1, axis=0), -1, axis=1)            # diagonal inferior direita
+        ) / 8.0
+        diffusion = DIFFUSION_COEF * (neigh_avg - m)
+
+        # 5) Composição
+        new_moisture = m + rain_add - evap_loss - uptake + diffusion
+
+        # 6) Lixiviação/Escoamento (Leaching/Runoff)
+        excesso = np.maximum(0.0, new_moisture - FIELD_CAPACITY)
+        new_nutrients = nutrients.copy()
+        
+        if np.any(excesso > 0):
+            # Fração do excesso é perdida
+            perda_lixiviada = excesso * LEACH_COEFF
+            new_moisture = new_moisture - perda_lixiviada
+            
+            # Aplicar perda proporcional de nutrientes
+            # Assumindo nutrientes em escala 0-100
+            fracao_perda_nutrientes = (perda_lixiviada / 100.0)
+            new_nutrients = np.clip(nutrients - (nutrients * fracao_perda_nutrientes), 0, 100)
+
+        # 7) Limites Absolutos
+        new_moisture = np.clip(new_moisture, 0.0, 100.0)
+
+        return new_moisture, new_nutrients
