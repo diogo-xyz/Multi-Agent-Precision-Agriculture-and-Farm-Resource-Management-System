@@ -73,3 +73,29 @@ class Pest:
         # Retorna o número de novas infeções para fins de monitorização
         #return np.sum(new_infections)
         return
+    
+    def apply_pesticide(self, row, col, neighbor_effect=0.75):
+        """
+        Aplica pesticida numa célula e afeta vizinhos.
+
+        row, col: coordenadas da célula central onde se aplica o pesticida
+        neighbor_effect: probabilidade de eliminar a peste nos vizinhos (default 75%)
+        """
+        rows, cols = self.pest.shape
+        
+        # 1. Eliminar a peste na célula central
+        self.pest[row, col] = 0
+
+        # 2. Identificar vizinhos (com contornos periódicos/toroidais)
+        neighbor_offsets = [(-1, -1), (-1, 0), (-1, 1),
+                            ( 0, -1),          ( 0, 1),
+                            ( 1, -1), ( 1, 0), ( 1, 1)]
+
+        for dr, dc in neighbor_offsets:
+            r = (row + dr) % rows
+            c = (col + dc) % cols
+
+            # Se o vizinho tem peste, aplica probabilidade de eliminação
+            if self.pest[r, c] == 1:
+                if np.random.rand() < neighbor_effect:
+                    self.pest[r, c] = 0

@@ -79,10 +79,13 @@ class Field:
         self.isPestActive = 0
         self.pest.pest = np.zeros((ROWS,COLS))
 
-    def aply_irrigation(self):
+    def aply_pesticide(self,row,col):
+        self.pest.apply_pesticide(row,col,neighbor_effect= 0.75)
+
+    def aply_irrigation(self,row,col,flow_rate_lph):
         pass
 
-    def aply_fertilize(self):
+    def aply_fertilize(self,row,col,fertilzer_kg):
         pass
     
     def get_drone(self,row,col):
@@ -90,3 +93,9 @@ class Field:
 
     def get_soil(self,row,col):
         return [self.temperature.temperature,self.nutrients.nutrients[row,col],self.moisture.moisture[row,col]]
+    
+    def teste_plantar(self,row,col,id_planta):
+        pass
+
+    def teste_colher(self,row,col):
+        pass
