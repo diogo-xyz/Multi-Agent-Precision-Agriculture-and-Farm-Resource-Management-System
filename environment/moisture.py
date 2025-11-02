@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE
+from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF_MOISTURE,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE
 
 class Moisture():
 
@@ -16,7 +16,7 @@ class Moisture():
         2: Chuva moderada (20.0 mm/h)
         3: Chuva forte (60.0 mm/h)
         """
-        return {0: 0.0, 1: 4, 2: 20.0, 3: 60.0}.get(nivel_chuva, 0.0)
+        return {0: 0.0, 1: 1, 2: 3, 3: 5}.get(nivel_chuva)
 
     def _calculate_stress_plant(self, humidade_atual, tipo_planta):
         """
@@ -32,15 +32,13 @@ class Moisture():
         # O stress aumenta linearmente quando o desvio excede a tolerância
         # Fator de stress = 1.0 - (desvio / (tolerancia * 2))
         # O fator de 2 na tolerância é para que o stress chegue a 0.0 quando o desvio for 2*tolerancia
+        # O stress é calculado com base no desvio em relação ao intervalo [target - tolerancia, target + tolerancia]
+        # Se o desvio for 0, stress_factor = 1.0. Se o desvio for 2*tolerancia, stress_factor = 0.0.
         stress_factor = 1.0 - np.clip(desvio - tolerancia, 0.0, tolerancia) / tolerancia
         
-        # Se a humidade estiver muito alta (acima do target + tolerancia), também pode haver stress
-        # Para simplificar, vamos usar o fator de stress para modular o uptake
-        
-        # Se a humidade estiver abaixo do target, o stress é maior
-        stress_factor_uptake = np.where(humidade_atual < target, stress_factor, 1.0)
-        
-        return stress_factor_uptake
+        # O stress afeta o uptake, seja por seca (humidade baixa) ou por excesso de água (humidade alta)
+        return stress_factor
+
 
     def update_moisture(self, rain, temperature, nutrients, crop_stage, crop_type, dt_hours=1.0):
         """
@@ -115,7 +113,7 @@ class Moisture():
             np.roll(np.roll(m, -1, axis=0), 1, axis=1) +           # diagonal inferior esquerda
             np.roll(np.roll(m, -1, axis=0), -1, axis=1)            # diagonal inferior direita
         ) / 8.0
-        diffusion = DIFFUSION_COEF * (neigh_avg - m)
+        diffusion = DIFFUSION_COEF_MOISTURE * (neigh_avg - m)
 
         # 5) Composição
         new_moisture = m + rain_add - evap_loss - uptake + diffusion
