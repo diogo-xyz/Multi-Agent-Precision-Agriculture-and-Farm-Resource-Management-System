@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF_MOISTURE,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE
+from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF_MOISTURE,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE,IRRIG_TO_PCT
 
 class Moisture():
 
@@ -150,8 +150,8 @@ class Moisture():
         # Assumindo a simplificação: 1 L/h aplicado a 1m² por 1h resulta em 1 mm de água.
         # Caudal total aplicado em mm
         
-        # Aumento de humidade em % (MM_TO_PCT deve ser importado do seu config)
-        irrigation_pct = flow_rate_lph * MM_TO_PCT
+        # Aumento de humidade em %
+        irrigation_pct = flow_rate_lph * IRRIG_TO_PCT
         
         # 2. Aplicação Inicial na Célula
         delta_moisture = np.zeros_like(self.moisture)

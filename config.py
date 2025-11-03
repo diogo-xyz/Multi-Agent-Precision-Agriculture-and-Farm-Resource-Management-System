@@ -16,7 +16,7 @@ EVAP_BASE_COEFF = 0.05 # Taxa base de evaporação em mm/h por grau Celsius acim
 EVAP_TEMP_THRESHOLD = 5
 # Abaixo desse valor, considera-se que a evaporação é quase nula 
 
-DIFFUSION_COEF_MOISTURE = 0.12
+DIFFUSION_COEF_MOISTURE = 0.30
 # Coeficiente de difusão espacial de humidade entre células vizinhas  [0,1]
 
 FIELD_CAPACITY = 90.0
@@ -28,6 +28,7 @@ LEACH_COEFF = 0.2 # Controla a intensidade da drenagem
 RAIN_NOISE = 0.05 
 # Desvio padrão do ruído aleatório aplicado à chuva, representando variação espacial (chuva desigual entre células)
 
+IRRIG_TO_PCT = 5.0 # 1 L de agua aumenta 5% da humiade
 
 
 
@@ -52,63 +53,23 @@ DROUGHT_PROB_MOD = np.array([1.0, 0.15, 0.001, 0.0001])
 # Fator pelo qual a duração média da chuva é reduzida quando começa a chover em seca
 DROUGHT_DURATION_FACTOR = 4.0
 
-# Matriz de Transição de Intensidade (por hora)
-# INTENSITY_TRANSITION_MATRIX[season][current_intensity] -> [prob_to_0, prob_to_1, prob_to_2, prob_to_3]
-# A soma das probabilidades de transição deve ser 1.0.
-# Nota: A transição para 0 (parar) é tratada separadamente por P_STOP_EARLY_PER_HOUR no rain_event.py,
-# mas esta matriz pode ser usada para modelar a mudança para uma intensidade mais fraca (e.g., 1) que pode levar à paragem.
-# Vamos simplificar: a matriz modela a transição entre intensidades > 0.
-# A probabilidade de transição para 0 é usada para modelar a diminuição da intensidade.
-# 
-# Exemplo (Verão): Chuva fraca (1) tem 80% de chance de se manter fraca, 15% de passar a normal (2), 5% de passar a forte (3).
-# Chuva forte (3) tem 70% de chance de se manter forte, 20% de passar a normal (2), 10% de passar a fraca (1).
-INTENSITY_TRANSITION_MATRIX = {
-    # [Para 0, Para 1, Para 2, Para 3]
-    "summer": {
-        0: np.array([1.0, 0.0, 0.0, 0.0]), # Não chove -> Não chove (Não usado na prática, mas completo)
-        1: np.array([0.10, 0.70, 0.15, 0.05]), # Fraca -> 10% para 0 (parar), 70% manter, 15% normal, 5% forte
-        2: np.array([0.05, 0.15, 0.70, 0.10]), # Normal -> 5% para 0, 15% fraca, 70% manter, 10% forte
-        3: np.array([0.02, 0.10, 0.20, 0.68]), # Forte -> 2% para 0, 10% fraca, 20% normal, 68% manter
-    },
-    "spring": {
-        0: np.array([1.0, 0.0, 0.0, 0.0]),
-        1: np.array([0.05, 0.75, 0.15, 0.05]),
-        2: np.array([0.02, 0.10, 0.78, 0.10]),
-        3: np.array([0.01, 0.05, 0.15, 0.79]),
-    },
-    "autumn": {
-        0: np.array([1.0, 0.0, 0.0, 0.0]),
-        1: np.array([0.05, 0.75, 0.15, 0.05]),
-        2: np.array([0.02, 0.10, 0.78, 0.10]),
-        3: np.array([0.01, 0.05, 0.15, 0.79]),
-    },
-    "winter": {
-        0: np.array([1.0, 0.0, 0.0, 0.0]),
-        1: np.array([0.02, 0.80, 0.15, 0.03]),
-        2: np.array([0.01, 0.05, 0.84, 0.10]),
-        3: np.array([0.00, 0.02, 0.08, 0.90]),
-    },
-}
 
 # Probabilidades sazonais para (0: none, 1: light, 2: moderate, 3: heavy)
-# Probabilidades sazonais para (0: none, 1: light, 2: moderate, 3: heavy)
 SEASON_PROBS = {
-    "summer": np.array([0.60, 0.35, 0.045, 0.005]),
-    "spring": np.array([0.30, 0.45, 0.20, 0.05]),
-    "autumn": np.array([0.30, 0.45, 0.20, 0.05]),
-    "winter": np.array([0.15, 0.35, 0.30, 0.20]),
+    "summer": np.array([0.75, 0.20, 0.045, 0.005]),   # verão seco: muito provavelmente nada ou chuvisco leve
+    "spring": np.array([0.45, 0.30, 0.20, 0.05]),    # primavera: mistura de dias secos e chuvas leves/moderadas
+    "autumn": np.array([0.40, 0.35, 0.20, 0.05]),    # outono: mais equilíbrio, um pouco mais de moderada
+    "winter": np.array([0.10, 0.30, 0.35, 0.25]),    # inverno: baixa chance de nenhum, maior de moderada/pesada
 }
 
 # Média de duração (horas) de um episódio para cada intensidade por estação.
 MEAN_DURATION_HOURS_BASE = {
-    "summer":   {0: 72.0, 1: 2.0, 2: 4.0, 3: 8.0},
-    "spring":   {0: 36.0, 1: 3.0, 2: 6.0, 3: 10.0},
-    "autumn":   {0: 36.0, 1: 3.0, 2: 6.0, 3: 10.0},
-    "winter":   {0: 24.0, 1: 6.0, 2: 12.0, 3: 24.0},
+    "summer":   {0: 72.0, 1: 5.0, 2: 3.0, 3: 2.0},
+    "spring":   {0: 36.0, 1: 6.0, 2: 8.0, 3: 10.0},
+    "autumn":   {0: 36.0, 1: 6.0, 2: 8.0, 3: 10.0},
+    "winter":   {0: 24.0, 1: 8.0, 2: 10.0, 3: 20.0},
 }
 
-# Probabilidade (por hora) de a intensidade mudar espontaneamente durante um episódio
-P_CHANGE_INTENSITY_PER_HOUR = 0.08 
 
 # Probabilidade (por hora) de terminar prematuramente um episódio 
 P_STOP_EARLY_PER_HOUR = 0.02 

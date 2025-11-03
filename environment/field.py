@@ -16,7 +16,7 @@ class Field:
     """
 
     def __init__(self):
-        self.day = 1
+        self.day = 200
         self.hours = 9
 
         self.temperature = Temperature(self.day,self.hours)
@@ -66,6 +66,7 @@ class Field:
         self.rain.apply_rain(intensity,self.day)
 
     def stop_rain(self):
+        if (self.rain.rain == 0): return
         self.rain.rain = 0
         self.rain._rain_hours_remaining = 0.0
 

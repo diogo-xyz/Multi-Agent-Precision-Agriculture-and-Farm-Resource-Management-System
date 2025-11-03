@@ -14,7 +14,7 @@ def display_matrix(field):
     print("==================================================================\n")
     print(f"Day: {field.day} \t Hour: {field.hours}")
     print(f"Temperatura: {field.temperature.temperature}")
-    print(f"Rain: {field.rain.rain}")
+    print(f"Rain: {field.rain.rain}   Hours_remaining: {field.rain._rain_hours_remaining}")
     print("Humidade:")
     print(np.array2string(field.moisture.moisture, precision=2, separator=', ', suppress_small=True))
     print("\nNutrientes:")
@@ -30,9 +30,20 @@ def display_matrix(field):
 
 
 def aply(field):
-    print("0: Peste \t 1: Remove Peste \t 2: Seca \t 3: Regar \t 4: Fertilizar \n5: Plantar \t 6: Colher \t\t 7: Chuva \t 8: Para chuvas:")
-    escolha = int(input("Escolha:"))
-    match (escolha):
+    print("0: Peste \t 1: Remove Peste \t 2: Seca \t 3: Regar \t 4: Fertilizar \n5: Plantar \t 6: Colher \t\t 7: Chuva \t 8: Para chuvas \t 9: Pesticida")
+    escolha_str = input("Escolha: ")
+    
+    if escolha_str.strip() == "":
+        # Usuário apenas deu Enter → vai para o case _
+        return
+    
+    try:
+        escolha = int(escolha_str)
+    except ValueError:
+        # Entrada inválida → também vai para o case _
+        return
+
+    match escolha:
         case 0:
             field.apply_pest()
         case 1: 
@@ -57,24 +68,23 @@ def aply(field):
             field.apply_rain(intensity)  
         case 8: 
             field.stop_rain() 
+        case 9:
+            row,col = map(int, input("Row, Col: ").split())
+            field.apply_pesticide(row,col)
         case _:
             pass
-    
+
     return
 
 def run_simulation():
     field = Field()
 
-    display_matrix(field)
+    while(True):
+        display_matrix(field)
+        aply(field)
+        field.step()
 
-    aply(field)
 
-    display_matrix(field)
-    #field.step()
-    #display_matrix(field)
-    aply(field)
-
-    display_matrix(field)
 
 
 if __name__ == "__main__":
