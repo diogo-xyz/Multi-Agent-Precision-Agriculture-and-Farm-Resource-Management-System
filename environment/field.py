@@ -93,10 +93,10 @@ class Field:
         self.nutrients.apply_fertilize(row,col,fertilzer_kg)
     
     def get_drone(self,row,col):
-        return [self.crop.crop_stage[row,col],self.pest.pest[row,col]]
+        return [self.crop.crop_stage[row,col], self.crop.crop_type[row,col], self.pest.pest[row,col]]
 
     def get_soil(self,row,col):
-        return [self.temperature.temperature,self.nutrients.nutrients[row,col],self.moisture.moisture[row,col]]
+        return [self.temperature.temperature, self.nutrients.nutrients[row,col], self.moisture.moisture[row,col]]
     
     def plant_seed(self, row, col, plant_type):
         return self.crop.plant_seed(row, col, plant_type)
