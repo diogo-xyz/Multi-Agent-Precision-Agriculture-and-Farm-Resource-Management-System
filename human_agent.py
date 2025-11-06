@@ -22,7 +22,7 @@ def get_user_choice():
     print("6. Ver Ambiente (view_environment)")
     print("7. Sair")
     while True:
-        choice = input("Escolha o número do evento a aplicar: ")
+        choice = input("Escolha o número do evento a aplicar\n")
         if choice in ['1', '2', '3', '4', '5', '6', '7']:
             return choice
         logger.warning("Escolha inválida. Por favor, insira um número de 1 a 7.")
