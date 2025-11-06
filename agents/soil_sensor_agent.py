@@ -123,7 +123,7 @@ class SoilAgent:
             "task_type": "fertilize_application",
             "seed_type": 0, 
             "zone": zone,
-            "area_size": "2x2", # Explicitly state the area size
+            "area_size": "2x2", # Explicitly state the area size not necessary
             "required_resources": [
                 {"type": "fertilizer", "amount": required_amount, "unit": "KG"}
             ],
