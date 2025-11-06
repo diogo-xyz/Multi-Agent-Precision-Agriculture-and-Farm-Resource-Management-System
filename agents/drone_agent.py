@@ -1,15 +1,11 @@
 from spade.agent import Agent
-from spade.template import Template
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
-import spade
 import time
 import asyncio
 import json
 import logging
 
-from message import make_message
-
-
+from agents.message import make_message
 ENV_JID = "environment@localhost"
 LOG_JID = "logistics@localhost"
 
@@ -338,34 +334,3 @@ class DroneAgent(Agent):
             self.agent.logger.info(
                 f"Recursos: Energia={self.agent.energy:.2f}%, Pesticida={self.agent.pesticide_amount:.2f}kg."
             )
-
-
-
-async def main():
-    # Configurar logging para ver o output
-    logging.basicConfig(level=logging.INFO)
-    
-    # Definições do Agente
-    DRONE_JID = "drone@localhost"
-    DRONE_PASS = "dronepass"
-
-    # Inicializar e iniciar o agente
-    env_agent = DroneAgent(DRONE_JID, DRONE_PASS,[(0,0),(0,1),(0,2),(0,3)],0,0)
-    await env_agent.start()
-    
-    logger.info("Agente Drone em execução. Pressione Ctrl+C para parar.")
-    
-    # Manter o agente a correr
-    try:
-        while env_agent.is_alive():
-            await asyncio.sleep(1)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        if env_agent.is_alive():
-            await env_agent.stop()
-        logger.info("Agente Ambiente parado.")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

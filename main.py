@@ -5,8 +5,23 @@ import logging
 
 from human_agent import HumanAgent
 from environment_agent import FarmEnvironmentAgent
+from agents.drone_agent import DroneAgent
+#from agents.logistics_agent import LogisticsAgent
+#from agents.harvester_agent import HarvesterAgent
+#from agents.soil_sensor_agent import SoilAgent
+#from agents.fertilizer_agent import FertilizationAgent
+#from agents.irrigation_agent import IrrigationAgent
 
-from config_agents import ENV_JID, ENV_PASS, HUMAN_JID, HUMAN_PASS 
+from config_agents import (
+    DRONE_JID, DRONE_PASS,
+    LOG_JID, LOG_PASS,
+    HARVESTERS_JID, HARVESTERS_PASS,
+    SOIL_JID, SOIL_PASS,
+    FERT_JID, FERT_PASS,
+    IRRIG_JID, IRRIG_PASS,
+    ENV_JID, ENV_PASS,
+    HUMAN_JID, HUMAN_PASS   
+)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from TB_Sistemas.environment.field import Field
@@ -33,15 +48,18 @@ async def main():
     field = Field()
 
     # Inicializar e iniciar o agente
-    env_agent = FarmEnvironmentAgent(ENV_JID, ENV_PASS, field)
+    env_agent = FarmEnvironmentAgent(ENV_JID[0], ENV_PASS[0], field)
     await env_agent.start()
     logger.info("Agente Ambiente em execução. Pressione Ctrl+C para parar.")
 
-    human_agent = HumanAgent(HUMAN_JID, HUMAN_PASS, ENV_JID)
+    human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
     await human_agent.start()
     logger.info("Agente Humano em execução. Pressione Ctrl+C para parar.")
 
-    
+    drone_agent = DroneAgent(DRONE_JID[0], DRONE_PASS[0],[(0,0),(0,1),(0,2),(0,3)],0,0)
+    await drone_agent.start()
+    logger.info("Agente Drone em execução.")
+
     # Manter o agente a correr
     try:
         while env_agent.is_alive():
