@@ -11,6 +11,7 @@ O Drone envia um inform ao agente Logistic a dizer se é preciso colher ou plant
 
     "inform_id": "inform_crop_time.time()",
     "zone": [1,1],
+    "crop_type": crop_type,
     "state": "0 -> not planted      1 -> Ready for harvasting",
     "checked_at": "time.time()"
 }
