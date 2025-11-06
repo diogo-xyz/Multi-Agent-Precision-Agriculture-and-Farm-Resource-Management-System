@@ -1,0 +1,14 @@
+test_boundary_case_0_0 (__main__.TestSoilAgent.test_boundary_case_0_0) ... ok
+test_boundary_case_max_row_max_col (__main__.TestSoilAgent.test_boundary_case_max_row_max_col) ... ok
+test_energy_loss (__main__.TestSoilAgent.test_energy_loss) ... ok
+test_energy_recharge_cfp (__main__.TestSoilAgent.test_energy_recharge_cfp) ... ok
+test_fertilize_cfp_details (__main__.TestSoilAgent.test_fertilize_cfp_details) ... ok
+test_full_in_bounds_mean_calculation (__main__.TestSoilAgent.test_full_in_bounds_mean_calculation) ... ok
+test_irrigation_cfp_details (__main__.TestSoilAgent.test_irrigation_cfp_details) ... ok
+test_no_cfp_when_conditions_are_good (__main__.TestSoilAgent.test_no_cfp_when_conditions_are_good) ... ok
+test_no_monitoring_when_out_of_energy (__main__.TestSoilAgent.test_no_monitoring_when_out_of_energy) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.004s
+
+OK
