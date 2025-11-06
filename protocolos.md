@@ -74,11 +74,7 @@ Usado por agentes executores (Irrigation, Harvester, Fertilizer) para responder 
 
     "cfp_id": "cfp_propose_task_time.time()",
     "eta_ticks": 6 (Estimated Time of Arrival),
-    "battery_lost": 10 ,
-    "available_resources": [
-        {"type":"water", "amount":120 (L)},
-        {"type":"fertilizer", "amount": 1.5 (KG)}
-        {"type":"seed", "amount":5 (g)}],
+    "battery_lost": 10 ,  //  fuel_cost
 }
 ```
 
@@ -142,6 +138,7 @@ Usado por agentes executores para informar o sobre a conclusão ou falha da tare
 
     "cfp_id": "cfp_done_time.time()",
     "status": "done",
+    "seed_type": 0,
     "details": {"water_used": 50, "time_taken": 6}
 }
 ```

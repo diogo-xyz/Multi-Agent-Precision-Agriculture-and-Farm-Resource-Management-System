@@ -240,9 +240,9 @@ class RechargeResponseReceiver(CyclicBehaviour):
                         self.agent.fuel_level = min(self.agent.fuel_level, 100)
                         self.agent.logger.info(f"[RECHARGE] Combustível reabastecido em {recharged_amount:.2f}. Nível atual: {self.agent.fuel_level:.2f}.")
                         
-                    if "seed_used" in details:
-                        # O Logistic Agent reabasteceu as sementes. O 'seed_used' é a quantidade reabastecida.
-                        recharged_amount = details["seed_used"]
+                    if "seed_type" in details:
+                        # O Logistic Agent reabasteceu as sementes. O 'seeds_type' é a quantidade reabastecida.
+                        recharged_amount = details["seeds_type"]
                         seed_type = details.get("seed_type")
                         
                         if seed_type is not None:
@@ -463,6 +463,7 @@ class HarvesterAgent(Agent):
             "receiver_id": str(to),
             "cfp_id": cfp_id,
             "eta_ticks": max(1, eta_ticks), # Mínimo de 1 tick
+            
             "fuel_cost": fuel_cost,
         }
         msg = make_message(to, PERFORMATIVE_PROPOSE_TASK, body)
