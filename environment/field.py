@@ -86,10 +86,10 @@ class Field:
     def apply_pesticide(self,row,col):
         self.pest.apply_pesticide(row,col,neighbor_effect= 0.75)
 
-    def apply_irrigation(self,row,col,flow_rate_lph = 2):
+    def apply_irrigation(self,row,col,flow_rate_lph):
         self.moisture.apply_irrigation(row,col,flow_rate_lph)
 
-    def apply_fertilize(self,row,col,fertilzer_kg = 1):
+    def apply_fertilize(self,row,col,fertilzer_kg):
         self.nutrients.apply_fertilize(row,col,fertilzer_kg)
     
     def get_drone(self,row,col):

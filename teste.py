@@ -52,7 +52,7 @@ def aply(field):
             field.toggle_drought()
         case 3:
             row,col = map(int, input("Row, Col: ").split())
-            field.apply_irrigation(row,col)
+            field.apply_irrigation(row,col,4)
         case 4:
             row,col = map(int, input("Row, Col: ").split())
             field.apply_fertilize(row,col)            

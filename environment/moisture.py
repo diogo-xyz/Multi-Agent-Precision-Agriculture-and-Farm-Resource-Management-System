@@ -151,7 +151,7 @@ class Moisture():
         # Caudal total aplicado em mm
         
         # Aumento de humidade em %
-        irrigation_pct = flow_rate_lph * IRRIG_TO_PCT
+        irrigation_pct = flow_rate_lph * IRRIG_TO_PCT 
         
         # 2. Aplicação Inicial na Célula
         delta_moisture = np.zeros_like(self.moisture)

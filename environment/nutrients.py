@@ -160,8 +160,8 @@ class Nutrients():
         new_nutrients = np.clip(new_nutrients, 0.0, 100.0)
 
         return new_nutrients
-    
-    def apply_fertilize(self, row, col, fertilizer_kg, dt_hours=1.0):
+
+    def apply_fertilize(self, row, col, fertilizer_kg):
         """
         Aplica fertilizante na célula (row, col) e difunde os nutrientes para os vizinhos.
 
@@ -200,7 +200,7 @@ class Nutrients():
         
         # Cálculo da difusão: fluxo de nutrientes (DIFFUSION_COEF_NUTRIENTS deve ser importado do seu config)
         # Multiplicamos pelo dt_hours para simular a difusão ao longo do tempo
-        diffusion = DIFFUSION_COEF_NUTRIENTS * (neigh_avg_temp - n_temp) * dt_hours
+        diffusion = DIFFUSION_COEF_NUTRIENTS * (neigh_avg_temp - n_temp)
         
         # 5. Composição
         new_nutrients = n_temp + diffusion

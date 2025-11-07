@@ -19,7 +19,6 @@ PERFORMATIVE_FAILURE = "failure"
 PERFORMATIVE_CFP_RECHARGE = "cfp_recharge"
 PERFORMATIVE_PROPOSE_RECHARGE = "propose_recharge"
 PERFORMATIVE_INFORM = "inform"
-
 ONTOLOGY_FARM_ACTION = "farm_action"
 
 # =====================
@@ -187,9 +186,9 @@ class ProposalResponseReceiver(CyclicBehaviour):
                     else:
                         self.agent.logger.error(f"[PROPOSAL] Tipo de tarefa desconhecido após aceitação: {proposal_data['task_type']}")
                         return
-                        
-                    self.agent.add_behaviour(b)
+                    
                     self.agent.status = proposal_data["task_type"].split('_')[0] # harvesting ou planting
+                    self.agent.add_behaviour(b)
                     
                 elif decision == "reject":
                     self.agent.logger.info(f"[PROPOSAL] Proposta {cfp_id} REJEITADA para {proposal_data['task_type']}.")
@@ -207,12 +206,59 @@ class ProposalResponseReceiver(CyclicBehaviour):
             await asyncio.sleep(0.1)
 
 
+class AnalyseRechargeProposalsBehaviour(OneShotBehaviour):
+    """Analisa as propostas de reabastecimento recebidas e escolhe a melhor."""
+    
+    def __init__(self, cfp_id):
+        super().__init__()
+        self.cfp_id = cfp_id
+        
+    async def run(self):
+        proposals = self.agent.recharge_proposals
+        
+        if not proposals:
+            self.agent.logger.warning(f"[RECHARGE] Nenhuma proposta de reabastecimento recebida para CFP {self.cfp_id}. O agente permanece em 'refueling'.")
+            # O CheckResourcesBehaviour irá tentar novamente
+            return
+            
+        # 1. Escolher a melhor proposta (menor eta_ticks)
+        best_proposal = min(proposals.values(), key=lambda p: p["eta_ticks"])
+        best_agent_jid = best_proposal["sender"]
+        
+        self.agent.chosen_logistic_agent = best_agent_jid
+        self.agent.logger.info(f"[RECHARGE] Proposta escolhida: {best_agent_jid} com ETA: {best_proposal['eta_ticks']}.")
+        
+        # 2. Enviar ACCEPT para o melhor
+        await self.agent.send_accept_proposal(best_agent_jid, self.cfp_id)
+        
+        # 3. Enviar REJECT para os restantes
+        for agent_jid, proposal in proposals.items():
+            if agent_jid != best_agent_jid:
+                await self.agent.send_reject_proposal(agent_jid, self.cfp_id)
+                
+        # Limpar propostas
+        self.agent.recharge_proposals = {}
+
+
 class RechargeResponseReceiver(CyclicBehaviour):
-    """Recebe e processa a resposta (Propose/Accept/Reject) ao CFP de reabastecimento."""
+    """Recebe e processa as respostas (Propose/Accept/Reject/Done) ao CFP de reabastecimento."""
+
+    def __init__(self):
+        super().__init__()
+        self.cfp_id = None
+        self.proposals_received = 0
+        self.proposals_expected = 0
+        self.timeout_task = None
+
+    async def on_start(self):
+        # O número de propostas esperadas é o número de Logistic Agents
+        self.proposals_expected = len(self.agent.log_jids)
+        self.agent.logger.info(f"[RECHARGE] Esperando {self.proposals_expected} propostas de reabastecimento.")
 
     async def run(self):
         # Espera por mensagens Propose, Accept/Reject ou Done do Logistic Agent
         template = Template()
+        template.set_metadata("performative", PERFORMATIVE_PROPOSE_RECHARGE)
         template.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
         template.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
         template.set_metadata("performative", PERFORMATIVE_DONE)
@@ -222,43 +268,79 @@ class RechargeResponseReceiver(CyclicBehaviour):
             try:
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
-            
-                if msg.get_metadata("performative") == PERFORMATIVE_ACCEPT_PROPOSAL:
-                    # O Logistic Agent aceitou o nosso CFP. O HarvesterAgent espera agora pelo DONE.
+                performative = msg.get_metadata("performative")
+                
+                if performative == PERFORMATIVE_PROPOSE_RECHARGE:
+                    # 1. Receber Proposta de Reabastecimento
+                    # O CFP ID é gerado no send_recharge_cfp, e é o mesmo para todos os agentes logísticos
+                    if self.cfp_id is None:
+                        self.cfp_id = cfp_id
+                    
+                    self.proposals_received += 1
+                    
+                    eta_ticks = content.get("eta_ticks")
+                    
+                    self.agent.recharge_proposals[str(msg.sender)] = {
+                        "eta_ticks": eta_ticks,
+                        "sender": str(msg.sender),
+                        "cfp_id": cfp_id
+                    }
+                    self.agent.logger.info(f"[RECHARGE] Proposta de reabastecimento recebida de {msg.sender} com ETA: {eta_ticks}. Total de propostas: {self.proposals_received}/{self.proposals_expected}.")
+                    
+                    # Se todas as propostas foram recebidas, ou se o timeout já foi iniciado, 
+                    # podemos iniciar a análise imediatamente.
+                    if self.proposals_received == self.proposals_expected:
+                        self.agent.logger.info("[RECHARGE] Todas as propostas recebidas. A iniciar análise.")
+                        self.kill() # Termina o CyclicBehaviour
+                        self.agent.add_behaviour(AnalyseRechargeProposalsBehaviour(self.cfp_id))
+                        return
+                        
+                    # Se for a primeira proposta, inicia o timeout para esperar pelas restantes
+                    if self.proposals_received == 1 and self.timeout_task is None:
+                        self.timeout_task = self.agent.loop.create_task(self.start_timeout())
+                        
+                elif performative == PERFORMATIVE_ACCEPT_PROPOSAL:
+                    # 2. O Logistic Agent aceitou o nosso CFP. O HarvesterAgent espera agora pelo DONE.
                     self.agent.logger.info(f"[RECHARGE] Proposta de reabastecimento {cfp_id} ACEITE. A aguardar conclusão do reabastecimento pelo Logistic Agent.")
                     # O agente permanece em 'refueling'
                     
-                elif msg.get_metadata("performative") == PERFORMATIVE_DONE:
-                    # O Logistic Agent informa que o reabastecimento foi concluído.
+                elif performative == PERFORMATIVE_DONE:
+                    # 3. O Logistic Agent informa que o reabastecimento foi concluído.
                     details = content.get("details", {})
                     
-                    if "fuel_used" in details:
-                        # O Logistic Agent reabasteceu o combustível. O 'fuel_used' é a quantidade reabastecida.
-                        recharged_amount = details["fuel_used"]
-                        self.agent.fuel_level += recharged_amount
-                        # Limitar ao máximo de 100
-                        self.agent.fuel_level = min(self.agent.fuel_level, 100)
-                        self.agent.logger.info(f"[RECHARGE] Combustível reabastecido em {recharged_amount:.2f}. Nível atual: {self.agent.fuel_level:.2f}.")
-                        
-                    if "seed_type" in details:
-                        # O Logistic Agent reabasteceu as sementes. O 'seeds_type' é a quantidade reabastecida.
-                        recharged_amount = details["seeds_type"]
-                        seed_type = details.get("seed_type")
-                        
-                        if seed_type is not None:
-                            # O CheckResourcesBehaviour pede para reabastecer até 500, então vamos assumir que é esse o limite.
-                            self.agent.seeds[seed_type] += recharged_amount
-                            self.agent.seeds[seed_type] = min(self.agent.seeds[seed_type], 500)
-                            self.agent.logger.info(f"[RECHARGE] Semente {seed_type} reabastecida em {recharged_amount}. Nível atual: {self.agent.seeds[seed_type]}.")
-                        else:
-                            self.agent.logger.warning("[RECHARGE] Mensagem DONE de sementes sem 'seed_type'. Ignorando atualização de sementes.")
+                    # Apenas atualiza os recursos se o agente que enviou o DONE for o agente escolhido
+                    if str(msg.sender) == self.agent.chosen_logistic_agent:
+                        if "fuel_used" in details:
+                            # O Logistic Agent reabasteceu o combustível. O 'fuel_used' é a quantidade reabastecida.
+                            recharged_amount = details["fuel_used"]
+                            self.agent.fuel_level += recharged_amount
+                            # Limitar ao máximo de 100
+                            self.agent.fuel_level = min(self.agent.fuel_level, 100)
+                            self.agent.logger.info(f"[RECHARGE] Combustível reabastecido em {recharged_amount:.2f}. Nível atual: {self.agent.fuel_level:.2f}.")
                             
-                    self.agent.status = "idle"
-                    self.agent.logger.info(f"[RECHARGE] Reabastecimento {cfp_id} concluído. Agente IDLE.")
-                    
-                elif msg.get_metadata("performative") == PERFORMATIVE_REJECT_PROPOSAL:
-                    self.agent.logger.warning(f"[RECHARGE] Proposta de reabastecimento {cfp_id} REJEITADA. O agente permanece em 'refueling'.")
-                    # O agente permanece em 'refueling' e o CheckResourcesBehaviour irá tentar novamente.
+                        if "seed_type" in details:
+                            # O Logistic Agent reabasteceu as sementes. O 'seeds_type' é a quantidade reabastecida.
+                            recharged_amount = details["seeds_type"]
+                            seed_type = details.get("seed_type")
+                            
+                            if seed_type is not None:
+                                # O CheckResourcesBehaviour pede para reabastecer até 500, então vamos assumir que é esse o limite.
+                                self.agent.seeds[seed_type] += recharged_amount
+                                self.agent.seeds[seed_type] = min(self.agent.seeds[seed_type], 500)
+                                self.agent.logger.info(f"[RECHARGE] Semente {seed_type} reabastecida em {recharged_amount}. Nível atual: {self.agent.seeds[seed_type]}.")
+                            else:
+                                self.agent.logger.warning("[RECHARGE] Mensagem DONE de sementes sem 'seed_type'. Ignorando atualização de sementes.")
+                                
+                        self.agent.status = "idle"
+                        self.agent.chosen_logistic_agent = None
+                        self.agent.logger.info(f"[RECHARGE] Reabastecimento {cfp_id} concluído. Agente IDLE.")
+                    else:
+                        self.agent.logger.warning(f"[RECHARGE] Recebido DONE de {msg.sender}, mas o agente escolhido é {self.agent.chosen_logistic_agent}. Ignorando atualização de recursos.")
+                        
+                elif performative == PERFORMATIVE_REJECT_PROPOSAL:
+                    # 4. Rejeição de Proposta (pode ser do agente logístico que rejeitou o nosso CFP)
+                    self.agent.logger.warning(f"[RECHARGE] Proposta de reabastecimento {cfp_id} REJEITADA por {msg.sender}. O agente permanece em 'refueling'.")
+                    # O agente permanece em 'refueling' e o CheckResourcesBehaviour irá tentar novamente se necessário.
 
                     
             except json.JSONDecodeError:
@@ -267,6 +349,16 @@ class RechargeResponseReceiver(CyclicBehaviour):
                 self.agent.logger.exception(f"[RECHARGE] Erro ao processar resposta de reabastecimento: {e}")
         else:
             await asyncio.sleep(0.1)
+
+    async def start_timeout(self):
+        """Inicia um timeout para esperar pelas restantes propostas."""
+        await asyncio.sleep(5) # Espera 5 segundos para receber todas as propostas
+        
+        if self.proposals_received < self.proposals_expected:
+            self.agent.logger.warning(f"[RECHARGE] Timeout atingido. Recebidas {self.proposals_received}/{self.proposals_expected} propostas. A iniciar análise.")
+        
+        self.kill() # Termina o CyclicBehaviour
+        self.agent.add_behaviour(AnalyseRechargeProposalsBehaviour(self.cfp_id))
 
 
 class HarvestExecutionBehaviour(OneShotBehaviour):
@@ -285,6 +377,7 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
         self.agent.logger.info(f"[HARVEST] A iniciar colheita para CFP {self.cfp_id} em {self.zone}.")
         
         try:
+            self.status = "moving"
             # 1. Simular ida ao local
             self.agent.logger.info(f"[HARVEST] A viajar para {self.zone}. Custo de combustível (ida e volta): {self.fuel_cost:.2f}.")
             await asyncio.sleep(5) # Simular tempo de viagem
@@ -445,13 +538,19 @@ class HarvesterAgent(Agent):
         self.fuel_level = 100  # Nível inicial de combustível
         self.status = "idle"  # harvesting, planting, refueling, idle
         self.env_jid = env_jid
-        self.log_jid = log_jid
+        # Garante que self.log_jids é uma lista, mesmo que apenas um JID seja passado
+       
+        self.log_jids = log_jid
+        
+        # Estrutura para armazenar propostas de reabastecimento recebidas
+        self.recharge_proposals = {}
+        self.chosen_logistic_agent = None # Agente logístico escolhido para o reabastecimento
 
         # Estrutura para armazenar propostas recebidas (por cfp_id)
         self.awaiting_proposals = {}
         
     # =====================
-    #   MÉTODOS DE COMUNICAÇÃO
+    # MÉTODOS DE COMUNICAÇÃO
     # =====================
     
     async def send_propose_task(self, to, cfp_id, distance, fuel_cost):
@@ -462,8 +561,7 @@ class HarvesterAgent(Agent):
             "sender_id": str(self.jid),
             "receiver_id": str(to),
             "cfp_id": cfp_id,
-            "eta_ticks": max(1, eta_ticks), # Mínimo de 1 tick
-            
+            "eta_ticks": max(1, eta_ticks), # Mínimo de 1 tick  
             "fuel_cost": fuel_cost,
         }
         msg = make_message(to, PERFORMATIVE_PROPOSE_TASK, body)
@@ -520,20 +618,25 @@ class HarvesterAgent(Agent):
         self.logger.warning(f"[FAILURE] Tarefa {cfp_id} falhou.")
 
     async def send_recharge_cfp(self, resource_type, amount, seed_type=None):
-        """Envia um CFP de reabastecimento ao Logistic Agent."""
+        """Envia um CFP de reabastecimento a todos os Logistic Agents."""
         cfp_id = f"cfp_recharge_{time.time()}"
-        body = {
-            "sender_id": str(self.jid),
-            "receiver_id": str(self.log_jid),
-            "cfp_id": cfp_id,
-            "task_type": resource_type, # fuel ou seeds
-            "required_resources": amount,
-            "seed_type": seed_type,
-            "priority": "Urgent"
-        }
-        msg = make_message(self.log_jid, PERFORMATIVE_CFP_RECHARGE, body)
-        await self.send(msg)
-        self.logger.info(f"[RECHARGE] CFP de reabastecimento ({resource_type}, {amount}) enviado: {cfp_id}.")
+        
+        # Limpar propostas anteriores antes de enviar um novo CFP
+        self.recharge_proposals = {}
+        
+        for log_jid in self.log_jids:
+            body = {
+                "sender_id": str(self.jid),
+                "receiver_id": str(log_jid),
+                "cfp_id": cfp_id,
+                "task_type": resource_type, # fuel ou seeds
+                "required_resources": amount,
+                "seed_type": seed_type,
+                "priority": "Urgent"
+            }
+            msg = make_message(log_jid, PERFORMATIVE_CFP_RECHARGE, body)
+            await self.send(msg)
+            self.logger.info(f"[RECHARGE] CFP de reabastecimento ({resource_type}, {amount}) enviado para {log_jid}: {cfp_id}.")
 
     # =====================
     #   SETUP
