@@ -1,3 +1,11 @@
+'''
+Caso o soil agent peça fertilização numa coluna inteira, o fertilizer agent deve ser capaz de calcular o ETA
+com base na distância Manhattan (número de blocos a percorrer) mais o tempo fixo de ação (5 ticks).
+Além disso, ao executar a tarefa, o fertilizer agent deve aplicar o fertilizante em todos os blocos da coluna especificada.
+Ao invés de aplicar fertilização numa área 2x2, ele deve aplicar em todos os blocos da coluna.
+'''
+
+
 import time
 import json
 import random
@@ -136,9 +144,22 @@ class FertilizerAgent:
         self.energy = max(0, self.energy - energy_lost)
         self.fertilizer_stock_kg -= required_fertilizer
         
-        # 2. Execute Field Action (Simulated)
+        # 2. Move to Target Zone (Simulated)
+        target_row, target_col = zone[0], zone[1]
+        
+        print(f"[{self.agent_id}] Moving from ({self.row}, {self.col}) to target column {target_col}...")
+        
+        # Simulate movement: update agent's position to the target column (e.g., row 0 of the column)
+        # The time taken for movement is already accounted for in the ETA calculation.
+        self.row = target_row
+        self.col = target_col
+        
+        print(f"[{self.agent_id}] Arrived at ({self.row}, {self.col}). Starting fertilization.")
+        
+        # 3. Execute Field Action (Simulated)
         # The zone is now [0, col] for the entire column
-        start_row, col_to_fertilize = zone[0], zone[1]
+        # start_row, col_to_fertilize = zone[0], zone[1] # Already extracted above
+        col_to_fertilize = target_col
         
         # Determine the number of blocks in the column (assuming ROWS is available)
         try:
@@ -165,9 +186,12 @@ class FertilizerAgent:
         print(f"[{self.agent_id}] Task {cfp_id} executed. {executed_blocks} blocks fertilized in column {col_to_fertilize}.")
 
         # 3. Report Completion
-        # NOTE: Recalculate ETA for the Done message details
-        target_row, target_col = zone[0], zone[1]
-        time_taken = self._calculate_eta(target_row, target_col)
+        # 4. Report Completion
+        # The time taken is the ETA calculated during the proposal phase, which includes travel and action time.
+        # For the Done message, we can use the time_taken from the original ETA calculation.
+        # Since the agent is now at the target location, the distance part of ETA is 0, so we use the action time.
+        ACTION_TIME = 5 # Fixed action time from _calculate_eta
+        time_taken = ACTION_TIME
         
         done_message = self._create_done_message(cfp_id, cfp_message["sender_id"], energy_lost, required_fertilizer, time_taken)
         print(f"[{self.agent_id}] Reporting 'Done' to {cfp_message['sender_id']}: \n{json.dumps(done_message, indent=4)}")

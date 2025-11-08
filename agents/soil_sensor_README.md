@@ -1,77 +1,30 @@
-# Soil Agent
+# Soil Sensor Agent (soil_sensor_agent_column.py)
 
-The `SoilAgent` is responsible for monitoring the soil conditions (nutrients and moisture) in a 2x2 area, managing its own energy, and initiating requests for corrective actions when necessary.
+## Visão Geral
+O `Soil Sensor Agent` é responsável por monitorar as condições do solo (nutrientes e umidade) em uma coluna específica do campo. Ele atua como um agente de monitoramento, utilizando o protocolo **Contract Net Protocol (CNP)** para solicitar a intervenção de agentes executores (como o `Fertilizer Agent` ou o `Irrigation Agent`) quando as condições do solo caem abaixo de um limiar aceitável.
 
-## Functionality
+## Funcionalidades Principais
+1.  **Monitoramento por Coluna:** Calcula a média das condições de nutrientes e umidade para todos os blocos em uma coluna designada.
+2.  **Detecção de Necessidade:** Compara as médias calculadas com os limiares ideais.
+3.  **Iniciação de CFP:** Se uma necessidade for detectada (por exemplo, baixo nutriente), o agente inicia um **Call For Proposal (CFP)** para a tarefa de aplicação de fertilizante ou irrigação, especificando a coluna inteira como a zona de ação.
+4.  **Seleção de Proposta:** Recebe propostas dos agentes executores, seleciona a melhor (geralmente a com menor ETA) e envia uma mensagem de `accept-proposal`.
+5.  **Confirmação de Conclusão:** Recebe a mensagem `Done` do agente executor após a conclusão da tarefa.
 
-1.  **Initialization:** The agent is initialized with its position (`row`, `col`), which serves as the **bottom-left corner** of its 2x2 monitoring area.
-2.  **Energy Management:**
-    *   Starts with **100** energy.
-    *   Loses a random amount of energy between **2 and 4** with every monitoring cycle.
-    *   If energy drops to **40 or below**, it sends a **CFP** to the `LogisticsAgent` for recharge.
-3.  **2x2 Area Monitoring:**
-    *   The agent monitors a 2x2 block area defined by the coordinates:
-        *   `(row, col)` (Bottom-Left - The block he is in)
-        *   `(row - 1, col)` (Top-Left - The block above)
-        *   `(row, col + 1)` (Bottom-Right - The block to the right)
-        *   `(row - 1, col + 1)` (Top-Right - The upper right diagonal)
-    *   It uses `field.get_soil(r, c)` for each block.
-    *   **Out-of-bounds** blocks are ignored and do not contribute to the mean calculation.
-4.  **Threshold Check:** It calculates the **mean** of the nutrient and moisture levels across the valid blocks in its 2x2 area. If the mean drops below **60**, it triggers an action for the entire 2x2 area.
-5.  **Communication:**
-    *   If **Mean Nutrients** are below the threshold, it sends a **Call For Proposal (CFP)** with the `task_type: "fertilize_application"` to the `FertilizerAgent`.
-    *   If **Mean Moisture** is below the threshold, it sends a **Call For Proposal (CFP)** with the `task_type: "irrigation_aplication"` to the `IrrigationAgent`.
+## Protocolo de Comunicação
+O agente utiliza os seguintes performativos do protocolo de comunicação:
 
-## Communication Protocol (CFP)
+| Performative | Uso |
+| :--- | :--- |
+| `cfp_task` | Enviado para solicitar uma tarefa (e.g., `fertilize_application`) para a coluna monitorada. |
+| `propose_task` | Recebido dos agentes executores em resposta ao `cfp_task`. |
+| `accept-proposal` | Enviado para o agente executor com a melhor proposta. |
+| `reject-proposal` | Enviado para os agentes executores com propostas não selecionadas. |
+| `Done` | Recebido do agente executor após a conclusão da tarefa. |
 
-The agent uses the `cfp_task` and `cfp_recharge` performatives as defined in `protocolos.md`.
+## Estrutura da Zona
+A zona de ação no `cfp_task` é definida como `[0, self.col]`, indicando que a tarefa se aplica a toda a coluna `self.col`, começando da linha 0.
 
-### CFP for Fertilization (2x2 Area)
-
-```json
-{
-    "sender_id": "SoilAgent_r_c",
-    "receiver_id": "FertilizerAgent",
-    "cfp_id": "cfp_fertilize_time.time()",
-    "task_type": "fertilize_application",
-    "seed_type": 0,
-    "zone": [r, c],
-    "area_size": "2x2",
-    "required_resources": [
-        {"type": "fertilizer", "amount": 4.0, "unit": "KG"}
-    ],
-    "priority": "High"
-}
-```
-
-### CFP for Irrigation (2x2 Area)
-
-```json
-{
-    "sender_id": "SoilAgent_r_c",
-    "receiver_id": "IrrigationAgent",
-    "cfp_id": "cfp_irrigation_time.time()",
-    "task_type": "irrigation_aplication",
-    "seed_type": 0,
-    "zone": [r, c],
-    "area_size": "2x2",
-    "required_resources": [
-        {"type": "water", "amount": 400.0, "unit": "L"}
-    ],
-    "priority": "High"
-}
-```
-
-### CFP for Energy Recharge
-
-```json
-{
-    "sender_id": "SoilAgent_r_c",
-    "receiver_id": "LogisticsAgent",
-    "cfp_id": "cfp_recharge_time.time()",
-    "task_type": "battery",
-    "required_resources": 60, // Example: amount needed to reach 100
-    "seed_type": 0,
-    "priority": "Urgent"
-}
-```
+## Dependências
+- `config.py`: Para constantes como `ROWS` e limiares de nutrientes.
+- `protocolos.md`: Para a estrutura das mensagens de comunicação.
+- `Field`: Para interagir com o estado atual do campo (simulação).
