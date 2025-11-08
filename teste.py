@@ -51,11 +51,11 @@ def aply(field):
         case 2:
             field.toggle_drought()
         case 3:
-            row,col = map(int, input("Row, Col: ").split())
-            field.apply_irrigation(row,col,4)
+            col = int(input("Col: "))
+            field.apply_irrigation(0,col,4)
         case 4:
-            row,col = map(int, input("Row, Col: ").split())
-            field.apply_fertilize(row,col)            
+            col = int(input("Col: "))
+            field.apply_fertilize(0,col,1)   
         case 5:
             row,col = map(int, input("Row, Col: ").split())
             plant_type = int(input("Tipo de planta :"))

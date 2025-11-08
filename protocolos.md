@@ -15,8 +15,40 @@ O Drone envia um inform ao agente Logistic a dizer se é preciso colher ou plant
     "state": "0 -> not planted      1 -> Ready for harvasting",
     "checked_at": "time.time()"
 }
-``` 
+```
 
+**Performative:** `inform_harvest`
+
+```json
+{   
+    "sender_id",
+    "receiver_id",
+
+    "inform_id": "inform_harvest_time.time()",
+    "amount_type":[
+        {"seed_type": 0 ,"amount", 1 (KG)},
+        {"seed_type": 1 ,"amount", 1 (KG)},
+        {"seed_type": 2 ,"amount", 1 (KG)},
+        {"seed_type": 3 ,"amount", 1 (KG)},
+        {"seed_type": 4 ,"amount", 1 (KG)},
+        {"seed_type": 5 ,"amount", 1 (KG)},
+    ],
+    "checked_at": "time.time()"
+}
+```
+
+**Performative:** `inform_received`
+
+```json
+{   
+    "sender_id",
+    "receiver_id",
+
+    "inform_id": "inform_received_time.time()",
+    "details" : {"seed_type": 0, "amount": 1}
+    "checked_at": "time.time()"
+}
+```
 
 # 2. CFP (Call For Proposal)
 
@@ -55,6 +87,7 @@ Usado pelos agentes Drone, SoilSensor, Fertelizer, Irrigation e Harvester para s
     "cfp_id": "cfp_recharge_time.time()",
     "task_type": "water", // enum: battery | fuel | seeds | pesticides | fertilizer | water
     "required_resources": 10, //enum: 80 mA  | 20 L | 10 g  |   1 KG     |   1 Kg     | 10 L
+    "position": (1,1), // tupla
     "seed_type": 1, // int que identifica o tipo de seed
     "priority": "High", // ou Medium, Low, Urgent
 }

@@ -10,7 +10,7 @@ from agents.drone_agent import DroneAgent
 #from agents.harvester_agent import HarvesterAgent
 #from agents.soil_sensor_agent import SoilAgent
 #from agents.fertilizer_agent import FertilizationAgent
-#from agents.irrigation_agent import IrrigationAgent
+from agents.irrigation_agent import IrrigationAgent
 
 from config_agents import (
     DRONE_JID, DRONE_PASS,
@@ -52,13 +52,13 @@ async def main():
     await env_agent.start()
     logger.info("Agente Ambiente em execução. Pressione Ctrl+C para parar.")
 
+    Irrig_agent = IrrigationAgent(IRRIG_JID[0], IRRIG_PASS[0], LOG_JID[0], ENV_JID[0],0, 0)
+    await Irrig_agent.start()
+    logger.info("Agente Irrigação em execução.")
+
     human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
     await human_agent.start()
     logger.info("Agente Humano em execução. Pressione Ctrl+C para parar.")
-
-    drone_agent = DroneAgent(DRONE_JID[0], DRONE_PASS[0],[(0,0),(0,1),(0,2),(0,3)],0,0)
-    await drone_agent.start()
-    logger.info("Agente Drone em execução.")
 
     # Manter o agente a correr
     try:
@@ -66,13 +66,14 @@ async def main():
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         pass
+    '''
     finally:
         if env_agent.is_alive():
             await env_agent.stop()
         logger.info("Agente Ambiente parado.")
         if human_agent.is_alive():
             await human_agent.stop()
-        logger.info("Agente Humano parado.")
+        logger.info("Agente Humano parado.") '''
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ from agents.message import make_message
 # Constantes de Limite
 BATTERY_LOW_THRESHOLD = 20.0
 PESTICIDE_LOW_THRESHOLD = 3.0
+ONTOLOGY_FARM_DATA = "farm_data"
 
 # =====================
 #   BEHAVIOURS
@@ -60,13 +61,14 @@ class DoneFailure(OneShotBehaviour):
 class CFPBehaviour(OneShotBehaviour):
     """Comportamento que envia um CFP e espera propostas."""
 
-    def __init__(self, timeout_wait, task_type, required_resources, priority):
+    def __init__(self, timeout_wait, task_type, required_resources, priority,position):
         super().__init__()
         self.timeout_wait = timeout_wait
         self.task_type = task_type
         self.required_resources = required_resources
         self.priority = priority
         self.task_id = f"cfp_{time.time()}"
+        self.position = position
 
     async def run(self):
         self.agent.logger.info(f"[DRO][CFP] Enviando CFP {self.task_id} para {self.task_type}")
@@ -77,6 +79,7 @@ class CFPBehaviour(OneShotBehaviour):
             "cfp_id": self.task_id,
             "task_type": self.task_type,  # battery | pesticides
             "required_resources": self.required_resources,
+            "position": self.position,  # Posição do drone para recarga/reabastecimento
             "priority": self.priority,
         }
         msg = make_message(self.agent.logistics_jid, "cfp_recharge", body)
@@ -171,10 +174,11 @@ class PatrolBehaviour(PeriodicBehaviour):
         msg = make_message(
             to=self.agent.environment_jid,
             performative="request",
-            ontology="farm_data",
             body_dict=body,
         )
         
+        msg.set_metadata("ontology", ONTOLOGY_FARM_DATA)
+        msg.set_metadata("performative", "request")
         self.agent.logger.info(f"[DRO] Solicitando dados de drone para ({row},{col}) ao Environment Agent.")
         
         # Envia a mensagem e espera pela resposta (inform)
@@ -232,7 +236,6 @@ class PatrolBehaviour(PeriodicBehaviour):
         msg = make_message(
             to=self.agent.environment_jid,
             performative="act",
-            ontology="farm_action",
             body_dict=body,
         )
 
@@ -379,6 +382,8 @@ class DroneAgent(Agent):
 
         # Estrutura para armazenar propostas recebidas (por cfp_id)
         self.awaiting_proposals = {}
+
+        self.waiting_informs = {}
 
     # =====================
     #   SETUP

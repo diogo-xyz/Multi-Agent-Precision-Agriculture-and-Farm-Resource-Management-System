@@ -1,15 +1,12 @@
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
-from spade.message import Message
 import time
 import asyncio
 import json
 import logging
-import random
 
 from agents.message import make_message
-from agents.config_agents import LOG_JID, SOIL_JID # Importar para usar as listas de JIDs
 
 # Constantes
 PERFORMATIVE_CFP_TASK = "cfp_task"
@@ -40,6 +37,7 @@ def calculate_energy_cost(distance):
 #   Comportamentos
 # =================================================================================
 
+
 class CheckRechargeBehaviour(PeriodicBehaviour):
     """Verifica periodicamente se é necessário recarregar água ou energia."""
     async def run(self):
@@ -50,16 +48,29 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
         low_water = self.agent.water_capacity < 0.15 * self.agent.water_capacity_max
         low_energy = self.agent.energy < 15 # 15% de 100 é 15
 
-        if low_water or low_energy:
-            self.agent.logger.info(f"[IRRI] Recursos baixos. Água: {self.agent.water_capacity}L, Energia: {self.agent.energy}. A solicitar recarga...")
+        if low_water:
+            self.agent.logger.info(f"[IRRI] Água baixa: {self.agent.water_capacity}L. A solicitar recarga de água...")
             self.agent.status = "charging"
             
             # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
-            cfp_id = await self.agent.send_cfp_recharge_to_all(low_water, low_energy)
+            cfp_id = await self.agent.send_cfp_recharge_to_all(low_water=True, low_energy=False)
             
             # Adiciona o comportamento para receber as propostas
             receive_proposals_b = ReceiveRechargeProposalsBehaviour(cfp_id)
             self.agent.add_behaviour(receive_proposals_b)
+            return # Sai para processar apenas uma recarga de cada vez
+
+        if low_energy:
+            self.agent.logger.info(f"[IRRI] Energia baixa: {self.agent.energy}. A solicitar recarga de bateria...")
+            self.agent.status = "charging"
+            
+            # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
+            cfp_id = await self.agent.send_cfp_recharge_to_all(low_water=False, low_energy=True)
+            
+            # Adiciona o comportamento para receber as propostas
+            receive_proposals_b = ReceiveRechargeProposalsBehaviour(cfp_id)
+            self.agent.add_behaviour(receive_proposals_b)
+            return # Sai para processar apenas uma recarga de cada vez
 
 
 class ReceiveCFPTaskBehaviour(CyclicBehaviour):
@@ -93,7 +104,7 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
                 
                 if water_needed == 0:
                     self.agent.logger.warning(f"[IRRI] CFP {cfp_id} não especifica água necessária. A rejeitar.")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id, "Recurso 'water' não especificado.")
+                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
                     return
 
                 # 1. Calcular Distância e Custo
@@ -113,13 +124,13 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
                 # Se a água necessária for maior que a capacidade atual
                 if water_needed > self.agent.water_capacity:
                     self.agent.logger.info(f"[IRRI] CFP {cfp_id} rejeitado: Água insuficiente ({water_needed}L necessários, {self.agent.water_capacity}L disponíveis).")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id, "Água insuficiente.")
+                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
                     return
                 
                 # Se o custo de energia for maior que a energia atual
                 if energy_cost > self.agent.energy:
                     self.agent.logger.info(f"[IRRI] CFP {cfp_id} rejeitado: Energia insuficiente ({energy_cost} necessários, {self.agent.energy} disponíveis).")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id, "Energia insuficiente.")
+                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
                     return
                 
                 # 3. Aceitar e Propor
@@ -276,18 +287,18 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
                     # Falha na irrigação (EnvironmentAgent reportou erro)
                     self.agent.logger.error(f"[IRRI] Falha na irrigação em {target_pos}. Mensagem do ENV: {reply_content.get('message')}")
                     self.agent.status = "idle"
-                    await self.agent.send_failure(sender_jid, cfp_id, f"Falha na interação com o EnvironmentAgent: {reply_content.get('message')}")
+                    await self.agent.send_failure(sender_jid, cfp_id)
                     
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[IRRI] Erro ao descodificar JSON da resposta do EnvironmentAgent: {env_reply.body}")
                 self.agent.status = "idle"
-                await self.agent.send_failure(sender_jid, cfp_id, "Resposta inválida do EnvironmentAgent.")
+                await self.agent.send_failure(sender_jid, cfp_id)
             
         else:
             # Timeout na resposta do EnvironmentAgent
             self.agent.logger.error(f"[IRRI] Timeout ao esperar resposta do EnvironmentAgent para irrigação em {target_pos}.")
             self.agent.status = "idle"
-            await self.agent.send_failure(sender_jid, cfp_id, "Timeout na resposta do EnvironmentAgent.")
+            await self.agent.send_failure(sender_jid, cfp_id)
 
 class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
     """Recebe propostas de recarga de todos os LogisticAgents, seleciona a melhor e aceita/rejeita."""
@@ -295,7 +306,7 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
-        self.timeout = 10 # Tempo para esperar por todas as propostas
+        self.timeout = 5 # Tempo para esperar por todas as propostas
 
     async def run(self):
         self.agent.logger.info(f"[IRRI] A aguardar propostas de recarga para CFP {self.cfp_id}...")
@@ -315,8 +326,8 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                     if content.get("cfp_id") == self.cfp_id:
                         self.proposals.append({
                             "sender": str(msg.sender),
-                            "eta_ticks": content.get("eta_ticks", float('inf')),
-                            "resources": content.get("resources", 0)
+                            "eta_ticks": content.get("eta_ticks"),
+                            "resources": content.get("resources")
                         })
                         self.agent.logger.info(f"[IRRI] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
                 except json.JSONDecodeError:
@@ -347,7 +358,7 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 
             else:
                 # Rejeitar
-                await self.agent.send_reject_proposal(proposal['sender'], self.cfp_id, "Proposta menos favorável.")
+                await self.agent.send_reject_proposal(proposal['sender'], self.cfp_id)
                 self.agent.logger.info(f"[IRRI] Proposta de {proposal['sender']} REJEITADA.")
 
 class ExecuteRechargeBehaviour(CyclicBehaviour):
@@ -375,7 +386,6 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
         # Template para receber DONE do LogisticAgent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_DONE)
-        template.set_metadata("protocol", "recharge_protocol") # Assumindo um protocolo para recarga
 
         msg = await self.receive(timeout=5)
         
@@ -389,14 +399,27 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
                     if content.get("cfp_id") == self.cfp_id:
                         self.agent.logger.info(f"[IRRI] Mensagem DONE recebida de {self.logistic_jid}. Recarga concluída.")
                         
-                        # Repor Recursos
-                        if self.agent.water_capacity < self.agent.water_capacity_max:
-                            self.agent.water_capacity = self.agent.water_capacity_max
-                            self.agent.logger.info(f"[IRRI] Recarga de ÁGUA concluída. Água atual: {self.agent.water_capacity}L.")
+                        # Repor Recursos com base nos detalhes da mensagem DONE
+                        details = content.get("details", {})
+                        
+                        # O utilizador forneceu um exemplo com "water_used" e "time_taken".
+                        # Assumindo que "water_used" é a quantidade de água recarregada.
+                        water_replenished = details.get("water_used", 0)
+                        # Para a bateria, o LogisticAgent deve enviar a quantidade recarregada.
+                        # Vamos assumir a chave "energy_used" para consistência.
+                        energy_replenished = details.get("energy_used", 0)
+                        
+                        if water_replenished > 0:
+                            self.agent.water_capacity = min(self.agent.water_capacity + water_replenished, self.agent.water_capacity_max)
+                            self.agent.logger.info(f"[IRRI] Recarga de ÁGUA concluída. Reposto: {water_replenished}L. Água atual: {self.agent.water_capacity}L.")
                             
-                        if self.agent.energy < 100:
-                            self.agent.energy = 100
-                            self.agent.logger.info(f"[IRRI] Recarga de ENERGIA concluída. Energia atual: {self.agent.energy}.")
+                        if energy_replenished > 0:
+                            self.agent.energy = min(self.agent.energy + energy_replenished, 100)
+                            self.agent.logger.info(f"[IRRI] Recarga de ENERGIA concluída. Reposto: {energy_replenished}. Energia atual: {self.agent.energy}.")
+                            
+                        # O tempo gasto na recarga é o time_taken
+                        time_taken = details.get("time_taken", 0)
+                        self.agent.logger.info(f"[IRRI] Tempo total de recarga: {time_taken} ticks.")
                             
                         self.agent.status = "idle"
                         self.agent.logger.info("[IRRI] Agente de Irrigação de volta ao estado 'idle'.")
@@ -494,42 +517,37 @@ class IrrigationAgent(Agent):
         msg = make_message(to_jid, PERFORMATIVE_PROPOSE_TASK, body)
         await self.send(msg)
 
-    async def send_reject_proposal(self, to_jid, cfp_id, reason=""):
+    async def send_reject_proposal(self, to_jid, cfp_id):
         """Envia uma rejeição de proposta de tarefa ou recarga."""
         body = {
             "cfp_id": cfp_id,
             "decision": "reject",
-            "details": reason
         }
         msg = make_message(to_jid, PERFORMATIVE_REJECT_PROPOSAL, body)
         await self.send(msg)
 
-    async def send_failure(self, to_jid, cfp_id, reason=""):
+    async def send_failure(self, to_jid, cfp_id):
         """Envia uma mensagem de falha na execução da tarefa."""
         body = {
             "cfp_id": cfp_id,
             "status": "failed",
-            "details": reason
         }
         msg = make_message(to_jid, PERFORMATIVE_FAILURE, body)
         await self.send(msg)
 
     async def send_cfp_recharge_to_all(self, low_water, low_energy):
-        """Envia um CFP (Call For Proposal) para recarga de água e/ou energia a TODOS os LogisticAgents."""
+        """Envia um CFP (Call For Proposal) para recarga de água ou energia a TODOS os LogisticAgents."""
         
         # Gera um ID único para o CFP de recarga
         cfp_id = f"recharge_{self.jid}_{time.time()}"
         
-        # Determina o tipo de recurso necessário
-        if low_water and low_energy:
-            task_type = "water_and_battery" # Tipo inventado, mas que engloba ambos
-            required_resources = f"{self.water_capacity_max - self.water_capacity}L de água e {100 - self.energy} de energia"
-        elif low_water:
+        # Determina o tipo de recurso necessário e a quantidade (inteiro)
+        if low_water:
             task_type = "water"
-            required_resources = f"{self.water_capacity_max - self.water_capacity}L de água"
+            required_resources = int(self.water_capacity_max - self.water_capacity)
         elif low_energy:
             task_type = "battery"
-            required_resources = f"{100 - self.energy} de energia"
+            required_resources = int(100 - self.energy)
         else:
             # Não deve acontecer, mas por segurança
             return None
@@ -537,14 +555,15 @@ class IrrigationAgent(Agent):
         body = {
             "cfp_id": cfp_id,
             "task_type": task_type,
-            "required_resources": required_resources, # O LogisticAgent terá de interpretar isto
+            "required_resources": required_resources,
+            "position": self.position,
             "priority": "High",
         }
         
         for to_jid in self.log_jid:
             msg = make_message(to_jid, PERFORMATIVE_CFP_RECHARGE, body)
             await self.send(msg)
-            self.logger.info(f"[IRRI] CFP_RECHARGE ({cfp_id}) enviado para {to_jid} a pedir {task_type}.")
+            self.logger.info(f"[IRRI] CFP_RECHARGE ({cfp_id}) enviado para {to_jid} a pedir {task_type} ({required_resources}).")
             
         return cfp_id
 

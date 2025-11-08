@@ -87,11 +87,13 @@ class Field:
         self.pest.apply_pesticide(row,col,neighbor_effect= 0.75)
 
     def apply_irrigation(self,row,col,flow_rate_lph):
-        self.moisture.apply_irrigation(row,col,flow_rate_lph)
+        for i in range(ROWS):
+            self.moisture.apply_irrigation(i,col,flow_rate_lph)
 
     def apply_fertilize(self,row,col,fertilzer_kg):
-        self.nutrients.apply_fertilize(row,col,fertilzer_kg)
-    
+        for i in range(ROWS):
+            self.nutrients.apply_fertilize(i,col,fertilzer_kg)
+            
     def get_drone(self,row,col):
         return [self.crop.crop_stage[row,col], self.crop.crop_type[row,col], self.pest.pest[row,col]]
 

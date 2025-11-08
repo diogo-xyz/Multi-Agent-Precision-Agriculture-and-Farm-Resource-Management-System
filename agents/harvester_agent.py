@@ -1,11 +1,11 @@
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
-from spade.message import Message
 import time
 import asyncio
 import json
 import logging
+import random
 
 from agents.message import make_message
 
@@ -21,9 +21,13 @@ PERFORMATIVE_PROPOSE_RECHARGE = "propose_recharge"
 PERFORMATIVE_INFORM = "inform"
 ONTOLOGY_FARM_ACTION = "farm_action"
 
+PERFORMATIVE_INFORM_HARVEST = "inform_harvest"
+PERFORMATIVE_INFORM_RECEIVED = "inform_received"
+
 # =====================
 #   FUNÇÕES AUXILIARES
 # =====================
+
 
 def calculate_distance(pos1, pos2):
     """Calcula a distância de Manhattan entre duas posições (row, col)."""
@@ -39,6 +43,84 @@ def calculate_fuel_cost(distance):
 # =====================
 #   BEHAVIOURS
 # =====================
+
+class HarvestYieldBehaviour(PeriodicBehaviour):
+    """Verifica o rendimento e inicia o processo de colheita quando atinge o limite."""
+
+    async def run(self):
+        if self.agent.status == "idle": # Só pode iniciar a colheita se estiver livre
+            harvest_ready = False
+            for seed_type, amount in self.agent.yield_seed.items():
+                if amount >= 100:
+                    harvest_ready = True
+                    break
+            
+            if harvest_ready:
+                self.agent.logger.info(f"[YIELD] Limite de colheita atingido. A iniciar processo de entrega.")
+                self.agent.status = "delivering_harvest"
+                # Escolhe um logístico aleatoriamente
+                logistic_agent_jid = random.choice(self.agent.log_jids)
+                
+                # Inicia o comportamento de entrega
+                delivery_behaviour = DeliverHarvestBehaviour(logistic_agent_jid)
+                self.agent.add_behaviour(delivery_behaviour)
+
+class DeliverHarvestBehaviour(OneShotBehaviour):
+    """Simula a viagem e envia a colheita para um agente logístico."""
+    def __init__(self, logistic_jid):
+        super().__init__()
+        self.logistic_jid = logistic_jid
+
+    async def run(self):
+        self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.logistic_jid}.")
+        
+        # Simula o tempo de viagem (ida e volta)
+        await asyncio.sleep(5)
+        
+        # Prepara a mensagem com os dados da colheita
+        amount_type_list = []
+        for seed_type, amount in self.agent.yield_seed.items():
+            if amount >= 100:
+                amount_type_list.append({"seed_type": seed_type, "amount": amount})
+                break
+
+        # Envia a mensagem `inform_harvest`
+        await self.agent.send_inform_harvest(self.logistic_jid, amount_type_list)
+        self.agent.logger.info(f"[DELIVERY] Mensagem 'inform_harvest' enviada para {self.logistic_jid}.")
+
+class InformReceivedReceiver(CyclicBehaviour):
+    """Recebe a confirmação 'inform_received' do agente logístico."""
+    async def run(self):
+        template = Template()
+        template.set_metadata("performative", PERFORMATIVE_INFORM_RECEIVED)
+        msg = await self.receive(timeout=5)
+
+        if msg:
+            try:
+                content = json.loads(msg.body)
+                self.agent.logger.info(f"[DELIVERY] Confirmação 'inform_received' recebida de {msg.sender}.")
+                
+                # Extrai os detalhes do que foi recebido
+                details = content.get("details")
+                if details:
+                    seed_type = details.get("seed_type")
+                    amount_received = details.get("amount")
+
+                    # Atualiza o yield_seed, subtraindo a quantidade entregue
+                    if seed_type in self.agent.yield_seed:
+                        self.agent.yield_seed[seed_type] -= amount_received
+                        self.agent.logger.info(f"[DELIVERY] Yield de semente {seed_type} atualizado. Novo valor: {self.agent.yield_seed[seed_type]}.")
+
+                # O agente volta ao estado 'idle' após a confirmação
+                self.agent.status = "idle"
+                self.agent.logger.info("[STATUS] Agente voltou ao estado 'idle'.")
+
+            except json.JSONDecodeError:
+                self.agent.logger.error(f"[DELIVERY] Erro ao descodificar JSON da confirmação: {msg.body}")
+            except Exception as e:
+                self.agent.logger.exception(f"[DELIVERY] Erro ao processar 'inform_received': {e}")
+                self.agent.status = "idle" # Garante que o agente não fica bloqueado
+
 
 class CheckResourcesBehaviour(PeriodicBehaviour):
     """Verifica periodicamente o nível de combustível e sementes e solicita reabastecimento se necessário."""
@@ -96,8 +178,10 @@ class CFPTaskReceiver(CyclicBehaviour):
                 
                 # 3. Verificar Capacidade e Recursos
                 can_accept = False
+
+                if self.agent.status != "idle": can_accept = False
                 
-                if task_type == "harvest_application":
+                elif task_type == "harvest_application":
                     # Colheita: Verificar capacidade de armazenamento e combustível
                     required_storage = next((res["amount"] for res in required_resources if res["type"] == "storage"), 0)
                     
@@ -241,7 +325,7 @@ class AnalyseRechargeProposalsBehaviour(OneShotBehaviour):
 
 
 class RechargeResponseReceiver(CyclicBehaviour):
-    """Recebe e processa as respostas (Propose/Accept/Reject/Done) ao CFP de reabastecimento."""
+    """Recebe e processa as respostas (Failure/Done) ao CFP de reabastecimento."""
 
     def __init__(self):
         super().__init__()
@@ -250,17 +334,10 @@ class RechargeResponseReceiver(CyclicBehaviour):
         self.proposals_expected = 0
         self.timeout_task = None
 
-    async def on_start(self):
-        # O número de propostas esperadas é o número de Logistic Agents
-        self.proposals_expected = len(self.agent.log_jids)
-        self.agent.logger.info(f"[RECHARGE] Esperando {self.proposals_expected} propostas de reabastecimento.")
-
     async def run(self):
         # Espera por mensagens Propose, Accept/Reject ou Done do Logistic Agent
         template = Template()
-        template.set_metadata("performative", PERFORMATIVE_PROPOSE_RECHARGE)
-        template.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
-        template.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
+        template.set_metadata("performative", PERFORMATIVE_FAILURE)
         template.set_metadata("performative", PERFORMATIVE_DONE)
         msg = await self.receive(timeout=5)
 
@@ -269,42 +346,9 @@ class RechargeResponseReceiver(CyclicBehaviour):
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
                 performative = msg.get_metadata("performative")
-                
-                if performative == PERFORMATIVE_PROPOSE_RECHARGE:
-                    # 1. Receber Proposta de Reabastecimento
-                    # O CFP ID é gerado no send_recharge_cfp, e é o mesmo para todos os agentes logísticos
-                    if self.cfp_id is None:
-                        self.cfp_id = cfp_id
+
                     
-                    self.proposals_received += 1
-                    
-                    eta_ticks = content.get("eta_ticks")
-                    
-                    self.agent.recharge_proposals[str(msg.sender)] = {
-                        "eta_ticks": eta_ticks,
-                        "sender": str(msg.sender),
-                        "cfp_id": cfp_id
-                    }
-                    self.agent.logger.info(f"[RECHARGE] Proposta de reabastecimento recebida de {msg.sender} com ETA: {eta_ticks}. Total de propostas: {self.proposals_received}/{self.proposals_expected}.")
-                    
-                    # Se todas as propostas foram recebidas, ou se o timeout já foi iniciado, 
-                    # podemos iniciar a análise imediatamente.
-                    if self.proposals_received == self.proposals_expected:
-                        self.agent.logger.info("[RECHARGE] Todas as propostas recebidas. A iniciar análise.")
-                        self.kill() # Termina o CyclicBehaviour
-                        self.agent.add_behaviour(AnalyseRechargeProposalsBehaviour(self.cfp_id))
-                        return
-                        
-                    # Se for a primeira proposta, inicia o timeout para esperar pelas restantes
-                    if self.proposals_received == 1 and self.timeout_task is None:
-                        self.timeout_task = self.agent.loop.create_task(self.start_timeout())
-                        
-                elif performative == PERFORMATIVE_ACCEPT_PROPOSAL:
-                    # 2. O Logistic Agent aceitou o nosso CFP. O HarvesterAgent espera agora pelo DONE.
-                    self.agent.logger.info(f"[RECHARGE] Proposta de reabastecimento {cfp_id} ACEITE. A aguardar conclusão do reabastecimento pelo Logistic Agent.")
-                    # O agente permanece em 'refueling'
-                    
-                elif performative == PERFORMATIVE_DONE:
+                if performative == PERFORMATIVE_DONE:
                     # 3. O Logistic Agent informa que o reabastecimento foi concluído.
                     details = content.get("details", {})
                     
@@ -318,9 +362,9 @@ class RechargeResponseReceiver(CyclicBehaviour):
                             self.agent.fuel_level = min(self.agent.fuel_level, 100)
                             self.agent.logger.info(f"[RECHARGE] Combustível reabastecido em {recharged_amount:.2f}. Nível atual: {self.agent.fuel_level:.2f}.")
                             
-                        if "seed_type" in details:
-                            # O Logistic Agent reabasteceu as sementes. O 'seeds_type' é a quantidade reabastecida.
-                            recharged_amount = details["seeds_type"]
+                        if "seed_used" in details:
+                            # O Logistic Agent reabasteceu as sementes. O 'seed_used' é a quantidade reabastecida.
+                            recharged_amount = details["seed_used"]
                             seed_type = details.get("seed_type")
                             
                             if seed_type is not None:
@@ -337,9 +381,9 @@ class RechargeResponseReceiver(CyclicBehaviour):
                     else:
                         self.agent.logger.warning(f"[RECHARGE] Recebido DONE de {msg.sender}, mas o agente escolhido é {self.agent.chosen_logistic_agent}. Ignorando atualização de recursos.")
                         
-                elif performative == PERFORMATIVE_REJECT_PROPOSAL:
-                    # 4. Rejeição de Proposta (pode ser do agente logístico que rejeitou o nosso CFP)
-                    self.agent.logger.warning(f"[RECHARGE] Proposta de reabastecimento {cfp_id} REJEITADA por {msg.sender}. O agente permanece em 'refueling'.")
+                elif performative == PERFORMATIVE_FAILURE:
+                    # 4. Falha na Proposta (pode ser do agente logístico que rejeitou o nosso CFP)
+                    self.agent.logger.warning(f"[RECHARGE] Proposta de reabastecimento {cfp_id} FALHOU por {msg.sender}. O agente permanece em 'refueling'.")
                     # O agente permanece em 'refueling' e o CheckResourcesBehaviour irá tentar novamente se necessário.
 
                     
@@ -349,16 +393,6 @@ class RechargeResponseReceiver(CyclicBehaviour):
                 self.agent.logger.exception(f"[RECHARGE] Erro ao processar resposta de reabastecimento: {e}")
         else:
             await asyncio.sleep(0.1)
-
-    async def start_timeout(self):
-        """Inicia um timeout para esperar pelas restantes propostas."""
-        await asyncio.sleep(5) # Espera 5 segundos para receber todas as propostas
-        
-        if self.proposals_received < self.proposals_expected:
-            self.agent.logger.warning(f"[RECHARGE] Timeout atingido. Recebidas {self.proposals_received}/{self.proposals_expected} propostas. A iniciar análise.")
-        
-        self.kill() # Termina o CyclicBehaviour
-        self.agent.add_behaviour(AnalyseRechargeProposalsBehaviour(self.cfp_id))
 
 
 class HarvestExecutionBehaviour(OneShotBehaviour):
@@ -371,6 +405,7 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
         self.logistic_agent = self.proposal_data["sender"]
         self.zone = self.proposal_data["zone"]
         self.fuel_cost = self.proposal_data["fuel_cost"]
+        self.seed_type = self.proposal_data["seed_type"]
         self.required_storage = next((res["amount"] for res in self.proposal_data["required_resources"] if res["type"] == "storage"), 0)
 
     async def run(self):
@@ -402,6 +437,7 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
                     
                     # 3. Atualizar o estado do agente
                     self.agent.machine_inventory += yield_amount
+                    self.agent.yield_seed[self.seed_type] += yield_amount
                     self.agent.fuel_level -= self.fuel_cost
                     
                     self.agent.logger.info(f"[HARVEST] Colheita concluída. Rendimento: {yield_amount:.2f}. Inventário: {self.agent.machine_inventory:.2f}. Combustível restante: {self.agent.fuel_level:.2f}.")
@@ -525,8 +561,18 @@ class HarvesterAgent(Agent):
         self.pos_initial = (row, col)
         self.row = row
         self.col = col
-        self.machine_capacity = 100  # Capacidade da máquina de colheita
+        self.machine_capacity = 600  # Capacidade da máquina de colheita
         self.machine_inventory = 0  # Inventário inicial da máquina (total_harvested)
+
+        self.yield_seed = {
+            0: 0, # 0: Tomate
+            1: 0, # 1: Pimento
+            2: 0, # 2: Trigo
+            3: 0, # 3: Couve
+            4: 0, # 4: Alface
+            5: 0  # 5: Cenoura
+        }
+
         self.seeds = {
             0: 500, # 0: Tomate 
             1: 500, # 1: Pimento
@@ -536,7 +582,7 @@ class HarvesterAgent(Agent):
             5: 500  # 5: Cenoura
         }
         self.fuel_level = 100  # Nível inicial de combustível
-        self.status = "idle"  # harvesting, planting, refueling, idle
+        self.status = "idle"  # harvesting, planting, refueling, idle, delivering_harvest
         self.env_jid = env_jid
         # Garante que self.log_jids é uma lista, mesmo que apenas um JID seja passado
        
@@ -617,6 +663,19 @@ class HarvesterAgent(Agent):
         await self.send(msg)
         self.logger.warning(f"[FAILURE] Tarefa {cfp_id} falhou.")
 
+    async def send_inform_harvest(self, to, amount_type_list):
+        """Envia uma mensagem inform_harvest para o agente logístico."""
+        body = {
+            "sender_id": str(self.jid),
+            "receiver_id": str(to),
+            "inform_id": f"inform_harvest_{time.time()}",
+            "amount_type": amount_type_list,
+            "checked_at": time.time()
+        }
+        msg = make_message(to, PERFORMATIVE_INFORM_HARVEST, body)
+        await self.send(msg)
+        self.logger.info(f"[HARVEST] Mensagem 'inform_harvest' enviada para {to}.")
+
     async def send_recharge_cfp(self, resource_type, amount, seed_type=None):
         """Envia um CFP de reabastecimento a todos os Logistic Agents."""
         cfp_id = f"cfp_recharge_{time.time()}"
@@ -631,6 +690,7 @@ class HarvesterAgent(Agent):
                 "cfp_id": cfp_id,
                 "task_type": resource_type, # fuel ou seeds
                 "required_resources": amount,
+                "position": self.pos_initial,
                 "seed_type": seed_type,
                 "priority": "Urgent"
             }
@@ -642,7 +702,7 @@ class HarvesterAgent(Agent):
     #   SETUP
     # =====================
 
-    def setup(self):
+    async def setup(self):
         self.logger.info(f"[HAR] HarvesterAgent {self.jid} iniciado. Posição: {self.pos_initial}")
         
         # 1. Comportamento para verificar recursos (combustível/sementes)
@@ -665,3 +725,11 @@ class HarvesterAgent(Agent):
         template_recharge_response.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
         template_recharge_response.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
         self.add_behaviour(RechargeResponseReceiver(), template=template_recharge_response)
+
+        # 5. Comportamento para verificar o rendimento da colheita
+        self.add_behaviour(HarvestYieldBehaviour(period=15))
+
+        # 6. Comportamento para receber confirmações de entrega da colheita
+        template_inform_received = Template()
+        template_inform_received.set_metadata("performative", PERFORMATIVE_INFORM_RECEIVED)
+        self.add_behaviour(InformReceivedReceiver(), template=template_inform_received)

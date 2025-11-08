@@ -162,6 +162,7 @@ class EnvironmentManager(CyclicBehaviour):
         try:
             row = content.get("row")
             col = content.get("col")
+            logger.info(f"Recebida mensagem: metadata={msg.metadata} body={msg.body}")
             
             # --- Ações de Perceção (REQUEST) ---
             if msg.performative == PERFORMATIVE_REQUEST:
@@ -190,7 +191,7 @@ class EnvironmentManager(CyclicBehaviour):
                     response_body["message"] = f"Irrigação aplicada em ({row},{col}) com taxa {flow_rate}."
                 
                 elif action == "apply_fertilize":
-                    fertilizer_kg = content.get("fertilizer_kg")
+                    fertilizer_kg = content.get("fertilizer")
                     self.field.apply_fertilize(row, col, fertilizer_kg)
                     response_body["message"] = f"Fertilizante aplicado em ({row},{col})."
                 
@@ -206,9 +207,9 @@ class EnvironmentManager(CyclicBehaviour):
                     response_body["message"] = f"Semente de tipo {plant_type} plantada em ({row},{col})."
 
                 elif action == "harvest":
-                    yield_amount = self.field.harvest(row, col)
-                    response_body["yield"] = float(yield_amount)
-                    response_body["message"] = f"Colheita realizada em ({row},{col}). Rendimento: {yield_amount:.2f}."
+                    health = self.field.harvest(row, col)
+                    response_body["yield"] = float(health/100)
+                    response_body["message"] = f"Colheita realizada em ({row},{col}). Rendimento: {health/100:.2f}."
 
                 else:
                     response_body = {"status": "error", "message": f"Ação desconhecida: {action}"}
