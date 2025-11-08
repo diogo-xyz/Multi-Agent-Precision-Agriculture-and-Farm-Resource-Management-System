@@ -476,7 +476,7 @@ class FertilizerAgent(Agent):
     #   SETUP
     # =====================
     async def setup(self):
-        self.logger.info(f"[IRRI] IrrigationAgent {self.jid} iniciado.")
+        self.logger.info(f"[FERT] FertilizerAgent {self.jid} iniciado.")
         
         # 1. Comportamento para verificar necessidade de recarga
         check_recharge_b = CheckRechargeBehaviour(period=10) # Verifica a cada 10 segundos
