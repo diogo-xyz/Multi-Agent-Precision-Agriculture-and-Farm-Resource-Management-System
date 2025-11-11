@@ -11,7 +11,7 @@ from agents.message import make_message
 
 # --- Constantes ---
 # Limiares
-MOISTURE_THRESHOLD = 50  # Humidade abaixo deste valor dispara irrigação
+MOISTURE_THRESHOLD = 65  # Humidade abaixo deste valor dispara irrigação
 NUTRIENTS_THRESHOLD = 70  # Nutrientes abaixo deste valor dispara fertilização
 MIN_ENERGY_FOR_SCAN = 2.0 # Energia mínima para iniciar um scan (2% é o máximo de perda)
 
@@ -56,7 +56,7 @@ class ScanBehaviour(PeriodicBehaviour):
             self.agent.status = "charging"
             template = Template()
             template.set_metadata("performative", "propose_recharge")
-            self.agent.add_behaviour(RequestRecharge(period=None, template = template))
+            self.agent.add_behaviour(RequestRecharge(period=None))
             return
 
         # 3. Consumir Energia
@@ -120,23 +120,38 @@ class ReceiveDataBehaviour(OneShotBehaviour):
 
             # 1. Verificar Humidade
             if mois < MOISTURE_THRESHOLD:
+                
+                amount = 4
+                if mois <= 60: amount = 7
+                if mois <= 50: amount = 10
+                if mois <= 20: amount = 20
+                if mois <= 10: amount = 25
+
+
                 self.agent.logger.warning(f"Humidade baixa ({mois:.2f}). A iniciar CFP para Irrigação.")
                 self.agent.status = "irrigating"
                 self.agent.add_behaviour(CallForProposal(
                     task_type="irrigation_application", 
                     agents_jids=self.agent.irrig_jid, 
-                    required_resource={"type": "water", "amount": 4} # Valor placeholder
+                    required_resource={"type": "water", "amount": amount} # Valor placeholder
                 ))
                 return
 
             # 2. Verificar Nutrientes
             if nutr < NUTRIENTS_THRESHOLD:
+
+                amount = 2
+                if nutr <= 60: amount = 3
+                if nutr <= 50: amount = 5
+                if nutr <= 20: amount = 7
+                if nutr <= 10: amount = 10
+
                 self.agent.logger.warning(f"Nutrientes baixos ({nutr:.2f}). A iniciar CFP para Fertilização.")
                 self.agent.status = "fertilizing"
                 self.agent.add_behaviour(CallForProposal(
                     task_type="fertilize_application", 
                     agents_jids=self.agent.fert_jid, 
-                    required_resource={"type": "fertilizer", "amount": 1} # Valor placeholder
+                    required_resource={"type": "fertilizer", "amount": amount} # Valor placeholder
                 ))
                 return
 
@@ -415,7 +430,7 @@ class SoilSensorAgent(Agent):
         
         # 2. Comportamento Periódico para realizar o Scan
         # O período deve ser ajustado à simulação, aqui usamos 30 segundos como exemplo
-        scan_b = ScanBehaviour(period=40, row=self.row, col=self.col, env_jid=self.env_jid)
+        scan_b = ScanBehaviour(period=30, row=self.row, col=self.col, env_jid=self.env_jid)
         self.add_behaviour(scan_b)
         
         self.logger.info("SoilSensorAgent iniciado com sucesso.")

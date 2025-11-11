@@ -4,8 +4,8 @@ DRONE_JID = [f"drone{i+1}@localhost" for i in range(6)]
 DRONE_PASS = ["dronepass"] * 6
 
 
-LOG_JID = [f"logistics{i+1}@localhost" for i in range(3)]
-LOG_PASS = ["logpass"] * 3
+LOG_JID = [f"logistics{i+1}@localhost" for i in range(4)]
+LOG_PASS = ["logpass"] * 4
 
 
 HARVESTERS_JID = [f"harvester{i+1}@localhost" for i in range(4)]
@@ -30,3 +30,6 @@ ENV_PASS = ["password"]
 
 HUMAN_JID = ["human@localhost"]
 HUMAN_PASS = ["human123"]
+
+STORAGE_JID = ["storage@localhost"]
+STORAGE_PASS = ["storage123"]

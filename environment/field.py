@@ -51,6 +51,7 @@ class Field:
                                                                    self.moisture.moisture,
                                                                    self.crop.crop_type,
                                                                    self.crop.crop_stage,
+                                                                   self.pest.pest,
                                                                    TICK_HOURS)
 
         if (self.isPestActive): self.pest.update_pest()

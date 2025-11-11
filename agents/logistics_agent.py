@@ -12,10 +12,9 @@ from agents.message import make_message
 
 
 # Constantes
+PERFORMATIVE_INFORM_LOGS = "inform_logs"
 PERFORMATIVE_CFP_RECHARGE = "cfp_recharge"
 PERFORMATIVE_PROPOSE_RECHARGE = "propose_recharge"
-PERFORMATIVE_INFORM_HARVEST = "inform_harvest"
-PERFORMATIVE_INFORM_RECEIVED = "inform_received"
 PERFORMATIVE_INFORM_CROP = "inform_crop"
 PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal"
 PERFORMATIVE_REJECT_PROPOSAL = "reject-proposal"
@@ -81,8 +80,6 @@ class AutoRechargeBehaviour(CyclicBehaviour):
             self.agent.logger.debug(f"[AUTO_RECHARGE] Agente ocupado ({self.agent.status}). Recarga adiada.")
                 
 
-
-
 class CFPRechargeReceiver(CyclicBehaviour):
     """Recebe e processa mensagens CFP (Call For Proposal) de reabastecimento."""
 
@@ -101,7 +98,7 @@ class CFPRechargeReceiver(CyclicBehaviour):
 
                 self.agent.logger.info(f"[CFP_RECHARGE] Recebido CFP {cfp_id} para {task_type} de {sender_jid} em {position}.")
                 # 1. Verificar se o agente está ocupado
-                if self.agent.status != "idle":
+                if self.agent.status != "idle" or self.agent.status == "await":
                     self.agent.logger.info(f"[CFP_RECHARGE] Agente ocupado ({self.agent.status}). Rejeitando proposta.")
                     msg = await self.agent.send_reject_proposal(sender_jid, cfp_id)
                     await self.send(msg)
@@ -144,6 +141,7 @@ class CFPRechargeReceiver(CyclicBehaviour):
                     "eta_ticks": eta_ticks,
                     "cfp_id": cfp_id
                 }
+                self.agent.status = "await"
                 msg = await self.agent.send_propose_recharge(sender_jid, cfp_id, eta_ticks, resource_amount)
                 await self.send(msg)
                 self.agent.logger.info(f"[CFP_RECHARGE] Proposta enviada para {sender_jid}. ETA: {eta_ticks}s, Recursos: {resource_amount}.")
@@ -169,6 +167,7 @@ class AcceptRejectRechargeReceiver(CyclicBehaviour):
                 if cfp_id in self.agent.pending_recharge_proposals:
                     if msg.metadata["performative"] == PERFORMATIVE_REJECT_PROPOSAL:
                         self.agent.logger.info(f"[REJECT_RECHARGE] Proposta {cfp_id} rejeitada por {sender_jid}.")
+                        self.agent.status = "idle"
                         # Remover a proposta pendente
                         if cfp_id in self.agent.pending_recharge_proposals:
                             del self.agent.pending_recharge_proposals[cfp_id]
@@ -238,55 +237,61 @@ class RechargeTaskBehaviour(OneShotBehaviour):
         self.agent.status = "idle"
         self.agent.logger.info("[STATUS] Agente voltou ao estado 'idle'.")
 
-
-class InformHarvestReceiver(CyclicBehaviour):
-    """Recebe a colheita do Harvester Agent e atualiza o yield_storage."""
+class InformOtherLogs(OneShotBehaviour):
+    """Informa os outros Logistic Agentes de uma Area do Campo que já esta a ser tratada"""
+    
+    def __init__(self, zone, add_or_remove):
+        super().__init__()
+        self.zone = tuple(zone)  # guarda a zona
+        self.add_or_remove = add_or_remove # 0 -> remove    1 -> add
 
     async def run(self):
+        for jid in self.agent.log_jid:
+            if str(jid) != str(self.agent.jid):
+                msg = make_message(
+                    to = str(jid),
+                    performative = PERFORMATIVE_INFORM_LOGS,
+                    body_dict={
+                        "cfp_id": f"cfp_inform_log_{time.time()}",
+                        "zone": self.zone,
+                        "add_or_remove": self.add_or_remove
+                    }
+                )
+                await self.send(msg)
+                self.agent.logger.info(f"[INFORM_LOG] Zona {self.zone} enviada para {jid}.")
+        return
+        
+class ReceiveInformOtherLogs(CyclicBehaviour):
+    """Recebe a informação de que uma zona já esta a ser tratada para não enviar cfp repetidos"""
 
+    async def run(self):
         msg = await self.receive(timeout=5)
+
         if msg:
             try:
                 content = json.loads(msg.body)
-                amount_type_list = content.get("amount_type", [])
-                sender_jid = str(msg.sender)
-                
-                self.agent.logger.info(f"[INFORM_HARVEST] Recebido colheita de {sender_jid}.")
-
-                details_received = []
-                for item in amount_type_list:
-                    seed_type = item.get("seed_type")
-                    amount = item.get("amount")
-                    
-                    if seed_type is not None and amount is not None:
-                        # Aumenta o yield_storage, arredondando para baixo (parte inteira)
-                        amount_int = int(amount)
-                        self.agent.yield_storage[seed_type] += amount
-                        self.agent.seed_storage[seed_type] += amount_int
-                        
-                        details_received.append({"seed_type": seed_type, "amount": amount_int})
-                        self.agent.logger.info(f"[INFORM_HARVEST] Yield de semente {seed_type} atualizado. Adicionado: {amount_int}. Total: {self.agent.yield_storage[seed_type]}.")
-
-                print(self.agent.yield_storage)
-                print(self.agent.seed_storage)
-                # Enviar confirmação `inform_received`
-                if details_received:
-                    msg = await self.agent.send_inform_received(sender_jid, details_received)
-                    await self.send(msg)
-                    self.agent.logger.info(f"[INFORM_HARVEST] Confirmação 'inform_received' enviada para {sender_jid}.")
-
+                zone = tuple(content.get("zone"))
+                add_or_remove = content.get("add_or_remove")
+                if add_or_remove:
+                    self.agent.pending_crop_tasks[zone] = {}
+                    self.agent.logger.info(f"[INFORM_LOG] Zona {zone} adicionada à lista")
+                else:
+                    del self.agent.pending_crop_tasks[zone] 
+                    self.agent.logger.info(f"[INFORM_LOG] Zona {zone} removida da lista")
             except json.JSONDecodeError:
-                self.agent.logger.error(f"[INFORM_HARVEST] Erro ao descodificar JSON: {msg.body}")
+                self.agent.logger.error(f"[INFORM_LOG] Erro ao descodificar JSON: {msg.body}")
             except Exception as e:
-                self.agent.logger.exception(f"[INFORM_HARVEST] Erro ao processar INFORM_HARVEST: {e}")
+                self.agent.logger.exception(f"[INFORM_LOG] Erro ao processar INFORM_CROP: {e}")
 
 
 class InformCropReceiver(CyclicBehaviour):
     """Recebe pedidos de plantio/colheita do Drone Agent e gere as tarefas."""
 
     async def run(self):
+        if self.agent.status == "await": 
+            return
+
         msg = await self.receive(timeout=5)
-        
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -303,6 +308,9 @@ class InformCropReceiver(CyclicBehaviour):
 
                 # 2. Adicionar a zona à lista de tarefas pendentes
                 self.agent.pending_crop_tasks[zone] = {"crop_type": crop_type, "state": state, "harvester_jid": None}
+                
+                inform_log = InformOtherLogs(zone,1)
+                self.agent.add_behaviour(inform_log)
                 
                 # 3. Decidir a ação e iniciar o processo de CFP
                 if state == 0: # not planted -> Plantar
@@ -326,6 +334,9 @@ class InformCropReceiver(CyclicBehaviour):
                 else:
                     self.agent.logger.warning(f"[INFORM_CROP] Estado desconhecido ({state}). Ignorando.")
                     del self.agent.pending_crop_tasks[zone] # Remover se for um estado inválido
+
+                    inform_log = InformOtherLogs(zone,0)
+                    self.agent.add_behaviour(inform_log)
 
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[INFORM_CROP] Erro ao descodificar JSON: {msg.body}")
@@ -361,12 +372,11 @@ class CFPTaskInitiator(OneShotBehaviour):
                 body_dict={
                     "cfp_id": self.cfp_id,
                     "task_type": self.task_type,
-                    "seed_type": self.seed_or_crop_type if self.task_type == "plant_application" else None,
+                    "seed_type": self.seed_or_crop_type,
                     "zone": list(self.zone),
                     "required_resources": required_resources,
                     "priority": "Medium"
-                },
-                protocol=ONTOLOGY_FARM_ACTION
+                }
             )
             await self.send(msg)
             self.agent.logger.info(f"[CFP_INIT] CFP enviado para {harv_jid}.")
@@ -385,20 +395,20 @@ class CFPTaskReceiver(CyclicBehaviour):
         self.task_type = task_type
         self.seed_or_crop_type = seed_or_crop_type
         self.proposals = {}
-        self.timeout = time.time() + 20 # Tempo limite para receber propostas
+        self.timeout = time.time() + 5 # Tempo limite para receber propostas
 
     async def run(self):
         # 1. Receber propostas
+        self.agent.status = "await"
         msg = await self.receive(timeout=1)
-
         if msg:
             try:
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
                 eta_ticks = content.get("eta_ticks")
-                fuel_cost = content.get("battery_lost") # Usando battery_lost como fuel_cost
+                fuel_cost = content.get("fuel_cost") 
                 sender_jid = str(msg.sender)
-
+            
                 if cfp_id == self.cfp_id:
                     self.agent.logger.info(f"[CFP_TASK_RECV] Proposta recebida de {sender_jid}. ETA: {eta_ticks}, Custo: {fuel_cost}.")
                     self.proposals[sender_jid] = {"eta": eta_ticks, "cost": fuel_cost}
@@ -416,7 +426,12 @@ class CFPTaskReceiver(CyclicBehaviour):
                 self.agent.logger.warning(f"[CFP_TASK_RECV] Nenhuma proposta recebida para CFP {self.cfp_id}. Tarefa falhada.")
                 # Remover a tarefa pendente
                 if self.zone in self.agent.pending_crop_tasks:
+                    self.agent.status = "idle"
                     del self.agent.pending_crop_tasks[self.zone]
+
+                    inform_log = InformOtherLogs(self.zone,0)
+                    self.agent.add_behaviour(inform_log)
+
                 self.kill()
                 return
 
@@ -439,6 +454,7 @@ class CFPTaskReceiver(CyclicBehaviour):
                     await self.send(msg)
             
             # 4. Adicionar o comportamento para receber o DONE
+            self.agent.status = "idle"
             self.agent.add_behaviour(TaskDoneReceiver(self.cfp_id, self.zone), template=Template(metadata={"performative": "Done"}))
             
             self.kill()
@@ -462,21 +478,32 @@ class TaskDoneReceiver(CyclicBehaviour):
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
                 sender_jid = str(msg.sender)
+                status = content.get("status")
 
                 if cfp_id == self.cfp_id:
-                    self.agent.logger.info(f"[TASK_DONE] Recebido DONE de {sender_jid} para CFP {cfp_id} na zona {self.zone}.")
+
+                    if status == "done":
+                        self.agent.logger.info(f"[TASK_DONE] Recebido DONE de {sender_jid} para CFP {cfp_id} na zona {self.zone}.")
+                        
+                        # Remover a tarefa da lista de pendentes
+                        if self.zone in self.agent.pending_crop_tasks:
+                            del self.agent.pending_crop_tasks[self.zone]
+                            self.agent.logger.info(f"[TASK_DONE] Tarefa da zona {self.zone} removida da lista de pendentes.")
                     
-                    # Remover a tarefa da lista de pendentes
-                    if self.zone in self.agent.pending_crop_tasks:
-                        del self.agent.pending_crop_tasks[self.zone]
-                        self.agent.logger.info(f"[TASK_DONE] Tarefa da zona {self.zone} removida da lista de pendentes.")
+                    else:
+                        self.agent.logger.info(f"[TASK_FAILURE] Recebido FAILURE de {sender_jid} para CFP {cfp_id} na zona {self.zone}.")
+                        if self.zone in self.agent.pending_crop_tasks:
+                            del self.agent.pending_crop_tasks[self.zone]
+                            self.agent.logger.info(f"[TASK_DONE] Tarefa da zona {self.zone} removida da lista de pendentes.")
                     
+                    inform_log = InformOtherLogs(self.zone,0)
+                    self.agent.add_behaviour(inform_log)
                     self.kill()
 
             except json.JSONDecodeError:
-                self.agent.logger.error(f"[TASK_DONE] Erro ao descodificar JSON: {msg.body}")
+                self.agent.logger.error(f"[TASK_FAILURE] Erro ao descodificar JSON: {msg.body}")
             except Exception as e:
-                self.agent.logger.exception(f"[TASK_DONE] Erro ao processar DONE: {e}")
+                self.agent.logger.exception(f"[TASK_FAILURE] Erro ao processar DONE: {e}")
 
 
 # =====================
@@ -485,15 +512,16 @@ class TaskDoneReceiver(CyclicBehaviour):
 
 class LogisticsAgent(Agent):
 
-    def __init__(self, jid, password, harv_jid, row, col):
+    def __init__(self, jid, password, harv_jid, log_jid, row, col):
         super().__init__(jid, password)
 
         self.logger = logging.getLogger(f"[LOG] {jid}")
         self.logger.setLevel(logging.INFO)
         
         self.harv_jid = harv_jid
+        self.log_jid = log_jid
         self.position = (row, col)
-        self.status = "idle"  # idle, moving, handling_task
+        self.status = "idle"  # idle, moving, handling_task, await
 
         # Armazenamento de Recursos
         self.water_storage = 1000  # initial water storage
@@ -546,14 +574,13 @@ class LogisticsAgent(Agent):
         self.add_behaviour(AcceptRejectRechargeReceiver(),template=template_reject)
 
         template = Template()
-        template.set_metadata("performative", PERFORMATIVE_INFORM_HARVEST)
-
-        self.add_behaviour(InformHarvestReceiver(),template=template)
-
-        template = Template()
         template.set_metadata("performative", PERFORMATIVE_INFORM_CROP)
         self.add_behaviour(InformCropReceiver(), template=template)
 
+
+        template = Template()
+        template.set_metadata("performative",PERFORMATIVE_INFORM_LOGS)
+        self.add_behaviour(ReceiveInformOtherLogs(), template=template)
 
     # =====================
     #   FUNÇÕES DE ENVIO DE MENSAGENS
@@ -616,18 +643,6 @@ class LogisticsAgent(Agent):
             body_dict={
                 "cfp_id": cfp_id,
                 "status": "done",
-                "details": details
-            }
-        )
-        return msg
-
-
-    async def send_inform_received(self, to, details):
-        msg = make_message(
-            to=to,
-            performative=PERFORMATIVE_INFORM_RECEIVED,
-            body_dict={
-                "inform_id": f"inform_received_{time.time()}",
                 "details": details
             }
         )

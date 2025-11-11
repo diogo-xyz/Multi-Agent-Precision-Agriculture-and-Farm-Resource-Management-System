@@ -12,13 +12,15 @@ from agents.message import make_message
 # Constantes
 PERFORMATIVE_CFP_TASK = "cfp_task"
 PERFORMATIVE_PROPOSE_TASK = "propose_task"
-PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal"
+PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal" 
 PERFORMATIVE_REJECT_PROPOSAL = "reject-proposal"
 PERFORMATIVE_DONE = "Done"
 PERFORMATIVE_FAILURE = "failure"
 PERFORMATIVE_CFP_RECHARGE = "cfp_recharge"
 PERFORMATIVE_PROPOSE_RECHARGE = "propose_recharge"
 PERFORMATIVE_INFORM = "inform"
+PERFORMATIVE_ACT = "act"
+
 ONTOLOGY_FARM_ACTION = "farm_action"
 
 PERFORMATIVE_INFORM_HARVEST = "inform_harvest"
@@ -59,20 +61,19 @@ class HarvestYieldBehaviour(PeriodicBehaviour):
                 self.agent.logger.info(f"[YIELD] Limite de colheita atingido. A iniciar processo de entrega.")
                 self.agent.status = "delivering_harvest"
                 # Escolhe um logístico aleatoriamente
-                logistic_agent_jid = self.agent.log_jids[0]
                 
                 # Inicia o comportamento de entrega
-                delivery_behaviour = DeliverHarvestBehaviour(logistic_agent_jid)
+                delivery_behaviour = DeliverHarvestBehaviour(self.agent.sto_jid)
                 self.agent.add_behaviour(delivery_behaviour)
 
 class DeliverHarvestBehaviour(OneShotBehaviour):
     """Simula a viagem e envia a colheita para um agente logístico."""
-    def __init__(self, logistic_jid):
+    def __init__(self, sto_jid):
         super().__init__()
-        self.logistic_jid = logistic_jid
+        self.sto_jid = sto_jid
 
     async def run(self):
-        self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.logistic_jid}.")
+        self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.sto_jid}.")
         
         # Simula o tempo de viagem (ida e volta)
         await asyncio.sleep(5)
@@ -84,12 +85,12 @@ class DeliverHarvestBehaviour(OneShotBehaviour):
                 amount_type_list.append({"seed_type": seed_type, "amount": amount})
 
         # Envia a mensagem `inform_harvest`
-        msg = await self.agent.send_inform_harvest(self.logistic_jid, amount_type_list)
+        msg = await self.agent.send_inform_harvest(self.sto_jid, amount_type_list)
         await self.send(msg)
-        self.agent.logger.info(f"[DELIVERY] Mensagem 'inform_harvest' enviada para {self.logistic_jid}.")
+        self.agent.logger.info(f"[DELIVERY] Mensagem 'inform_harvest' enviada para {self.sto_jid}.")
 
 class InformReceivedReceiver(CyclicBehaviour):
-    """Recebe a confirmação 'inform_received' do agente logístico."""
+    """Recebe a confirmação 'inform_received' do agente Storage."""
     async def run(self):
         msg = await self.receive(timeout=5)
 
@@ -157,7 +158,7 @@ class CheckResourcesBehaviour(PeriodicBehaviour):
                 self.agent.logger.warning(f"Nível de semente {seed_type} baixo ({amount}). Solicitando reabastecimento.")
                 self.agent.status = "refueling"
                 # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
-                cfp_id, body = await self.agent.send_cfp_recharge_to_all(low_fuel=False, low_seeds=True, seed_type=seed_type, required_resources= 500 - amount)
+                cfp_id, body = await self.agent.send_cfp_recharge_to_all(low_fuel=False, low_seeds=True, seed_type=seed_type, required_resources= 100 - amount)
 
                 for to_jid in self.agent.log_jids:
                     msg = make_message(to_jid, PERFORMATIVE_CFP_RECHARGE, body)
@@ -180,7 +181,6 @@ class CFPTaskReceiver(CyclicBehaviour):
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
         msg = await self.receive(timeout=5)
-
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -257,6 +257,8 @@ class CFPTaskReceiver(CyclicBehaviour):
                     
                     # Enviar Proposta
                     msg = await self.agent.send_propose_task(msg.sender, cfp_id, distance, fuel_needed)
+                    await self.send(msg)
+                    self.agent.logger.info(f"[ACCEPT] Proposta aceite para CFP {cfp_id}.")
                 else:
                     msg = await self.agent.send_reject_proposal(msg.sender, cfp_id)
                     await self.send(msg)
@@ -388,7 +390,7 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
                             self.agent.logger.info(f"[RECHARGE] Recarga de COMBUSTÍVEL concluída. Reposto: {fuel_replenished}. Nível atual: {self.agent.fuel_level:.2f}.")
 
                         for seed_type, amount in seeds_replenished.items():
-                            self.agent.seeds[seed_type] = min(self.agent.seeds.get(seed_type, 0) + amount,500)
+                            self.agent.seeds[seed_type] = min(self.agent.seeds.get(seed_type, 0) + amount,100)
                             self.agent.logger.info(f"[RECHARGE] Recarga de SEMENTES ({seed_type}) concluída. Reposto: {amount}. Nível atual: {self.agent.seeds[seed_type]}.")
 
                             
@@ -414,7 +416,6 @@ class ProposalResponseReceiver(CyclicBehaviour):
     async def run(self):
         # Espera por mensagens Accept ou Reject do Logistic Agent
         msg = await self.receive(timeout=5)
-
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -432,9 +433,9 @@ class ProposalResponseReceiver(CyclicBehaviour):
                     
                     # Iniciar o comportamento de execução da tarefa
                     if proposal_data["task_type"] == "harvest_application":
-                        b = HarvestExecutionBehaviour(proposal_data)
+                        b = HarvestExecutionBehaviour(proposal_data,cfp_id)
                     elif proposal_data["task_type"] == "plant_application":
-                        b = PlantExecutionBehaviour(proposal_data)
+                        b = PlantExecutionBehaviour(proposal_data,cfp_id)
                     else:
                         self.agent.logger.error(f"[PROPOSAL] Tipo de tarefa desconhecido após aceitação: {proposal_data['task_type']}")
                         return
@@ -461,10 +462,10 @@ class ProposalResponseReceiver(CyclicBehaviour):
 class HarvestExecutionBehaviour(OneShotBehaviour):
     """Executa a tarefa de colheita após a aceitação da proposta."""
     
-    def __init__(self, proposal_data):
+    def __init__(self, proposal_data,cfp_id):
         super().__init__()
         self.proposal_data = proposal_data
-        self.cfp_id = self.proposal_data["cfp_id"]
+        self.cfp_id = cfp_id
         self.logistic_agent = self.proposal_data["sender"]
         self.zone = self.proposal_data["zone"]
         self.fuel_cost = self.proposal_data["fuel_cost"]
@@ -487,11 +488,12 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
                 "col": self.zone[1]
             }
             
-            msg_env = make_message(self.agent.env_jid, PERFORMATIVE_INFORM, harvest_body, {"ontology": ONTOLOGY_FARM_ACTION})
-            await self.agent.send(msg_env)
+            msg_env = make_message(self.agent.env_jid, PERFORMATIVE_ACT, harvest_body)
+            msg_env.set_metadata("ontology",ONTOLOGY_FARM_ACTION)
+            await self.send(msg_env)
             
             # Esperar pela resposta do Environment Agent
-            msg_reply = await self.agent.receive(timeout=10)
+            msg_reply = await self.receive(timeout=10)
             
             if msg_reply and msg_reply.get_metadata("performative") == PERFORMATIVE_INFORM:
                 reply_content = json.loads(msg_reply.body)
@@ -504,7 +506,6 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
                     self.agent.fuel_level -= self.fuel_cost
                     
                     self.agent.logger.info(f"[HARVEST] Colheita concluída. Rendimento: {yield_amount:.2f}. Inventário: {self.agent.machine_inventory:.2f}. Combustível restante: {self.agent.fuel_level:.2f}.")
-                    
                     # 4. Simular volta ao local inicial (já incluído no fuel_cost)
                     await asyncio.sleep(5) # Simular tempo de viagem de volta
                     
@@ -544,10 +545,10 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
 class PlantExecutionBehaviour(OneShotBehaviour):
     """Executa a tarefa de plantação após a aceitação da proposta."""
     
-    def __init__(self, proposal_data):
+    def __init__(self, proposal_data,cfp_id):
         super().__init__()
         self.proposal_data = proposal_data
-        self.cfp_id = self.proposal_data["cfp_id"]
+        self.cfp_id = cfp_id
         self.logistic_agent = self.proposal_data["sender"]
         self.zone = self.proposal_data["zone"]
         self.fuel_cost = self.proposal_data["fuel_cost"]
@@ -570,11 +571,12 @@ class PlantExecutionBehaviour(OneShotBehaviour):
                 "plant_type": self.seed_type
             }
             
-            msg_env = make_message(self.agent.env_jid, PERFORMATIVE_INFORM, plant_body, {"ontology": ONTOLOGY_FARM_ACTION})
-            await self.agent.send(msg_env)
+            msg_env = make_message(self.agent.env_jid, PERFORMATIVE_ACT, plant_body)
+            msg_env.set_metadata("ontology",ONTOLOGY_FARM_ACTION)
+            await self.send(msg_env)
             
             # Esperar pela resposta do Environment Agent
-            msg_reply = await self.agent.receive(timeout=10)
+            msg_reply = await self.receive(timeout=10)
             
             if msg_reply and msg_reply.get_metadata("performative") == PERFORMATIVE_INFORM:
                 reply_content = json.loads(msg_reply.body)
@@ -654,7 +656,7 @@ class HarvesterAgent(Agent):
         }
         
         return cfp_id, body
-    def __init__(self, jid, password, row, col, env_jid, log_jid):
+    def __init__(self, jid, password, row, col, env_jid, log_jid,sto_jid):
         super().__init__(jid, password)
         
         # Configuração de Logging
@@ -680,19 +682,18 @@ class HarvesterAgent(Agent):
         }
 
         self.seeds = {
-            0: 500, # 0: Tomate 
-            1: 500, # 1: Pimento
-            2: 500, # 2: Trigo
-            3: 500, # 3: Couve
-            4: 500, # 4: Alface
-            5: 500  # 5: Cenoura
+            0: 100, # 0: Tomate 
+            1: 100, # 1: Pimento
+            2: 100, # 2: Trigo
+            3: 100, # 3: Couve
+            4: 100, # 4: Alface
+            5: 100  # 5: Cenoura
         }
         self.fuel_level = 100  # Nível inicial de combustível
         self.status = "idle"  # harvesting, planting, refueling, idle, delivering_harvest
         self.env_jid = env_jid
-        # Garante que self.log_jids é uma lista, mesmo que apenas um JID seja passado
-       
         self.log_jids = log_jid
+        self.sto_jid = sto_jid
         
         # Estrutura para armazenar propostas de reabastecimento recebidas
         self.recharge_proposals = {}
@@ -765,7 +766,7 @@ class HarvesterAgent(Agent):
         return msg
 
     async def send_inform_harvest(self, to, amount_type_list):
-        """Envia uma mensagem inform_harvest para o agente logístico."""
+        """Envia uma mensagem inform_harvest para o agente storage."""
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -791,12 +792,13 @@ class HarvesterAgent(Agent):
         self.add_behaviour(CFPTaskReceiver(), template=template_cfp_task)
         
         # 3. Comportamento para receber respostas às propostas de Tarefas
-        template_task_response = Template()
-        template_task_response.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
-        self.add_behaviour(ProposalResponseReceiver(), template=template_task_response)
+        template_task_accept = Template()
+        template_task_accept.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
+        self.add_behaviour(ProposalResponseReceiver(), template=template_task_accept)
 
-        template_task_response.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
-        self.add_behaviour(ProposalResponseReceiver(), template=template_task_response)
+        template_task_reject = Template()
+        template_task_reject.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
+        self.add_behaviour(ProposalResponseReceiver(), template=template_task_reject)
 
         # 4. Comportamento para verificar o rendimento da colheita
         self.add_behaviour(HarvestYieldBehaviour(period=15))

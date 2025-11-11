@@ -44,7 +44,7 @@ class Crop():
         
         # Dias desde que atingiu maturação (para controlar apodrecimento)
         self.crop_days_mature = np.zeros((rows, cols), dtype=float)
-
+        
     def plant_seed(self, row, col, plant_type):
         """
         Planta uma semente na posição (row, col).

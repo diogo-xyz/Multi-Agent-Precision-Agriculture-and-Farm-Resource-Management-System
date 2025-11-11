@@ -2,8 +2,8 @@ import numpy as np
 # Variáveis de Simulação
 
 TICK_HOURS = 1
-ROWS = 3
-COLS = 3
+ROWS = 6
+COLS = 6
 
 
 # Parametros da humidade 
@@ -16,10 +16,10 @@ EVAP_BASE_COEFF = 0.05 # Taxa base de evaporação em mm/h por grau Celsius acim
 EVAP_TEMP_THRESHOLD = 5
 # Abaixo desse valor, considera-se que a evaporação é quase nula 
 
-DIFFUSION_COEF_MOISTURE = 0.30
+DIFFUSION_COEF_MOISTURE = 0.15
 # Coeficiente de difusão espacial de humidade entre células vizinhas  [0,1]
 
-FIELD_CAPACITY = 90.0
+FIELD_CAPACITY = 95.0
 # Percentagem de humidade máxima que o solo pode reter antes de ocorrer runoff (escoamento superficial) ou leaching (lixiviação)
 
 LEACH_COEFF = 0.2 # Controla a intensidade da drenagem

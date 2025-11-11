@@ -59,8 +59,9 @@ class EnvironmentTicker(PeriodicBehaviour):
 
     async def run(self):
         self.field.step()
+        logger.info(50*"=")
         logger.info(f"TICK: Ambiente avançou para o dia {self.field.day}, hora {self.field.hours}. Seca: {self.field.drought}, Peste: {self.field.isPestActive}, Temperatura: {self.field.temperature.temperature}")
-
+        logger.info(50*"=")
 
 class EnvironmentManager(CyclicBehaviour):
     """

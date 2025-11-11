@@ -29,7 +29,6 @@ class DoneFailure(CyclicBehaviour):
 
     async def run(self):
         # Aceder ao logger do agente para consistência
-        self.agent.logger.info(f"[DRO][DoneFailure] Esperando por resposta de carregamento...")
         msg = await self.receive(timeout=self.timeout_wait)
 
         if not msg: 
@@ -195,19 +194,20 @@ class PatrolBehaviour(PeriodicBehaviour):
             return None, None, None
 
     async def _inform_crop(self, row, col, state,crop_type):
+        log_jid = np.random.choice(self.agent.logistics_jid)
         """Envia uma mensagem inform_crop ao Logistics."""
         body = {
             "sender_id": str(self.agent.jid),
-            "receiver_id": self.agent.logistics_jid[0],
+            "receiver_id": log_jid,
             "inform_id": f"inform_crop_{time.time()}",
             "zone": [row, col],
             "crop_type": crop_type,
             "state": state,  # "0 -> not planted" ou "1 -> Ready for harvesting"
             "checked_at": time.time(),
         }
-        msg = make_message(self.agent.logistics_jid[0], "inform_crop", body)
+        msg = make_message(log_jid, "inform_crop", body)
         await self.send(msg)
-        self.agent.logger.info(f"[DRO] Mensagem enviada para {self.agent.logistics_jid[0]} (inform_crop).")
+        self.agent.logger.info(f"[DRO] Mensagem enviada para {log_jid} (inform_crop).")
 
     async def _apply_pesticide(self, row, col):
         """Envia uma mensagem 'act' ao Environment Agent para aplicar pesticida."""
@@ -355,7 +355,7 @@ class DroneAgent(Agent):
         self.position = (row, col)
         self.zones = zones  # Lista de tuplos (row, col) que o drone patrulha
         self.status = "idle"  # flying, charging, handling_task
-        self.pesticide_amount = 0.0  # Quantidade inicial de pesticida em KG
+        self.pesticide_amount = 10.0  # Quantidade inicial de pesticida em KG
         self.max_pesticide_amount = 10.0
         self.environment_jid = env_jid  # JID do agente Environment
         self.logistics_jid = log_jid  # JID do agente Logistics
@@ -372,7 +372,7 @@ class DroneAgent(Agent):
         self.logger.info(f"DroneAgent {self.jid} iniciado. Posição: {self.position}")
 
         # Adiciona comportamentos principais
-        patrol_b = PatrolBehaviour(period=5)  # patrulha a cada 5 ticks
+        patrol_b = PatrolBehaviour(period=6)  # patrulha a cada 10 ticks
         self.add_behaviour(patrol_b)
 
         # 2. Comportamento de Receção de Propostas (CFP)

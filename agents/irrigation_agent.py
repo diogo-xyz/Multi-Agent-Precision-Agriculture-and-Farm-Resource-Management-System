@@ -243,7 +243,7 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
             "action": "apply_irrigation",
             "row": target_pos[0],
             "col": target_pos[1],
-            "flow_rate": self.agent.flow_rate # Usar a taxa de fluxo do agente
+            "flow_rate": water_needed
         }
         
         act_msg = make_message(

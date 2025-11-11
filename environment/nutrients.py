@@ -16,10 +16,8 @@ class Nutrients():
     def __init__(self, rows, cols):
         # Inicializa com valores aleatórios, como no original
         self.nutrients = np.random.triangular(75,80,85, size=(rows, cols))
-        # Adicionar soil_pests para evitar erro na linha 63
-        self.soil_pests = np.zeros((rows, cols)) # Assumir 0 pragas por defeito
 
-    def update_nutrients(self, drought, temperature, moisture, crop_type, crop_stage, dt_hours = 1.0):
+    def update_nutrients(self, drought, temperature, moisture, crop_type, crop_stage, peste, dt_hours = 1.0):
         """
         Atualiza self.nutrients (escala 0..100) em função de:
         - consumo pelas plantas (depende do tipo e estágio da planta, humidade e temperatura)
@@ -127,7 +125,7 @@ class Nutrients():
         new_nutrients = new_nutrients + mineral_add
 
         # ----- 3) perda extra por pragas de solo -----
-        pest_factor = self.soil_pests
+        pest_factor = peste
         
         # Se sp for uma matriz binária (0 ou 1), ou de contagem,
         # podemos usar um fator de perda que é proporcional à presença/intensidade da praga.
