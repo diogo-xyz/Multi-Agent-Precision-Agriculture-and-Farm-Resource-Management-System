@@ -1,4 +1,3 @@
-from loguru import logger
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour,CyclicBehaviour
 from spade.template import Template
@@ -6,6 +5,7 @@ import time
 import asyncio
 import json
 import logging
+import numpy as np
 
 from agents.message import make_message
 
@@ -13,50 +13,44 @@ from agents.message import make_message
 BATTERY_LOW_THRESHOLD = 20.0
 PESTICIDE_LOW_THRESHOLD = 3.0
 ONTOLOGY_FARM_DATA = "farm_data"
+ONTOLOGY_FARM_ACTION = "farm_action"
 
 # =====================
 #   BEHAVIOURS
 # =====================
 
 
-class DoneFailure(OneShotBehaviour):
+class DoneFailure(CyclicBehaviour):
     """Comportamento que lida com o sucesso ou falha de recargas."""
 
-    def __init__(self, timeout_wait, task_type):
+    def __init__(self, timeout_wait):
         super().__init__()
         self.timeout_wait = timeout_wait
-        self.task_type = task_type  # battery | pesticides
 
     async def run(self):
         # Aceder ao logger do agente para consistência
-        self.agent.logger.info(f"[DRO][DoneFailure] Esperando por resposta de {self.task_type}...")
+        self.agent.logger.info(f"[DRO][DoneFailure] Esperando por resposta de carregamento...")
         msg = await self.receive(timeout=self.timeout_wait)
 
-        if not msg:
-            self.agent.logger.error("[DRO] Timeout ao esperar por resposta do Logistics Agent.")
-            # O agente deve voltar a "idle" para tentar novamente no próximo ciclo
-            self.agent.status = "idle"
+        if not msg: 
             return
-        
-        try:
-            content = json.loads(msg.body)
-        except Exception:
-            content = {}
 
-        if msg.metadata.get("performative") == "done":
-            if self.task_type == "battery":
-                self.agent.energy = self.agent.energy + content.get("battery_used")
+        content = json.loads(msg.body)
+        details = content.get("details", {}) 
+        if msg.get_metadata("performative") == "Done":
+            if details.get("resource_type") == "battery":
+                self.agent.energy = self.agent.energy + details.get("amount_delivered")
                 self.agent.logger.info("[DRO] Recarga de bateria concluída com sucesso.")
-            elif self.task_type == "pesticides":
-                self.agent.pesticide_amount = self.agent.max_pesticide_amount + content.get("pesticide_used")
+            elif details.get("resource_type") == "pesticide":
+                self.agent.pesticide_amount = self.agent.pesticide_amount + details.get("amount_delivered")
                 self.agent.logger.info("[DRO] Reabastecimento de pesticida concluído com sucesso.")
-        elif msg.metadata.get("performative") == "failure":
-            self.agent.logger.error(f"[DRO] Falha na tarefa de {self.task_type}: {content.get('message', 'Sem detalhes')}")
+            self.agent.status = "idle"
+        elif msg.get_metadata("performative") == "Failure":
+            self.agent.logger.error(f"[DRO] Falha na tarefa de {details.get('resource_type', 'desconhecido')}: {content.get('message', 'Sem detalhes')}")
+            self.agent.status = "idle"
         else:
             self.agent.logger.warning(f"[DRO][DoneFailure] Recebida performativa inesperada: {msg.metadata.get('performative')}")
 
-        # A tarefa foi concluída, o agente volta a "idle"
-        self.agent.status = "idle"
 
 class CFPBehaviour(OneShotBehaviour):
     """Comportamento que envia um CFP e espera propostas."""
@@ -72,26 +66,26 @@ class CFPBehaviour(OneShotBehaviour):
 
     async def run(self):
         self.agent.logger.info(f"[DRO][CFP] Enviando CFP {self.task_id} para {self.task_type}")
-
-        body = {
-            "sender_id": str(self.agent.jid),
-            "receiver_id": self.agent.logistics_jid,
-            "cfp_id": self.task_id,
-            "task_type": self.task_type,  # battery | pesticides
-            "required_resources": self.required_resources,
-            "position": self.position,  # Posição do drone para recarga/reabastecimento
-            "priority": self.priority,
-        }
-        msg = make_message(self.agent.logistics_jid, "cfp_recharge", body)
-        await self.send(msg)
-
+        for to_jid in self.agent.logistics_jid:
+            body = {
+                "sender_id": str(self.agent.jid),
+                "receiver_id": to_jid,
+                "cfp_id": self.task_id,
+                "task_type": self.task_type,  # battery | pesticides
+                "required_resources": self.required_resources,
+                "position": self.position,  # Posição do drone para recarga/reabastecimento
+                "priority": self.priority,
+            }
+            msg = make_message(to_jid, "cfp_recharge", body)
+            await self.send(msg)
+            self.agent.logger.info(f"[DRO] CFP_RECHARGE ({self.task_id}) enviado para {to_jid} a pedir {self.task_type} ({self.required_resources}).")
         # O agente deve esperar por propostas no seu CyclicBehaviour de receção
         # Este CFPBehaviour apenas envia o CFP e espera um tempo para que as propostas cheguem
 
+        self.agent.awaiting_proposals.setdefault(self.task_id, [])
+
         # Espera o tempo de timeout para recolher propostas
         await asyncio.sleep(self.timeout_wait)
-
-        self.agent.awaiting_proposals.setdefault(self.task_id, [])
 
         proposals = self.agent.awaiting_proposals.pop(self.task_id, [])
         if not proposals:
@@ -134,12 +128,8 @@ class ReceiveProposalsBehaviour(CyclicBehaviour):
     """Comportamento para receber propostas (propose) em resposta a um CFP."""
     
     async def run(self):
-        # Cria um template para filtrar mensagens de "propose"
-        template = Template()
-        template.set_metadata("performative", "propose")
 
         msg = await self.receive(timeout=2) # Espera 2 segundos
-
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -186,7 +176,6 @@ class PatrolBehaviour(PeriodicBehaviour):
         
         # Espera pela resposta com timeout
         reply = await self.receive(timeout=5)
-        
         if reply:
             try:
                 content = json.loads(reply.body)
@@ -209,16 +198,16 @@ class PatrolBehaviour(PeriodicBehaviour):
         """Envia uma mensagem inform_crop ao Logistics."""
         body = {
             "sender_id": str(self.agent.jid),
-            "receiver_id": self.agent.logistics_jid,
+            "receiver_id": self.agent.logistics_jid[0],
             "inform_id": f"inform_crop_{time.time()}",
             "zone": [row, col],
             "crop_type": crop_type,
             "state": state,  # "0 -> not planted" ou "1 -> Ready for harvesting"
             "checked_at": time.time(),
         }
-        msg = make_message(self.agent.logistics_jid, "inform_crop", body)
+        msg = make_message(self.agent.logistics_jid[0], "inform_crop", body)
         await self.send(msg)
-        self.agent.logger.info(f"[DRO] Mensagem enviada para {self.agent.logistics_jid} (inform_crop).")
+        self.agent.logger.info(f"[DRO] Mensagem enviada para {self.agent.logistics_jid[0]} (inform_crop).")
 
     async def _apply_pesticide(self, row, col):
         """Envia uma mensagem 'act' ao Environment Agent para aplicar pesticida."""
@@ -238,6 +227,7 @@ class PatrolBehaviour(PeriodicBehaviour):
             performative="act",
             body_dict=body,
         )
+        msg.set_metadata("ontology", ONTOLOGY_FARM_ACTION)
 
         self.agent.logger.info(f"[DRO] Solicitando aplicação de pesticida em ({row},{col}) ao Environment Agent.")
 
@@ -246,14 +236,13 @@ class PatrolBehaviour(PeriodicBehaviour):
 
         # Espera pela resposta com timeout
         reply = await self.receive( timeout=5)
-
         if reply:
             try:
                 content = json.loads(reply.body)
                 if content.get("status") == "success" and content.get("action") == "apply_pesticide":
                     # Se a aplicação for bem-sucedida no ambiente, gasta os recursos do drone
                     self.agent.pesticide_amount -= 0.5
-                    self.agent.energy -= 3.0  # Gasto de energia
+                    self.agent.energy -= np.random.uniform(1, 3)  # Gasto de energia
                     self.agent.logger.info(
                         f"[DRO] Pesticida aplicado em ({row},{col}) com sucesso. Restante: {self.agent.pesticide_amount:.2f} kg. Energia: {self.agent.energy:.2f}%"
                     )
@@ -280,40 +269,31 @@ class PatrolBehaviour(PeriodicBehaviour):
 
             # Adiciona o comportamento CFP para solicitar recarga
             self.agent.add_behaviour(
-                self.agent.CFPBehaviour(
-                    timeout_wait=10,
+                CFPBehaviour(
+                    timeout_wait=3,
                     task_type="battery",
-                    required_resources={"energy": 100.0 - self.agent.energy},
-                    priority=1,
-                )
-            )
-            # Adiciona o comportamento DoneFailure para esperar pelo resultado
-            self.agent.add_behaviour(
-                self.agent.DoneFailure(
-                    timeout_wait=15,
-                    task_type="battery",
+                    required_resources=100.0 - self.agent.energy,
+                    priority="High",
+                    position=self.agent.position
                 )
             )
             return
 
         if self.agent.pesticide_amount < PESTICIDE_LOW_THRESHOLD:
+                    
             self.agent.status = "charging"
             self.agent.logger.warning(f"Pesticida baixo ({self.agent.pesticide_amount:.2f} kg). Solicitando reabastecimento.")
             # Adiciona o comportamento CFP para solicitar reabastecimento
             self.agent.add_behaviour(
-                self.agent.CFPBehaviour(
-                    timeout_wait=10,
-                    task_type="pesticides",
-                    required_resources={"pesticide": self.agent.max_pesticide_amount - self.agent.pesticide_amount},
-                    priority=1,
+                CFPBehaviour(
+                    timeout_wait=2,
+                    task_type="pesticide",
+                    required_resources=self.agent.max_pesticide_amount - self.agent.pesticide_amount,
+                    priority="High",
+                    position=self.agent.position
                 )
             )
-            self.agent.add_behaviour(
-                self.agent.DoneFailure(
-                    timeout_wait=15,
-                    task_type="pesticides",
-                )
-            )
+
             return
 
         # 2. Patrulhar
@@ -325,10 +305,10 @@ class PatrolBehaviour(PeriodicBehaviour):
         next_zone = self.agent.zones[next_zone_index]
         
         self.agent.position = next_zone
-        self.agent.energy -= 1.0  # Gasto de energia por movimento
+        self.agent.energy -= np.random.uniform(0.1, 1)  # Gasto de energia por movimento
         
         row, col = self.agent.position
-        self.agent.logger.info(f"Patrulhando zona ({row},{col}). Energia: {self.agent.energy:.2f}%.")
+        self.agent.logger.info(f"Patrulhando zona ({row},{col}). Energia: {self.agent.energy:.2f}%. {self.agent.pesticide_amount:.2f} kg de pesticida restante.")
 
         # 3. Obter dados da cultura
         try:
@@ -345,15 +325,15 @@ class PatrolBehaviour(PeriodicBehaviour):
             self.agent.status = "handling_task"
             await self._apply_pesticide(row, col)
         
-        if crop_stage == "mature":
+        if crop_stage == 4:
             self.agent.logger.info(f"Cultura madura em ({row},{col}). Informando Logistics.")
             # A chamada foi corrigida para usar o método do Behaviour
-            await self._inform_crop(row, col, "1", crop_type)
+            await self._inform_crop(row, col, 4, crop_type)
         
-        if crop_stage == "not_planted":
+        if crop_stage == 0:
             self.agent.logger.info(f"Zona ({row},{col}) não plantada. Informando Logistics.")
             # A chamada foi corrigida para usar o método do Behaviour
-            await self._inform_crop(row, col, "0", None)
+            await self._inform_crop(row, col, 0, None)
 
         self.agent.status = "idle"
         
@@ -367,15 +347,15 @@ class PatrolBehaviour(PeriodicBehaviour):
 class DroneAgent(Agent):
     def __init__(self, jid, password, zones, row, col,env_jid, log_jid):
         super().__init__(jid, password)
-        logger = logging.getLogger(jid)
+        logger = logging.getLogger(f"[DRO] {jid}")
         logger.setLevel(logging.INFO)
         self.logger = logger
 
-        self.energy = 100.0
+        self.energy = 100  # Percentagem de bateria
         self.position = (row, col)
         self.zones = zones  # Lista de tuplos (row, col) que o drone patrulha
         self.status = "idle"  # flying, charging, handling_task
-        self.pesticide_amount = 10.0  # Quantidade inicial de pesticida em KG
+        self.pesticide_amount = 0.0  # Quantidade inicial de pesticida em KG
         self.max_pesticide_amount = 10.0
         self.environment_jid = env_jid  # JID do agente Environment
         self.logistics_jid = log_jid  # JID do agente Logistics
@@ -395,10 +375,24 @@ class DroneAgent(Agent):
         patrol_b = PatrolBehaviour(period=5)  # patrulha a cada 5 ticks
         self.add_behaviour(patrol_b)
 
-            # 2. Comportamento de Receção de Propostas (CFP)
-        # Este comportamento é necessário para recolher as propostas enviadas pelo Logistics Agent
+        # 2. Comportamento de Receção de Propostas (CFP)
+        # Este comportamento é necessário para recolher as propostas enviadas pelo Logistics 
+        # Cria um template para filtrar mensagens de "propose"
+        template = Template()
+        template.set_metadata("performative", "propose_recharge")
         receive_proposals_b = ReceiveProposalsBehaviour()
-        self.add_behaviour(receive_proposals_b)
+        self.add_behaviour(receive_proposals_b,template=template)
+
+        template_done = Template()
+        template_done.set_metadata("performative", "Done")
+
+        template_fail = Template()
+        template_fail.set_metadata("performative", "Failure")
+
+        # Adiciona o comportamento DoneFailure para esperar pelo resultado
+
+        self.add_behaviour(DoneFailure(timeout_wait=5), template=template_done)
+        self.add_behaviour(DoneFailure(timeout_wait=5), template=template_fail)
 
         # O DoneFailure e o CFPBehaviour são adicionados dinamicamente pelo PatrolBehaviour
         # quando é necessário solicitar uma recarga/reabastecimento.

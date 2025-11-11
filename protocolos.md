@@ -45,7 +45,9 @@ O Drone envia um inform ao agente Logistic a dizer se é preciso colher ou plant
     "receiver_id",
 
     "inform_id": "inform_received_time.time()",
-    "details" : {"seed_type": 0, "amount": 1}
+    "details" : [{"seed_type": 0, "amount": 1}
+                ... 
+    ],
     "checked_at": "time.time()"
 }
 ```
@@ -79,6 +81,7 @@ Usado pelos agentes Drone, SoilSensor, Fertelizer, Irrigation e Harvester para s
 
 **Performative:** `cfp_recharge`
 
+
 ``` json
 {
     "sender_id",
@@ -100,6 +103,7 @@ Usado por agentes executores (Irrigation, Harvester, Fertilizer) para responder 
 
 **Performative:** `propose_task`
 
+
 ```json
 {
     "sender_id",
@@ -115,6 +119,7 @@ Usado por agentes executores (Irrigation, Harvester, Fertilizer) para responder 
 Usado pelo Agente Logistic para responder a um CFP de reabastecimento
 
 **Performative:** `propose_recharge`
+
 
 ```json
 {
@@ -135,6 +140,7 @@ Usado pelos agentes para aceitar ou rejeitar uma proposta.
 
 **Performative:** `accept-proposal`
 
+
 ```json
 {
     "sender_id",
@@ -147,6 +153,7 @@ Usado pelos agentes para aceitar ou rejeitar uma proposta.
 ```
 
 **Performative:** `reject-proposal`
+
 
 ```json
 {
@@ -164,6 +171,7 @@ Usado por agentes executores para informar o sobre a conclusão ou falha da tare
 
 **Performative:** `Done`
 
+
 ```json
 {
     "sender_id",
@@ -172,11 +180,12 @@ Usado por agentes executores para informar o sobre a conclusão ou falha da tare
     "cfp_id": "cfp_done_time.time()",
     "status": "done",
     "seed_type": 0,
-    "details": {"water_used": 50, "time_taken": 6}
+    "details": {"amount_delivered": 50}
 }
 ```
 
 **Performative:** `failure`
+
 
 ```json
 {

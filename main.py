@@ -6,10 +6,10 @@ import logging
 from human_agent import HumanAgent
 from environment_agent import FarmEnvironmentAgent
 from agents.drone_agent import DroneAgent
-#from agents.logistics_agent import LogisticsAgent
-#from agents.harvester_agent import HarvesterAgent
-#from agents.soil_sensor_agent import SoilAgent
-#from agents.fertilizer_agent import FertilizationAgent
+from agents.logistics_agent import LogisticsAgent
+from agents.harvester_agent import HarvesterAgent
+from agents.soil_sensor_agent import SoilSensorAgent
+from agents.fertilizer_agent import FertilizerAgent
 from agents.irrigation_agent import IrrigationAgent
 
 from config_agents import (
@@ -45,20 +45,39 @@ logger = logging.getLogger("MainStarter")
 
 
 async def main():
+    # drones e soiles são os ultimos a iniciar 
+    #human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
+    #await human_agent.start()
+    #logger.info("Agente Humano em execução. Pressione Ctrl+C para parar.")
+
     field = Field()
+    logistic_agent = LogisticsAgent(LOG_JID[0], LOG_PASS[0], HARVESTERS_JID,3, -1)
+    await logistic_agent.start()
+    logger.info("Agente Logística em execução.")
+
+    logistic_agent = LogisticsAgent(LOG_JID[1], LOG_PASS[1], HARVESTERS_JID,3, -5)
+    await logistic_agent.start()
+    logger.info("Agente Logística em execução.")
 
     # Inicializar e iniciar o agente
     env_agent = FarmEnvironmentAgent(ENV_JID[0], ENV_PASS[0], field)
     await env_agent.start()
     logger.info("Agente Ambiente em execução. Pressione Ctrl+C para parar.")
 
-    Irrig_agent = IrrigationAgent(IRRIG_JID[0], IRRIG_PASS[0], LOG_JID[0], ENV_JID[0],0, 0)
-    await Irrig_agent.start()
-    logger.info("Agente Irrigação em execução.")
+    harv_agent = HarvesterAgent(HARVESTERS_JID[0],HARVESTERS_PASS[0],0,0,ENV_JID[0],LOG_JID)
+    await harv_agent.start()
+    logger.info("Agente Harv  em execução.")
+    #
+    #soil_agent = SoilSensorAgent(SOIL_JID[0], SOIL_PASS[0],LOG_JID, IRRIG_JID, FERT_JID, ENV_JID[0],0, 1)
+    #await soil_agent.start()
+    #logger.info("Agente Sensor de Solo em execução.")
 
-    human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
-    await human_agent.start()
-    logger.info("Agente Humano em execução. Pressione Ctrl+C para parar.")
+    #drone_agent = DroneAgent(DRONE_JID[0], DRONE_PASS[0],[(0,0),(1,0),(2,0)],0, 0, ENV_JID[0],LOG_JID)
+    #await drone_agent.start()
+    #logger.info("Agente Drone em execução.")
+
+
+
 
     # Manter o agente a correr
     try:

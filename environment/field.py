@@ -97,9 +97,25 @@ class Field:
     def get_drone(self,row,col):
         return [self.crop.crop_stage[row,col], self.crop.crop_type[row,col], self.pest.pest[row,col]]
 
-    def get_soil(self,row,col):
-        return [self.temperature.temperature, self.nutrients.nutrients[row,col], self.moisture.moisture[row,col]]
-    
+    def get_soil(self, row, col):
+        total_temp = 0
+        total_nutr = 0
+        total_mois = 0
+        
+        for i in range(ROWS):
+            temp = self.temperature.temperature
+            nutr = self.nutrients.nutrients[i, col]
+            mois = self.moisture.moisture[i, col]
+            total_temp += temp
+            total_nutr += nutr
+            total_mois += mois
+        
+        avg_temp = total_temp / ROWS
+        avg_nutr = total_nutr / ROWS
+        avg_mois = total_mois / ROWS
+
+        return avg_temp, avg_nutr, avg_mois
+
     def plant_seed(self, row, col, plant_type):
         return self.crop.plant_seed(row, col, plant_type)
 

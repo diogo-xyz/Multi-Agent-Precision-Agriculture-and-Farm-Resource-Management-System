@@ -6,7 +6,7 @@ class Moisture():
 
     def __init__(self, num_linhas, num_colunas):
         # Inicializa a humidade do solo com valores triangulares aleatórios (50-70%)
-        self.moisture = np.random.triangular(60, 65, 70, size=(num_linhas, num_colunas))
+        self.moisture = np.random.triangular(75, 80, 85, size=(num_linhas, num_colunas))
 
     def _rain_mm_per_hour(self, nivel_chuva):
         """

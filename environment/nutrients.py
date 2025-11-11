@@ -15,7 +15,7 @@ class Nutrients():
 
     def __init__(self, rows, cols):
         # Inicializa com valores aleatórios, como no original
-        self.nutrients = np.random.triangular(60, 65, 70, size=(rows, cols))
+        self.nutrients = np.random.triangular(75,80,85, size=(rows, cols))
         # Adicionar soil_pests para evitar erro na linha 63
         self.soil_pests = np.zeros((rows, cols)) # Assumir 0 pragas por defeito
 

@@ -59,7 +59,7 @@ class EnvironmentTicker(PeriodicBehaviour):
 
     async def run(self):
         self.field.step()
-        logger.info(f"TICK: Ambiente avançou para o dia {self.field.day}, hora {self.field.hours}. Seca: {self.field.drought}, Peste: {self.field.isPestActive}")
+        logger.info(f"TICK: Ambiente avançou para o dia {self.field.day}, hora {self.field.hours}. Seca: {self.field.drought}, Peste: {self.field.isPestActive}, Temperatura: {self.field.temperature.temperature}")
 
 
 class EnvironmentManager(CyclicBehaviour):
@@ -149,9 +149,6 @@ class EnvironmentManager(CyclicBehaviour):
         reply.set_metadata("ontology", ONTOLOGY_DYNAMIC_EVENT)
         await self.send(reply)
 
-	        # A impressão do ambiente foi movida para o HumanAgent a pedido.
-	        # display_matrix(self.field)
-
 
     async def handle_agent_request(self, msg, content, action):
         """
@@ -163,15 +160,15 @@ class EnvironmentManager(CyclicBehaviour):
             row = content.get("row")
             col = content.get("col")
             logger.info(f"Recebida mensagem: metadata={msg.metadata} body={msg.body}")
-            
+
             # --- Ações de Perceção (REQUEST) ---
-            if msg.performative == PERFORMATIVE_REQUEST:
+            if msg.get_metadata("performative") == PERFORMATIVE_REQUEST:
                 if action == "get_soil":
                     data = self.field.get_soil(row, col)
                     response_body["data"] = {
-                        "temperature": float(data[0]),
-                        "nutrients": float(data[1]),
-                        "moisture": float(data[2])
+                        "temperature": round(data[0],2),
+                        "nutrients": round(data[1],2),
+                        "moisture": round(data[2],2),
                     }
                 elif action == "get_drone":
                     data = self.field.get_drone(row, col)
@@ -184,7 +181,7 @@ class EnvironmentManager(CyclicBehaviour):
                     response_body = {"status": "error", "message": f"Pedido de dados desconhecido: {action}"}
             
             # --- Ações de Atuação (ACT) ---
-            elif msg.performative == PERFORMATIVE_ACT:
+            elif msg.get_metadata("performative")  == PERFORMATIVE_ACT:
                 if action == "apply_irrigation":
                     flow_rate = content.get("flow_rate")
                     self.field.apply_irrigation(row, col, flow_rate)
@@ -222,7 +219,7 @@ class EnvironmentManager(CyclicBehaviour):
             logger.error(f"Erro ao executar ação {action}: {e}")
 
         # Envia resposta
-        reply = Message(to=str(msg.sender), body=json.dumps(response_body))
+        reply = Message(to=msg.sender, body=json.dumps(response_body))
         reply.set_metadata("performative", PERFORMATIVE_INFORM)
         reply.set_metadata("ontology", msg.metadata.get("ontology"))
         await self.send(reply)

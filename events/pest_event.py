@@ -15,7 +15,6 @@ class Pest:
         """
         self.pest = np.zeros((rows, cols), dtype=int)
 
-        self.pest[0,0]  = 1
 
     def update_pest(self):
         """

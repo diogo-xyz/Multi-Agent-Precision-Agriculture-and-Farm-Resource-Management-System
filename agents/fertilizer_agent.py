@@ -10,8 +10,8 @@ from agents.message import make_message
 
 # Constantes
 PERFORMATIVE_CFP_TASK = "cfp_task"
-PERFORMATIVE_PROPOSE_TASK = "propose_task"
-PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal"
+PERFORMATIVE_PROPOSE_TASK = "propose_task" 
+PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal" 
 PERFORMATIVE_REJECT_PROPOSAL = "reject-proposal"
 PERFORMATIVE_DONE = "Done"
 PERFORMATIVE_FAILURE = "failure"
@@ -53,7 +53,12 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
             self.agent.status = "charging"
             
             # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
-            cfp_id = await self.agent.send_cfp_recharge_to_all(low_fertilize=True, low_energy=False)
+            cfp_id, body = await self.agent.send_cfp_recharge_to_all(low_fertilize=True, low_energy=False)
+
+            for to_jid in self.agent.log_jid:
+                msg = make_message(to_jid, PERFORMATIVE_CFP_RECHARGE, body)
+                await self.send(msg)
+                self.agent.logger.info(f"CFP_RECHARGE ({cfp_id}) enviado para {to_jid} a pedir {body["task_type"]} ({body["required_resources"]}).")
 
             # Adiciona o comportamento para receber as propostas
             receive_proposals_b = ReceiveRechargeProposalsBehaviour(cfp_id)
@@ -65,7 +70,12 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
             self.agent.status = "charging"
             
             # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
-            cfp_id = await self.agent.send_cfp_recharge_to_all(low_fertilize=False, low_energy=True)
+            cfp_id, body = await self.agent.send_cfp_recharge_to_all(low_fertilize=False, low_energy=True)
+
+            for to_jid in self.agent.log_jid:
+                msg = make_message(to_jid, PERFORMATIVE_CFP_RECHARGE, body)
+                await self.send(msg)
+                self.agent.logger.info(f"CFP_RECHARGE ({cfp_id}) enviado para {to_jid} a pedir {body["task_type"]} ({body["required_resources"]}).")
 
             # Adiciona o comportamento para receber as propostas
             receive_proposals_b = ReceiveRechargeProposalsBehaviour(cfp_id)
@@ -81,7 +91,6 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
         
         msg = await self.receive(timeout=5)
-        
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -91,7 +100,7 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
                 required_resources = content.get("required_resources", [])
 
                 # Apenas processa se for uma tarefa de fertilização
-                if content.get("task_type") != "fertilization_application":
+                if content.get("task_type") != "fertilize_application":
                     self.agent.logger.warning(f"[FERT] CFP recebido não é de fertilização: {content.get('task_type')}")
                     return
 
@@ -104,7 +113,8 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
 
                 if fertilizer_needed == 0:
                     self.agent.logger.warning(f"[FERT] CFP {cfp_id} não especifica fertilizante necessário. A rejeitar.")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    msg = await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    await self.send(msg)
                     return
 
                 # 1. Calcular Distância e Custo
@@ -122,15 +132,17 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
                 # 2. Verificar Capacidade e Energia
 
                 # Se o fertilizante necessário for maior que a capacidade atual
-                if fertilizer_needed > self.agent.fertilizer_capacity:
+                if fertilizer_needed > self.agent.fertilize_capacity:
                     self.agent.logger.info(f"[FERT] CFP {cfp_id} rejeitado: Fertilizante insuficiente ({fertilizer_needed}L necessários, {self.agent.fertilizer_capacity}L disponíveis).")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    msg = await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    await self.send(msg)
                     return
                 
                 # Se o custo de energia for maior que a energia atual
                 if energy_cost > self.agent.energy:
                     self.agent.logger.info(f"[FERT] CFP {cfp_id} rejeitado: Energia insuficiente ({energy_cost} necessários, {self.agent.energy} disponíveis).")
-                    await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    msg = await self.agent.send_reject_proposal(sender_jid, cfp_id)
+                    await self.send(msg)
                     return
                 
                 # 3. Aceitar e Propor
@@ -146,7 +158,8 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
                 }
                 
                 # Enviar Proposta
-                await self.agent.send_propose_task(sender_jid, cfp_id, eta_ticks, energy_cost)
+                msg = await self.agent.send_propose_task(sender_jid, cfp_id, eta_ticks, energy_cost)
+                await self.send(msg)
 
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[FERT] Erro ao descodificar JSON do CFP: {msg.body}")
@@ -167,7 +180,6 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
         
         # Receber qualquer uma das performatives
         msg = await self.receive(timeout=5)
-        
         if msg:
             performative = msg.get_metadata("performative")
             try:
@@ -184,7 +196,7 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
                     self.agent.logger.info(f"[FERT] Proposta {cfp_id} ACEITE pelo {str(msg.sender)}. A iniciar tarefa de fertilização.")
                     #
                     #  Iniciar o comportamento de execução da tarefa
-                    task_exec_b = ExecuteTaskBehaviour(proposal_data)
+                    task_exec_b = ExecuteTaskBehaviour(proposal_data,cfp_id)
                     self.agent.add_behaviour(task_exec_b)
                     
                 elif performative == PERFORMATIVE_REJECT_PROPOSAL:
@@ -201,13 +213,14 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
 
 class ExecuteTaskBehaviour(OneShotBehaviour):
     """Executa a tarefa de fertilização após a proposta ser aceite."""
-    def __init__(self, proposal_data):
+    def __init__(self, proposal_data,cfp_id):
         super().__init__()
         self.proposal_data = proposal_data
+        self.cfp_id = cfp_id
 
     async def run(self):
         sender_jid = self.proposal_data["sender"]
-        cfp_id = self.proposal_data["cfp_id"]
+        cfp_id = self.cfp_id
         target_pos = self.proposal_data["zone"]
         fertilizer_needed = self.proposal_data["fertilizer_needed"]
         energy_cost = self.proposal_data["energy_cost"]
@@ -229,31 +242,28 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
         env_jid = "environment@localhost" # Assumindo que o JID do EnvironmentAgent é este
         
         act_body = {
-            "action": "apply_fertilizer",
+            "action": "apply_fertilize",
             "row": target_pos[0],
             "col": target_pos[1],
-            "fertilizer": self.agent.fertilizer 
+            "fertilizer": fertilizer_needed
         }
-        
         act_msg = make_message(
             to=env_jid,
-            performative=PERFORMATIVE_INFORM,
             body_dict=act_body,
+            performative= "act",
             protocol=None,
             language="json"
         )
-        act_msg.set_metadata("performative", "act")
         act_msg.set_metadata("ontology", ONTOLOGY_FARM_ACTION)
         
-        await self.agent.send(act_msg)
+        await self.send(act_msg)
         
         # Esperar pela resposta do EnvironmentAgent (INFORM)
         reply_template = Template()
         reply_template.set_metadata("performative", PERFORMATIVE_INFORM)
         reply_template.set_metadata("ontology", ONTOLOGY_FARM_ACTION)
         
-        env_reply = await self.agent.receive(timeout=10)
-        
+        env_reply = await self.receive(timeout=10)
         if env_reply:
             try:
                 reply_content = json.loads(env_reply.body)
@@ -261,10 +271,11 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
                     self.agent.logger.info(f"[FERT] Fertilização em {target_pos} concluída com sucesso. Mensagem do ENV: {reply_content.get('message')}")
                     
                     # 3. Atualizar estado e simular viagem de volta
-                    self.agent.fertilizer -= fertilizer_needed
+
+                    self.agent.fertilize_capacity -= fertilizer_needed
                     self.agent.energy -= energy_cost
 
-                    self.agent.logger.info(f"[FERT] Fertilizante restante: {self.agent.fertilizer}kg. Energia restante: {self.agent.energy}.")
+                    self.agent.logger.info(f"[FERT] Fertilizante restante: {self.agent.fertilize_capacity}kg. Energia restante: {self.agent.energy}.")
                     
                     # Simular Viagem de Volta
                     self.agent.logger.info(f"[FERT] A regressar à base. Tempo de viagem: {travel_time} ticks.")
@@ -280,25 +291,28 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
                         "details": {"fertilizer_used": fertilizer_needed, "time_taken": eta_ticks}
                     }
                     done_msg = make_message(sender_jid, PERFORMATIVE_DONE, done_body)
-                    await self.agent.send(done_msg)
+                    await self.send(done_msg)
                     self.agent.logger.info(f"[FERT] Tarefa {cfp_id} concluída e Done enviado para {sender_jid}.")
                     
                 else:
                     # Falha na fertilização (EnvironmentAgent reportou erro)
                     self.agent.logger.error(f"[FERT] Falha na fertilização em {target_pos}. Mensagem do ENV: {reply_content.get('message')}")
                     self.agent.status = "idle"
-                    await self.agent.send_failure(sender_jid, cfp_id)
+                    msg = await self.agent.send_failure(sender_jid, cfp_id)
+                    await self.send(msg)
                     
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[FERT] Erro ao descodificar JSON da resposta do EnvironmentAgent: {env_reply.body}")
                 self.agent.status = "idle"
-                await self.agent.send_failure(sender_jid, cfp_id)
+                msg = await self.agent.send_failure(sender_jid, cfp_id)
+                await self.send(msg)
             
         else:
             # Timeout na resposta do EnvironmentAgent
             self.agent.logger.error(f"[FERT] Timeout ao esperar resposta do EnvironmentAgent para fertilização em {target_pos}.")
             self.agent.status = "idle"
-            await self.agent.send_failure(sender_jid, cfp_id)
+            msg = await self.agent.send_failure(sender_jid, cfp_id)
+            await self.send(msg)
 
 class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
     """Recebe propostas de recarga de todos os LogisticAgents, seleciona a melhor e aceita/rejeita."""
@@ -349,25 +363,27 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
         for proposal in self.proposals:
             if proposal == best_proposal:
                 # Aceitar
-                await self.agent.send_accept_proposal(proposal['sender'], self.cfp_id)
+                msg = await self.agent.send_accept_proposal(proposal['sender'], self.cfp_id)
+                await self.send(msg)
                 self.agent.logger.info(f"[FERT] Proposta de {proposal['sender']} ACEITE.")
 
                 # Iniciar o comportamento de execução da recarga
-                execute_recharge_b = ExecuteRechargeBehaviour(best_proposal)
+                execute_recharge_b = ExecuteRechargeBehaviour(best_proposal,self.cfp_id)
                 self.agent.add_behaviour(execute_recharge_b)
                 
             else:
                 # Rejeitar
-                await self.agent.send_reject_proposal(proposal['sender'], self.cfp_id)
+                msg = await self.agent.send_reject_proposal(proposal['sender'], self.cfp_id)
+                await self.send(msg)
                 self.agent.logger.info(f"[FERT] Proposta de {proposal['sender']} REJEITADA.")
 
 class ExecuteRechargeBehaviour(CyclicBehaviour):
     """Aguarda a mensagem DONE do LogisticAgent após a proposta ser aceite e repõe os recursos."""
-    def __init__(self, proposal_data):
+    def __init__(self, proposal_data,cfp_id):
         super().__init__()
         self.proposal_data = proposal_data
         self.logistic_jid = proposal_data["sender"]
-        self.cfp_id = proposal_data["cfp_id"]
+        self.cfp_id = cfp_id
         self.eta_ticks = proposal_data["eta_ticks"]
         self.start_time = time.time()
         self.awaiting_done = True
@@ -401,25 +417,23 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
                         
                         # Repor Recursos com base nos detalhes da mensagem DONE
                         details = content.get("details", {})
-                        
+                        energy_used = 0
+                        fertilizer_replenished = 0
                         # O utilizador forneceu um exemplo com "fertilizer_used" e "time_taken".
                         # Assumindo que "fertilizer_used" é a quantidade de fertilizante recarregada.
-                        fertilizer_replenished = details.get("fertilizer_used", 0)
+                        if (details["resource_type"] == "battery"): energy_used = details.get("amount_delivered", 0) 
                         # Para a bateria, o LogisticAgent deve enviar a quantidade recarregada.
                         # Vamos assumir a chave "energy_used" para consistência.
-                        energy_used = details.get("energy_used", 0)
+                        else: fertilizer_replenished = details.get("amount_delivered", 0)
                         
                         if fertilizer_replenished > 0:
-                            self.agent.fertilizer = min(self.agent.fertilizer + fertilizer_replenished, self.agent.fertilizer_max)
-                            self.agent.logger.info(f"[FERT] Recarga de FERTILIZANTE concluída. Reposto: {fertilizer_replenished}kg. Fertilizante atual: {self.agent.fertilizer}kg.")
+                            self.agent.fertilize_capacity = min(self.agent.fertilize_capacity + fertilizer_replenished, self.agent.fertilize_capacity_max)
+                            self.agent.logger.info(f"[FERT] Recarga de FERTILIZANTE concluída. Reposto: {fertilizer_replenished}kg. Fertilizante atual: {self.agent.fertilize_capacity}kg.")
 
                         if energy_used > 0:
                             self.agent.energy = min(self.agent.energy + energy_used, 100)
                             self.agent.logger.info(f"[FERT] Recarga de ENERGIA concluída. Reposto: {energy_used}. Energia atual: {self.agent.energy}.")
 
-                        # O tempo gasto na recarga é o time_taken
-                        time_taken = details.get("time_taken", 0)
-                        self.agent.logger.info(f"[FERT] Tempo total de recarga: {time_taken} ticks.")
                             
                         self.agent.status = "idle"
                         self.agent.logger.info("[FERT] Agente de Fertilização de volta ao estado 'idle'.")
@@ -462,9 +476,9 @@ class FertilizerAgent(Agent):
         self.log_jid = log_jid
 
         self.fertilize = 1
-        self.energy = 100
-        self.fertilize_capacity = 100  
-        self.fertilize_capacity_max = 100 
+        self.energy = 100.0
+        self.fertilize_capacity = 100.0
+        self.fertilize_capacity_max = 100.0
 
         # Estrutura para armazenar propostas enviadas e aguardando resposta (por cfp_id)
         self.awaiting_proposals = {}
@@ -490,14 +504,14 @@ class FertilizerAgent(Agent):
         self.add_behaviour(receive_cfp_b, template_cfp)
         
         # 3. Comportamento para receber resposta à proposta de tarefa
-        receive_prop_resp_b = ReceiveProposalResponseBehaviour()
+
         template_accept = Template()
         template_accept.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
         template_reject = Template()
         template_reject.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
         # Adicionar o mesmo comportamento para ambos os templates
-        self.add_behaviour(receive_prop_resp_b, template_accept)
-        self.add_behaviour(receive_prop_resp_b, template_reject)
+        self.add_behaviour(ReceiveProposalResponseBehaviour(), template_accept)
+        self.add_behaviour(ReceiveProposalResponseBehaviour(), template_reject)
         
         # O comportamento de recarga (ReceiveRechargeProposalsBehaviour e ExecuteRechargeBehaviour)
         # é adicionado dinamicamente pelo CheckRechargeBehaviour.
@@ -515,7 +529,7 @@ class FertilizerAgent(Agent):
             "battery_lost": energy_cost,
         }
         msg = make_message(to_jid, PERFORMATIVE_PROPOSE_TASK, body)
-        await self.send(msg)
+        return msg
 
     async def send_reject_proposal(self, to_jid, cfp_id):
         """Envia uma rejeição de proposta de tarefa ou recarga."""
@@ -524,7 +538,7 @@ class FertilizerAgent(Agent):
             "decision": "reject",
         }
         msg = make_message(to_jid, PERFORMATIVE_REJECT_PROPOSAL, body)
-        await self.send(msg)
+        return msg
 
     async def send_failure(self, to_jid, cfp_id):
         """Envia uma mensagem de falha na execução da tarefa."""
@@ -533,7 +547,7 @@ class FertilizerAgent(Agent):
             "status": "failed",
         }
         msg = make_message(to_jid, PERFORMATIVE_FAILURE, body)
-        await self.send(msg)
+        return msg
 
     async def send_cfp_recharge_to_all(self, low_fertilize, low_energy):
         """Envia um CFP (Call For Proposal) para recarga de água ou energia a TODOS os LogisticAgents."""
@@ -543,7 +557,7 @@ class FertilizerAgent(Agent):
         
         # Determina o tipo de recurso necessário e a quantidade (inteiro)
         if low_fertilize:
-            task_type = "fertilize"
+            task_type = "fertilizer"
             required_resources = int(self.fertilize_capacity_max - self.fertilize_capacity)
         elif low_energy:
             task_type = "battery"
@@ -559,13 +573,8 @@ class FertilizerAgent(Agent):
             "position": self.position,
             "priority": "High",
         }
-        
-        for to_jid in self.log_jid:
-            msg = make_message(to_jid, PERFORMATIVE_CFP_RECHARGE, body)
-            await self.send(msg)
-            self.logger.info(f"CFP_RECHARGE ({cfp_id}) enviado para {to_jid} a pedir {task_type} ({required_resources}).")
             
-        return cfp_id
+        return cfp_id, body
 
     async def send_accept_proposal(self, to_jid, cfp_id):
         """Envia uma aceitação de proposta (usado para aceitar proposta de recarga)."""
@@ -574,4 +583,4 @@ class FertilizerAgent(Agent):
             "decision": "accept",
         }
         msg = make_message(to_jid, PERFORMATIVE_ACCEPT_PROPOSAL, body)
-        await self.send(msg)
+        return msg
