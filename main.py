@@ -80,7 +80,7 @@ async def main():
     
     # ===  Criar agentes logísticos ===
     pos_logistics = [[-1, 3], [6, 3], [3, -1], [4, 6]]
-    for i in range(1):
+    for i in range(4):
         logistics_agents.append(
             LogisticsAgent(
                 LOG_JID[i],
@@ -94,7 +94,7 @@ async def main():
 
     # ===  Criar agentes de colheita (harvesters) ===
     pos_agents = [[-1, -1], [-1, 6], [6, -1], [6, 6]]
-    for i in range(1):
+    for i in range(4):
         harvesters.append(
             HarvesterAgent(
                 HARVESTERS_JID[i],
@@ -108,7 +108,7 @@ async def main():
         )
 
     # === Criar agentes de irrigação ===
-    for i in range(1):
+    for i in range(4):
         irrigations.append(
             IrrigationAgent(
                 IRRIG_JID[i],
@@ -121,7 +121,7 @@ async def main():
         )
 
     # ===  Criar agentes de fertilização ===
-    for i in range(1):
+    for i in range(4):
         fertilizers.append(
             FertilizerAgent(
                 FERT_JID[i],
@@ -146,7 +146,7 @@ async def main():
     logger.info("Agentes principais, logísticos, colheitadeiras, irrigação e fertilização em execução.")
     
     # ===  Criar e iniciar agentes sensores de solo ===
-    for i in range(1):
+    for i in range(6):
         soils.append(
             SoilSensorAgent(
                 SOIL_JID[i],
@@ -172,7 +172,7 @@ async def main():
         [(0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4)],
         [(0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5)],
     ]
-    for i in range(1):
+    for i in range(6):
         drones.append(
             DroneAgent(
                 DRONE_JID[i],

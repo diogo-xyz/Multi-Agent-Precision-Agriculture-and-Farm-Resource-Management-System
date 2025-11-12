@@ -1,155 +1,1051 @@
-2025-11-12 00:09:53,381 - slixmpp.features.feature_bind.bind - INFO - JID set to: storage@0.0.0.0/814aed23-219c-4d0a-87f1-2eed20720631
-2025-11-12 00:09:53,382 - spade.Agent - INFO - Agent storage@localhost connected and authenticated.
-2025-11-12 00:09:53,382 - [STO] storage@localhost - INFO - Storage started
-2025-11-12 00:09:53,611 - slixmpp.features.feature_bind.bind - INFO - JID set to: logistics1@0.0.0.0/84bc6f64-bfa0-43ab-86c8-a996c17690b8
-2025-11-12 00:09:53,612 - spade.Agent - INFO - Agent logistics1@localhost connected and authenticated.
-2025-11-12 00:09:53,612 - [LOG] logistics1@localhost - INFO - LogisticsAgent started
-2025-11-12 00:09:53,846 - slixmpp.features.feature_bind.bind - INFO - JID set to: environment@0.0.0.0/31859f3b-8ca9-4094-ac8d-b3c34d0e013d
-2025-11-12 00:09:53,847 - spade.Agent - INFO - Agent environment@localhost connected and authenticated.
-2025-11-12 00:09:53,847 - FarmEnvironmentAgent - INFO - FarmEnvironmentAgent environment@localhost a iniciar...
-2025-11-12 00:09:53,847 - FarmEnvironmentAgent - INFO - FarmEnvironmentAgent iniciado com sucesso.
-2025-11-12 00:09:53,847 - FarmEnvironmentAgent - INFO - ==================================================
-2025-11-12 00:09:53,847 - FarmEnvironmentAgent - INFO - TICK: Ambiente avançou para o dia 200, hora 10. Seca: 0, Peste: 0, Temperatura: 29.74
-2025-11-12 00:09:53,848 - FarmEnvironmentAgent - INFO - ==================================================
-2025-11-12 00:09:54,078 - slixmpp.features.feature_bind.bind - INFO - JID set to: human@0.0.0.0/d454cb73-771d-417e-ad52-a14d9e4eaac8
-2025-11-12 00:09:54,079 - spade.Agent - INFO - Agent human@localhost connected and authenticated.
-2025-11-12 00:09:54,079 - HumanAgent - INFO - HumanAgent human@localhost a iniciar...
-2025-11-12 00:09:54,079 - HumanAgent - INFO - HumanAgent iniciado com sucesso.
-2025-11-12 00:09:54,309 - slixmpp.features.feature_bind.bind - INFO - JID set to: harvester1@0.0.0.0/5c785b04-72da-484a-b855-5857a657c684
-2025-11-12 00:09:54,310 - spade.Agent - INFO - Agent harvester1@localhost connected and authenticated.
-2025-11-12 00:09:54,311 - [HAR] harvester1@localhost - INFO - [HAR] HarvesterAgent harvester1@localhost iniciado. Posição: (-1, -1)
-2025-11-12 00:09:54,541 - slixmpp.features.feature_bind.bind - INFO - JID set to: irrig1@0.0.0.0/be550025-5a5c-4d24-ba09-1c292b810ae1
-2025-11-12 00:09:54,542 - spade.Agent - INFO - Agent irrig1@localhost connected and authenticated.
-2025-11-12 00:09:54,542 - [IRRI] irrig1@localhost - INFO - [IRRI] IrrigationAgent irrig1@localhost iniciado.
-2025-11-12 00:09:54,543 - slixmpp.features.feature_bind.bind - INFO - JID set to: fert1@0.0.0.0/6578fac3-0f39-4656-9d11-e48bf164bab0
-2025-11-12 00:09:54,543 - spade.Agent - INFO - Agent fert1@localhost connected and authenticated.
-2025-11-12 00:09:54,543 - [FERT] fert1@localhost - INFO - [FERT] FertilizerAgent fert1@localhost iniciado.
-2025-11-12 00:09:54,543 - MainStarter - INFO - Agentes principais, logísticos, colheitadeiras, irrigação e fertilização em execução.
-2025-11-12 00:09:54,795 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil1@0.0.0.0/57710aa1-44ce-4b44-89c6-e5e0a29053fc
-2025-11-12 00:09:54,795 - spade.Agent - INFO - Agent soil1@localhost connected and authenticated.
-2025-11-12 00:09:54,795 - [SOIL] soil1@localhost - INFO - SoilSensorAgent soil1@localhost a iniciar...
-2025-11-12 00:09:54,795 - [SOIL] soil1@localhost - INFO - SoilSensorAgent iniciado com sucesso.
-2025-11-12 00:09:54,795 - [SOIL] soil1@localhost - INFO - ScanBehaviour iniciado.
-2025-11-12 00:09:54,795 - [SOIL] soil1@localhost - INFO - Energia consumida: 0.33%. Energia restante: 99.67%.
-2025-11-12 00:09:54,795 - [SOIL] soil1@localhost - INFO - A realizar scan na coluna 0...
-2025-11-12 00:09:54,795 - MainStarter - INFO - Agentes Sensores de Solo em execução.
-2025-11-12 00:09:54,807 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil1@localhost
-2025-11-12 00:09:54,807 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 0}
-2025-11-12 00:09:54,807 - [SOIL] soil1@localhost - INFO - Scan concluído. T: 29.74, N: 79.30, M: 79.59
-2025-11-12 00:09:54,807 - [SOIL] soil1@localhost - INFO - Condições ideais. A aguardar próximo scan.
-2025-11-12 00:09:54,807 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
-2025-11-12 00:09:55,044 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone1@0.0.0.0/aa155d1c-81a5-44b4-aaca-b0848aa137bf
-2025-11-12 00:09:55,044 - spade.Agent - INFO - Agent drone1@localhost connected and authenticated.
-2025-11-12 00:09:55,044 - [DRO] drone1@localhost - INFO - DroneAgent drone1@localhost iniciado. Posição: (0, 0)
-2025-11-12 00:09:55,045 - [DRO] drone1@localhost - INFO - Patrulhando zona (1,0). Energia: 99.01%. 10.00 kg de pesticida restante.
-2025-11-12 00:09:55,045 - [DRO] drone1@localhost - INFO - [DRO] Solicitando dados de drone para (1,0) ao Environment Agent.
-2025-11-12 00:09:55,045 - MainStarter - INFO - Agentes Drones em execução.
-2025-11-12 00:09:55,045 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone1@localhost
-2025-11-12 00:09:55,045 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 0}
-2025-11-12 00:09:55,045 - [DRO] drone1@localhost - INFO - [DRO] Dados de drone recebidos para (1,0): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
-2025-11-12 00:09:55,045 - [DRO] drone1@localhost - INFO - Zona (1,0) não plantada. Informando Logistics.
-2025-11-12 00:09:55,046 - [DRO] drone1@localhost - INFO - [DRO] Mensagem enviada para logistics3@localhost (inform_crop).
-2025-11-12 00:09:55,046 - [DRO] drone1@localhost - INFO - Recursos: Energia=99.01%, Pesticida=10.00.
-2025-11-12 00:10:05,046 - [DRO] drone1@localhost - INFO - Patrulhando zona (2,0). Energia: 98.10%. 10.00 kg de pesticida restante.
-2025-11-12 00:10:05,046 - [DRO] drone1@localhost - INFO - [DRO] Solicitando dados de drone para (2,0) ao Environment Agent.
-2025-11-12 00:10:05,047 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone1@localhost
-2025-11-12 00:10:05,047 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 0}
-2025-11-12 00:10:05,048 - [DRO] drone1@localhost - INFO - [DRO] Dados de drone recebidos para (2,0): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
-2025-11-12 00:10:05,048 - [DRO] drone1@localhost - INFO - Zona (2,0) não plantada. Informando Logistics.
-2025-11-12 00:10:05,049 - [DRO] drone1@localhost - INFO - [DRO] Mensagem enviada para logistics4@localhost (inform_crop).
-2025-11-12 00:10:05,049 - [DRO] drone1@localhost - INFO - Recursos: Energia=98.10%, Pesticida=10.00.
-2025-11-12 00:10:13,847 - FarmEnvironmentAgent - INFO - Limite de ticks atingido. Parando EnvironmentTicker.
-2025-11-12 00:10:13,848 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
-2025-11-12 00:10:13,848 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
-2025-11-12 00:10:13,848 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
-2025-11-12 00:10:13,849 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
-2025-11-12 00:10:13,849 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
-2025-11-12 00:10:13,849 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
-2025-11-12 00:10:13,851 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:13,851 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,063 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/HumanInteractionBehaviour with exit code: None
-2025-11-12 00:10:14,067 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,068 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,069 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
-2025-11-12 00:10:14,069 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
-2025-11-12 00:10:14,069 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
-2025-11-12 00:10:14,069 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
-2025-11-12 00:10:14,070 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
-2025-11-12 00:10:14,070 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
-2025-11-12 00:10:14,073 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,074 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,074 - [HAR] harvester1@localhost - INFO - harvester1@localhost guardou o resto da colheita no agente storage
-2025-11-12 00:10:14,075 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
-2025-11-12 00:10:14,075 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
-2025-11-12 00:10:14,076 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
-2025-11-12 00:10:14,076 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
-2025-11-12 00:10:14,076 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
-2025-11-12 00:10:14,076 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
-2025-11-12 00:10:14,076 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
-2025-11-12 00:10:14,077 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
-2025-11-12 00:10:14,079 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,079 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,080 - [STO] storage@localhost - INFO - =================================== STOR ===================================
-2025-11-12 00:10:14,081 - [STO] storage@localhost - INFO - storage@localhost guardou em toda a simulação:
-2025-11-12 00:10:14,082 - [STO] storage@localhost - INFO - Tomate: 0
-2025-11-12 00:10:14,082 - [STO] storage@localhost - INFO - Pimento: 0
-2025-11-12 00:10:14,082 - [STO] storage@localhost - INFO - Trigo: 0
-2025-11-12 00:10:14,082 - [STO] storage@localhost - INFO - Couve: 0
-2025-11-12 00:10:14,082 - [STO] storage@localhost - INFO - Alface: 0
-2025-11-12 00:10:14,083 - [STO] storage@localhost - INFO - Cenoura: 0
-2025-11-12 00:10:14,083 - [STO] storage@localhost - INFO - =================================== STOR ===================================
-2025-11-12 00:10:14,084 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformHarvestReceiver with exit code: None
-2025-11-12 00:10:14,087 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,089 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,089 - [IRRI] irrig1@localhost - INFO - =================================== IRRI ===================================
-2025-11-12 00:10:14,089 - [IRRI] irrig1@localhost - INFO - irrig1@localhost usou 0 L de água
-2025-11-12 00:10:14,090 - [IRRI] irrig1@localhost - INFO - =================================== IRRI ===================================
-2025-11-12 00:10:14,090 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
-2025-11-12 00:10:14,091 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
-2025-11-12 00:10:14,091 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,091 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,096 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,097 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,097 - [FERT] fert1@localhost - INFO - =================================== FERT ===================================
-2025-11-12 00:10:14,097 - [FERT] fert1@localhost - INFO - fert1@localhost usou 0 KG de fertelizante
-2025-11-12 00:10:14,098 - [FERT] fert1@localhost - INFO - =================================== FERT ===================================
-2025-11-12 00:10:14,098 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
-2025-11-12 00:10:14,098 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
-2025-11-12 00:10:14,098 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,098 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,100 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,101 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,102 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
-2025-11-12 00:10:14,102 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
-2025-11-12 00:10:14,104 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,104 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,104 - [DRO] drone1@localhost - INFO - =================================== DRONE ===================================
-2025-11-12 00:10:14,105 - [DRO] drone1@localhost - INFO - drone1@localhost usou 0 KG de pesticada
-2025-11-12 00:10:14,105 - [DRO] drone1@localhost - INFO - =================================== DRONE ===================================
-2025-11-12 00:10:14,105 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
-2025-11-12 00:10:14,105 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
-2025-11-12 00:10:14,105 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
-2025-11-12 00:10:14,106 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
-2025-11-12 00:10:14,107 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
-2025-11-12 00:10:14,107 - spade.Agent - INFO - Client disconnected.
-2025-11-12 00:10:14,107 - MainStarter - INFO - Todos os agentes foram parados com sucesso.
-2025-11-12 00:10:14,257 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
-2025-11-12 00:10:14,257 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
-2025-11-12 00:10:14,312 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
-2025-11-12 00:10:14,315 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
-2025-11-12 00:10:14,544 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
-2025-11-12 00:10:14,544 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
-2025-11-12 00:10:14,718 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
-2025-11-12 00:10:14,718 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
-2025-11-12 00:10:14,718 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
-2025-11-12 00:10:14,949 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
-2025-11-12 00:10:14,949 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,949 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,950 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
-2025-11-12 00:10:14,950 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:14,950 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
-2025-11-12 00:10:15,046 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
-2025-11-12 00:10:15,049 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
-2025-11-12 00:10:15,050 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
-2025-11-12 00:10:15,057 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
-2025-11-12 00:10:15,108 - MainStarter - INFO - Simulação encerrada com sucesso.
+2025-11-12 15:22:38,845 - slixmpp.features.feature_bind.bind - INFO - JID set to: human@0.0.0.0/ed159883-3952-4b4b-aa07-f084e04e425a
+2025-11-12 15:22:38,845 - spade.Agent - INFO - Agent human@localhost connected and authenticated.
+2025-11-12 15:22:38,845 - HumanAgent - INFO - HumanAgent human@localhost a iniciar...
+2025-11-12 15:22:38,845 - HumanAgent - INFO - HumanAgent iniciado com sucesso.
+2025-11-12 15:22:39,305 - slixmpp.features.feature_bind.bind - INFO - JID set to: environment@0.0.0.0/d8d5f45f-a230-4d56-8709-ebfccd839348
+2025-11-12 15:22:39,306 - spade.Agent - INFO - Agent environment@localhost connected and authenticated.
+2025-11-12 15:22:39,307 - FarmEnvironmentAgent - INFO - FarmEnvironmentAgent environment@localhost a iniciar...
+2025-11-12 15:22:39,307 - FarmEnvironmentAgent - INFO - FarmEnvironmentAgent iniciado com sucesso.
+2025-11-12 15:22:39,310 - FarmEnvironmentAgent - INFO - ==================================================
+2025-11-12 15:22:39,310 - FarmEnvironmentAgent - INFO - TICK: Ambiente avançou para o dia 200, hora 10. Seca: 0, Peste: 0, Temperatura: 30.02
+2025-11-12 15:22:39,310 - FarmEnvironmentAgent - INFO - ==================================================
+2025-11-12 15:22:39,536 - slixmpp.features.feature_bind.bind - INFO - JID set to: logistics1@0.0.0.0/036e5728-dc26-4897-bc7e-0338fb388274
+2025-11-12 15:22:39,537 - spade.Agent - INFO - Agent logistics1@localhost connected and authenticated.
+2025-11-12 15:22:39,540 - [LOG] logistics1@localhost - INFO - LogisticsAgent started
+2025-11-12 15:22:39,541 - slixmpp.features.feature_bind.bind - INFO - JID set to: logistics2@0.0.0.0/e98128ca-5e4b-4d85-a79b-11f936e234af
+2025-11-12 15:22:39,542 - spade.Agent - INFO - Agent logistics2@localhost connected and authenticated.
+2025-11-12 15:22:39,542 - [LOG] logistics2@localhost - INFO - LogisticsAgent started
+2025-11-12 15:22:40,001 - slixmpp.features.feature_bind.bind - INFO - JID set to: logistics3@0.0.0.0/5c3446a7-0db0-4d26-bb84-750614b4b076
+2025-11-12 15:22:40,003 - spade.Agent - INFO - Agent logistics3@localhost connected and authenticated.
+2025-11-12 15:22:40,003 - [LOG] logistics3@localhost - INFO - LogisticsAgent started
+2025-11-12 15:22:40,233 - slixmpp.features.feature_bind.bind - INFO - JID set to: logistics4@0.0.0.0/9575b94d-8704-4b25-9b84-eac11585efbe
+2025-11-12 15:22:40,233 - spade.Agent - INFO - Agent logistics4@localhost connected and authenticated.
+2025-11-12 15:22:40,233 - [LOG] logistics4@localhost - INFO - LogisticsAgent started
+2025-11-12 15:22:40,691 - slixmpp.features.feature_bind.bind - INFO - JID set to: harvester1@0.0.0.0/5054f71a-9b79-4581-b1c1-b85a1deaf992
+2025-11-12 15:22:40,693 - spade.Agent - INFO - Agent harvester1@localhost connected and authenticated.
+2025-11-12 15:22:40,693 - [HAR] harvester1@localhost - INFO - [HAR] HarvesterAgent harvester1@localhost iniciado. Posição: (-1, -1)
+2025-11-12 15:22:40,693 - slixmpp.features.feature_bind.bind - INFO - JID set to: storage@0.0.0.0/675d4308-c39b-426b-b543-d459735f9fd5
+2025-11-12 15:22:40,694 - spade.Agent - INFO - Agent storage@localhost connected and authenticated.
+2025-11-12 15:22:40,694 - [STO] storage@localhost - INFO - Storage started
+2025-11-12 15:22:40,695 - slixmpp.features.feature_bind.bind - INFO - JID set to: harvester3@0.0.0.0/5d11e80a-5534-4519-9947-5e089cd97d06
+2025-11-12 15:22:40,696 - spade.Agent - INFO - Agent harvester3@localhost connected and authenticated.
+2025-11-12 15:22:40,696 - [HAR] harvester3@localhost - INFO - [HAR] HarvesterAgent harvester3@localhost iniciado. Posição: (6, -1)
+2025-11-12 15:22:41,156 - slixmpp.features.feature_bind.bind - INFO - JID set to: harvester2@0.0.0.0/0ab81027-63ea-410a-9bdb-ec95ffd904a1
+2025-11-12 15:22:41,157 - spade.Agent - INFO - Agent harvester2@localhost connected and authenticated.
+2025-11-12 15:22:41,157 - [HAR] harvester2@localhost - INFO - [HAR] HarvesterAgent harvester2@localhost iniciado. Posição: (-1, 6)
+2025-11-12 15:22:41,843 - slixmpp.features.feature_bind.bind - INFO - JID set to: harvester4@0.0.0.0/33107fcf-0c25-474d-949e-9856661ca20d
+2025-11-12 15:22:41,844 - spade.Agent - INFO - Agent harvester4@localhost connected and authenticated.
+2025-11-12 15:22:41,844 - [HAR] harvester4@localhost - INFO - [HAR] HarvesterAgent harvester4@localhost iniciado. Posição: (6, 6)
+2025-11-12 15:22:42,074 - slixmpp.features.feature_bind.bind - INFO - JID set to: irrig2@0.0.0.0/d66c497f-bf8b-4b21-8052-4a62980bb892
+2025-11-12 15:22:42,075 - slixmpp.features.feature_bind.bind - INFO - JID set to: irrig1@0.0.0.0/7cf6e5c3-6973-42b1-bbf1-f8394e56b4c0
+2025-11-12 15:22:42,075 - slixmpp.features.feature_bind.bind - INFO - JID set to: irrig3@0.0.0.0/4d6503cb-3e0f-4ec9-b84a-a51169f7bad3
+2025-11-12 15:22:42,077 - spade.Agent - INFO - Agent irrig2@localhost connected and authenticated.
+2025-11-12 15:22:42,077 - [IRRI] irrig2@localhost - INFO - [IRRI] IrrigationAgent irrig2@localhost iniciado.
+2025-11-12 15:22:42,078 - spade.Agent - INFO - Agent irrig1@localhost connected and authenticated.
+2025-11-12 15:22:42,078 - [IRRI] irrig1@localhost - INFO - [IRRI] IrrigationAgent irrig1@localhost iniciado.
+2025-11-12 15:22:42,078 - spade.Agent - INFO - Agent irrig3@localhost connected and authenticated.
+2025-11-12 15:22:42,078 - [IRRI] irrig3@localhost - INFO - [IRRI] IrrigationAgent irrig3@localhost iniciado.
+2025-11-12 15:22:42,306 - slixmpp.features.feature_bind.bind - INFO - JID set to: fert1@0.0.0.0/974453bc-92c8-46c6-a2f9-349f99f4592c
+2025-11-12 15:22:42,307 - spade.Agent - INFO - Agent fert1@localhost connected and authenticated.
+2025-11-12 15:22:42,307 - [FERT] fert1@localhost - INFO - [FERT] FertilizerAgent fert1@localhost iniciado.
+2025-11-12 15:22:42,536 - slixmpp.features.feature_bind.bind - INFO - JID set to: irrig4@0.0.0.0/a1109459-7dd3-42cb-9328-d2de19f99f20
+2025-11-12 15:22:42,538 - spade.Agent - INFO - Agent irrig4@localhost connected and authenticated.
+2025-11-12 15:22:42,538 - [IRRI] irrig4@localhost - INFO - [IRRI] IrrigationAgent irrig4@localhost iniciado.
+2025-11-12 15:22:42,995 - slixmpp.features.feature_bind.bind - INFO - JID set to: fert2@0.0.0.0/8ea87ac4-0daa-4c03-ac30-92446ba62eff
+2025-11-12 15:22:42,996 - spade.Agent - INFO - Agent fert2@localhost connected and authenticated.
+2025-11-12 15:22:42,996 - [FERT] fert2@localhost - INFO - [FERT] FertilizerAgent fert2@localhost iniciado.
+2025-11-12 15:22:42,997 - slixmpp.features.feature_bind.bind - INFO - JID set to: fert3@0.0.0.0/57154bda-e72c-4301-a40c-e249e3cf8d53
+2025-11-12 15:22:42,997 - slixmpp.features.feature_bind.bind - INFO - JID set to: fert4@0.0.0.0/6a0abd77-5bde-46b3-a47e-a2b46a6e3523
+2025-11-12 15:22:42,998 - spade.Agent - INFO - Agent fert3@localhost connected and authenticated.
+2025-11-12 15:22:42,998 - [FERT] fert3@localhost - INFO - [FERT] FertilizerAgent fert3@localhost iniciado.
+2025-11-12 15:22:42,998 - spade.Agent - INFO - Agent fert4@localhost connected and authenticated.
+2025-11-12 15:22:42,998 - [FERT] fert4@localhost - INFO - [FERT] FertilizerAgent fert4@localhost iniciado.
+2025-11-12 15:22:42,999 - MainStarter - INFO - Agentes principais, logísticos, colheitadeiras, irrigação e fertilização em execução.
+2025-11-12 15:22:43,760 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil1@0.0.0.0/1e07ee5d-4abe-4f5d-9076-129b78752ea4
+2025-11-12 15:22:43,761 - spade.Agent - INFO - Agent soil1@localhost connected and authenticated.
+2025-11-12 15:22:43,761 - [SOIL] soil1@localhost - INFO - SoilSensorAgent soil1@localhost a iniciar...
+2025-11-12 15:22:43,761 - [SOIL] soil1@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:43,761 - [SOIL] soil1@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:43,761 - [SOIL] soil1@localhost - INFO - Energia consumida: 0.04%. Energia restante: 99.96%.
+2025-11-12 15:22:43,761 - [SOIL] soil1@localhost - INFO - A realizar scan na coluna 0...
+2025-11-12 15:22:43,761 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil1@localhost
+2025-11-12 15:22:43,761 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 0}
+2025-11-12 15:22:43,762 - [SOIL] soil1@localhost - INFO - Scan concluído. T: 30.02, N: 80.57, M: 78.50
+2025-11-12 15:22:43,762 - [SOIL] soil1@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:43,762 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:43,990 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil3@0.0.0.0/49eea1e1-2980-47be-b5c7-51474208bc23
+2025-11-12 15:22:43,990 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil2@0.0.0.0/e733e46e-4273-4b1a-8b3d-996b33e8d765
+2025-11-12 15:22:43,991 - spade.Agent - INFO - Agent soil3@localhost connected and authenticated.
+2025-11-12 15:22:43,992 - [SOIL] soil3@localhost - INFO - SoilSensorAgent soil3@localhost a iniciar...
+2025-11-12 15:22:43,992 - [SOIL] soil3@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:43,992 - spade.Agent - INFO - Agent soil2@localhost connected and authenticated.
+2025-11-12 15:22:43,992 - [SOIL] soil2@localhost - INFO - SoilSensorAgent soil2@localhost a iniciar...
+2025-11-12 15:22:43,992 - [SOIL] soil2@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:43,992 - [SOIL] soil3@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:43,992 - [SOIL] soil3@localhost - INFO - Energia consumida: 0.97%. Energia restante: 99.03%.
+2025-11-12 15:22:43,992 - [SOIL] soil3@localhost - INFO - A realizar scan na coluna 2...
+2025-11-12 15:22:43,992 - [SOIL] soil2@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:43,992 - [SOIL] soil2@localhost - INFO - Energia consumida: 0.15%. Energia restante: 99.85%.
+2025-11-12 15:22:43,992 - [SOIL] soil2@localhost - INFO - A realizar scan na coluna 1...
+2025-11-12 15:22:43,993 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil3@localhost
+2025-11-12 15:22:43,993 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 2}
+2025-11-12 15:22:43,993 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil2@localhost
+2025-11-12 15:22:43,993 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 1}
+2025-11-12 15:22:43,993 - [SOIL] soil3@localhost - INFO - Scan concluído. T: 30.02, N: 80.30, M: 81.45
+2025-11-12 15:22:43,993 - [SOIL] soil3@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:43,993 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:43,993 - [SOIL] soil2@localhost - INFO - Scan concluído. T: 30.02, N: 79.36, M: 80.78
+2025-11-12 15:22:43,993 - [SOIL] soil2@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:43,993 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:44,449 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil4@0.0.0.0/b5748123-3fee-4e8c-8159-77025928d028
+2025-11-12 15:22:44,450 - spade.Agent - INFO - Agent soil4@localhost connected and authenticated.
+2025-11-12 15:22:44,450 - [SOIL] soil4@localhost - INFO - SoilSensorAgent soil4@localhost a iniciar...
+2025-11-12 15:22:44,450 - [SOIL] soil4@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:44,450 - [SOIL] soil4@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:44,450 - [SOIL] soil4@localhost - INFO - Energia consumida: 0.15%. Energia restante: 99.85%.
+2025-11-12 15:22:44,450 - [SOIL] soil4@localhost - INFO - A realizar scan na coluna 3...
+2025-11-12 15:22:44,451 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil5@0.0.0.0/7e6ebe73-4a20-4981-b896-a53ff55efe4f
+2025-11-12 15:22:44,451 - slixmpp.features.feature_bind.bind - INFO - JID set to: soil6@0.0.0.0/9c6a3371-fd32-46d0-a039-79e0302acad3
+2025-11-12 15:22:44,451 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil4@localhost
+2025-11-12 15:22:44,451 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 3}
+2025-11-12 15:22:44,452 - spade.Agent - INFO - Agent soil5@localhost connected and authenticated.
+2025-11-12 15:22:44,452 - [SOIL] soil5@localhost - INFO - SoilSensorAgent soil5@localhost a iniciar...
+2025-11-12 15:22:44,452 - [SOIL] soil5@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:44,452 - [SOIL] soil5@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:44,452 - [SOIL] soil5@localhost - INFO - Energia consumida: 0.79%. Energia restante: 99.21%.
+2025-11-12 15:22:44,452 - [SOIL] soil5@localhost - INFO - A realizar scan na coluna 4...
+2025-11-12 15:22:44,452 - spade.Agent - INFO - Agent soil6@localhost connected and authenticated.
+2025-11-12 15:22:44,452 - [SOIL] soil6@localhost - INFO - SoilSensorAgent soil6@localhost a iniciar...
+2025-11-12 15:22:44,452 - [SOIL] soil6@localhost - INFO - SoilSensorAgent iniciado com sucesso.
+2025-11-12 15:22:44,452 - [SOIL] soil6@localhost - INFO - ScanBehaviour iniciado.
+2025-11-12 15:22:44,452 - [SOIL] soil6@localhost - INFO - Energia consumida: 0.30%. Energia restante: 99.70%.
+2025-11-12 15:22:44,452 - [SOIL] soil6@localhost - INFO - A realizar scan na coluna 5...
+2025-11-12 15:22:44,452 - [SOIL] soil4@localhost - INFO - Scan concluído. T: 30.02, N: 79.02, M: 79.23
+2025-11-12 15:22:44,452 - [SOIL] soil4@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:44,452 - MainStarter - INFO - Agentes Sensores de Solo em execução.
+2025-11-12 15:22:44,453 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:44,453 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil5@localhost
+2025-11-12 15:22:44,453 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 4}
+2025-11-12 15:22:44,514 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_soil de soil6@localhost
+2025-11-12 15:22:44,514 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'protocol': 'inform', 'ontology': 'farm_data'} body={"action": "get_soil", "row": 0, "col": 5}
+2025-11-12 15:22:44,516 - [SOIL] soil5@localhost - INFO - Scan concluído. T: 30.02, N: 80.15, M: 79.44
+2025-11-12 15:22:44,516 - [SOIL] soil5@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:44,517 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:44,517 - [SOIL] soil6@localhost - INFO - Scan concluído. T: 30.02, N: 80.40, M: 78.13
+2025-11-12 15:22:44,517 - [SOIL] soil6@localhost - INFO - Condições ideais. A aguardar próximo scan.
+2025-11-12 15:22:44,517 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/ReceiveDataBehaviour with exit code: None
+2025-11-12 15:22:44,992 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone1@0.0.0.0/d208104c-6188-46e0-be28-e4c00fc16a50
+2025-11-12 15:22:44,992 - spade.Agent - INFO - Agent drone1@localhost connected and authenticated.
+2025-11-12 15:22:45,020 - [DRO] drone1@localhost - INFO - DroneAgent drone1@localhost iniciado. Posição: (0, 0)
+2025-11-12 15:22:45,020 - [DRO] drone1@localhost - INFO - Patrulhando zona (1,0). Energia: 99.52%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,020 - [DRO] drone1@localhost - INFO - [DRO] Solicitando dados de drone para (1,0) ao Environment Agent.
+2025-11-12 15:22:45,021 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone1@localhost
+2025-11-12 15:22:45,021 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 0}
+2025-11-12 15:22:45,021 - [DRO] drone1@localhost - INFO - [DRO] Dados de drone recebidos para (1,0): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,022 - [DRO] drone1@localhost - INFO - Zona (1,0) não plantada. Informando Logistics.
+2025-11-12 15:22:45,022 - [DRO] drone1@localhost - INFO - [DRO] Mensagem enviada para logistics1@localhost (inform_crop).
+2025-11-12 15:22:45,022 - [DRO] drone1@localhost - INFO - Recursos: Energia=99.52%, Pesticida=10.00.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Recebido inform de drone1@localhost para zona (1, 0). Estado: 0.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 5 em (1, 0).
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 0) enviada para logistics2@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 0) enviada para logistics3@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 0) enviada para logistics4@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960965.0223572 para plant_application em (1, 0).
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:45,022 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:45,022 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:45,023 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:45,023 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 0) adicionada à lista
+2025-11-12 15:22:45,023 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 0) adicionada à lista
+2025-11-12 15:22:45,023 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 0) adicionada à lista
+2025-11-12 15:22:45,023 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.0223572 para plant_application em [1, 0].
+2025-11-12 15:22:45,023 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/1.50.
+2025-11-12 15:22:45,023 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.0223572.
+2025-11-12 15:22:45,023 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.0223572 para plant_application em [1, 0].
+2025-11-12 15:22:45,023 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:45,023 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.0223572.
+2025-11-12 15:22:45,023 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.0223572 para plant_application em [1, 0].
+2025-11-12 15:22:45,023 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:45,023 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.0223572.
+2025-11-12 15:22:45,023 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.0223572 para plant_application em [1, 0].
+2025-11-12 15:22:45,023 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/5.50.
+2025-11-12 15:22:45,023 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.0223572.
+2025-11-12 15:22:45,023 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 3, Custo: 1.5.
+2025-11-12 15:22:45,023 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:45,023 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:45,024 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 11, Custo: 5.5.
+2025-11-12 15:22:45,451 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone2@0.0.0.0/251bc28d-fbf6-4007-9313-ae324a202ca2
+2025-11-12 15:22:45,452 - spade.Agent - INFO - Agent drone2@localhost connected and authenticated.
+2025-11-12 15:22:45,452 - [DRO] drone2@localhost - INFO - DroneAgent drone2@localhost iniciado. Posição: (0, 1)
+2025-11-12 15:22:45,452 - [DRO] drone2@localhost - INFO - Patrulhando zona (1,1). Energia: 99.56%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,452 - [DRO] drone2@localhost - INFO - [DRO] Solicitando dados de drone para (1,1) ao Environment Agent.
+2025-11-12 15:22:45,452 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone2@localhost
+2025-11-12 15:22:45,452 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 1}
+2025-11-12 15:22:45,452 - [DRO] drone2@localhost - INFO - [DRO] Dados de drone recebidos para (1,1): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,452 - [DRO] drone2@localhost - INFO - Zona (1,1) não plantada. Informando Logistics.
+2025-11-12 15:22:45,453 - [DRO] drone2@localhost - INFO - [DRO] Mensagem enviada para logistics4@localhost (inform_crop).
+2025-11-12 15:22:45,453 - [DRO] drone2@localhost - INFO - Recursos: Energia=99.56%, Pesticida=10.00.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Recebido inform de drone2@localhost para zona (1, 1). Estado: 0.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 2 em (1, 1).
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 1) enviada para logistics1@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 1) enviada para logistics2@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 1) enviada para logistics3@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960965.4532092 para plant_application em (1, 1).
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:45,453 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:45,453 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:45,454 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:45,454 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 1) adicionada à lista
+2025-11-12 15:22:45,454 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 1) adicionada à lista
+2025-11-12 15:22:45,454 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 1) adicionada à lista
+2025-11-12 15:22:45,454 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.4532092 para plant_application em [1, 1].
+2025-11-12 15:22:45,454 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/2.00.
+2025-11-12 15:22:45,454 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.4532092.
+2025-11-12 15:22:45,454 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.4532092 para plant_application em [1, 1].
+2025-11-12 15:22:45,454 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:45,454 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.4532092.
+2025-11-12 15:22:45,454 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.4532092 para plant_application em [1, 1].
+2025-11-12 15:22:45,454 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:45,454 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.4532092.
+2025-11-12 15:22:45,454 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.4532092 para plant_application em [1, 1].
+2025-11-12 15:22:45,454 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/5.00.
+2025-11-12 15:22:45,454 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.4532092.
+2025-11-12 15:22:45,454 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 4, Custo: 2.0.
+2025-11-12 15:22:45,454 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:45,454 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:45,454 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 10, Custo: 5.0.
+2025-11-12 15:22:45,681 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone4@0.0.0.0/e9c48e51-1aa8-4c3b-b5f9-f44526b81e26
+2025-11-12 15:22:45,681 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone3@0.0.0.0/a1853d95-39c8-4011-9d97-ebe8b23fb086
+2025-11-12 15:22:45,682 - spade.Agent - INFO - Agent drone4@localhost connected and authenticated.
+2025-11-12 15:22:45,682 - [DRO] drone4@localhost - INFO - DroneAgent drone4@localhost iniciado. Posição: (0, 3)
+2025-11-12 15:22:45,682 - spade.Agent - INFO - Agent drone3@localhost connected and authenticated.
+2025-11-12 15:22:45,682 - [DRO] drone3@localhost - INFO - DroneAgent drone3@localhost iniciado. Posição: (0, 2)
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - Patrulhando zona (1,3). Energia: 99.72%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - [DRO] Solicitando dados de drone para (1,3) ao Environment Agent.
+2025-11-12 15:22:45,683 - [DRO] drone3@localhost - INFO - Patrulhando zona (1,2). Energia: 99.83%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,683 - [DRO] drone3@localhost - INFO - [DRO] Solicitando dados de drone para (1,2) ao Environment Agent.
+2025-11-12 15:22:45,683 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone4@localhost
+2025-11-12 15:22:45,683 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 3}
+2025-11-12 15:22:45,683 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone3@localhost
+2025-11-12 15:22:45,683 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 2}
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - [DRO] Dados de drone recebidos para (1,3): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - Zona (1,3) não plantada. Informando Logistics.
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - [DRO] Mensagem enviada para logistics3@localhost (inform_crop).
+2025-11-12 15:22:45,683 - [DRO] drone4@localhost - INFO - Recursos: Energia=99.72%, Pesticida=10.00.
+2025-11-12 15:22:45,684 - [DRO] drone3@localhost - INFO - [DRO] Dados de drone recebidos para (1,2): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,684 - [DRO] drone3@localhost - INFO - Zona (1,2) não plantada. Informando Logistics.
+2025-11-12 15:22:45,684 - [DRO] drone3@localhost - INFO - [DRO] Mensagem enviada para logistics3@localhost (inform_crop).
+2025-11-12 15:22:45,684 - [DRO] drone3@localhost - INFO - Recursos: Energia=99.83%, Pesticida=10.00.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Recebido inform de drone4@localhost para zona (1, 3). Estado: 0.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 2 em (1, 3).
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 3) enviada para logistics1@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 3) enviada para logistics2@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 3) enviada para logistics4@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960965.6843653 para plant_application em (1, 3).
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:45,684 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Recebido inform de drone3@localhost para zona (1, 2). Estado: 0.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 5 em (1, 2).
+2025-11-12 15:22:45,685 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:45,685 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 2) enviada para logistics1@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 2) enviada para logistics2@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 2) enviada para logistics4@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960965.6850352 para plant_application em (1, 2).
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:45,685 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:45,685 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:45,685 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:45,685 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 3) adicionada à lista
+2025-11-12 15:22:45,685 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 3) adicionada à lista
+2025-11-12 15:22:45,685 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 3) adicionada à lista
+2025-11-12 15:22:45,685 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6843653 para plant_application em [1, 3].
+2025-11-12 15:22:45,685 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:45,686 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6843653.
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6843653 para plant_application em [1, 3].
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6843653.
+2025-11-12 15:22:45,686 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6843653 para plant_application em [1, 3].
+2025-11-12 15:22:45,686 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/4.50.
+2025-11-12 15:22:45,686 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6843653.
+2025-11-12 15:22:45,686 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6843653 para plant_application em [1, 3].
+2025-11-12 15:22:45,686 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:45,686 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6843653.
+2025-11-12 15:22:45,686 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 2) adicionada à lista
+2025-11-12 15:22:45,686 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 2) adicionada à lista
+2025-11-12 15:22:45,686 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 2) adicionada à lista
+2025-11-12 15:22:45,686 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6850352 para plant_application em [1, 2].
+2025-11-12 15:22:45,686 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:45,686 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6850352.
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6850352 para plant_application em [1, 2].
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:45,686 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6850352.
+2025-11-12 15:22:45,686 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6850352 para plant_application em [1, 2].
+2025-11-12 15:22:45,687 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:45,687 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6850352.
+2025-11-12 15:22:45,687 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.6850352 para plant_application em [1, 2].
+2025-11-12 15:22:45,687 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/4.50.
+2025-11-12 15:22:45,687 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.6850352.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 9, Custo: 4.5.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:45,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 9, Custo: 4.5.
+2025-11-12 15:22:45,911 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone5@0.0.0.0/a8504f2a-33d1-452b-b063-ff1332861d22
+2025-11-12 15:22:45,912 - spade.Agent - INFO - Agent drone5@localhost connected and authenticated.
+2025-11-12 15:22:45,912 - [DRO] drone5@localhost - INFO - DroneAgent drone5@localhost iniciado. Posição: (0, 4)
+2025-11-12 15:22:45,912 - [DRO] drone5@localhost - INFO - Patrulhando zona (1,4). Energia: 99.90%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,912 - [DRO] drone5@localhost - INFO - [DRO] Solicitando dados de drone para (1,4) ao Environment Agent.
+2025-11-12 15:22:45,912 - slixmpp.features.feature_bind.bind - INFO - JID set to: drone6@0.0.0.0/2f3b74fb-ae8b-4374-ae41-8832e864a276
+2025-11-12 15:22:45,913 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone5@localhost
+2025-11-12 15:22:45,913 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 4}
+2025-11-12 15:22:45,913 - spade.Agent - INFO - Agent drone6@localhost connected and authenticated.
+2025-11-12 15:22:45,913 - [DRO] drone6@localhost - INFO - DroneAgent drone6@localhost iniciado. Posição: (0, 5)
+2025-11-12 15:22:45,913 - [DRO] drone6@localhost - INFO - Patrulhando zona (1,5). Energia: 99.68%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:45,913 - [DRO] drone6@localhost - INFO - [DRO] Solicitando dados de drone para (1,5) ao Environment Agent.
+2025-11-12 15:22:45,913 - [DRO] drone5@localhost - INFO - [DRO] Dados de drone recebidos para (1,4): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,913 - [DRO] drone5@localhost - INFO - Zona (1,4) não plantada. Informando Logistics.
+2025-11-12 15:22:45,913 - [DRO] drone5@localhost - INFO - [DRO] Mensagem enviada para logistics1@localhost (inform_crop).
+2025-11-12 15:22:45,913 - [DRO] drone5@localhost - INFO - Recursos: Energia=99.90%, Pesticida=10.00.
+2025-11-12 15:22:45,913 - MainStarter - INFO - Agentes Drones em execução.
+2025-11-12 15:22:45,913 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone6@localhost
+2025-11-12 15:22:45,914 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 1, "col": 5}
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Recebido inform de drone5@localhost para zona (1, 4). Estado: 0.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 3 em (1, 4).
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 4) enviada para logistics2@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 4) enviada para logistics3@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 4) enviada para logistics4@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960965.9141612 para plant_application em (1, 4).
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:45,914 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:45,914 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:45,914 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:45,914 - [DRO] drone6@localhost - INFO - [DRO] Dados de drone recebidos para (1,5): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:45,914 - [DRO] drone6@localhost - INFO - Zona (1,5) não plantada. Informando Logistics.
+2025-11-12 15:22:45,914 - [DRO] drone6@localhost - INFO - [DRO] Mensagem enviada para logistics1@localhost (inform_crop).
+2025-11-12 15:22:45,915 - [DRO] drone6@localhost - INFO - Recursos: Energia=99.68%, Pesticida=10.00.
+2025-11-12 15:22:45,915 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 4) adicionada à lista
+2025-11-12 15:22:45,915 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 4) adicionada à lista
+2025-11-12 15:22:45,915 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 4) adicionada à lista
+2025-11-12 15:22:45,915 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.9141612 para plant_application em [1, 4].
+2025-11-12 15:22:45,915 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:45,915 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.9141612.
+2025-11-12 15:22:45,915 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.9141612 para plant_application em [1, 4].
+2025-11-12 15:22:45,915 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/2.00.
+2025-11-12 15:22:45,915 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.9141612.
+2025-11-12 15:22:45,915 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.9141612 para plant_application em [1, 4].
+2025-11-12 15:22:45,915 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/5.00.
+2025-11-12 15:22:45,915 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.9141612.
+2025-11-12 15:22:45,915 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960965.9141612 para plant_application em [1, 4].
+2025-11-12 15:22:45,915 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:45,915 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960965.9141612.
+2025-11-12 15:22:45,915 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:45,915 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 4, Custo: 2.0.
+2025-11-12 15:22:45,915 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 10, Custo: 5.0.
+2025-11-12 15:22:45,916 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:50,455 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960965.4532092. A avaliar propostas.
+2025-11-12 15:22:50,469 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 4.
+2025-11-12 15:22:50,469 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,470 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,470 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.4532092 ACEITE para plant_application em (1, 1).
+2025-11-12 15:22:50,470 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.4532092 REJEITADA para plant_application.
+2025-11-12 15:22:50,470 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.4532092 REJEITADA para plant_application.
+2025-11-12 15:22:50,470 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.4532092 REJEITADA para plant_application.
+2025-11-12 15:22:50,470 - [HAR] harvester1@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960965.4532092 em (1, 1) (Semente: 2).
+2025-11-12 15:22:50,470 - [HAR] harvester1@localhost - INFO - [PLANT] A viajar para (1, 1). Custo de combustível (ida e volta): 2.00.
+2025-11-12 15:22:50,687 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960965.6843653. A avaliar propostas.
+2025-11-12 15:22:50,688 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester2@localhost com ETA 5.
+2025-11-12 15:22:50,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,688 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960965.6850352. A avaliar propostas.
+2025-11-12 15:22:50,688 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 5.
+2025-11-12 15:22:50,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,688 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6843653 REJEITADA para plant_application.
+2025-11-12 15:22:50,688 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6843653 ACEITE para plant_application em (1, 3).
+2025-11-12 15:22:50,688 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6843653 REJEITADA para plant_application.
+2025-11-12 15:22:50,688 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6843653 REJEITADA para plant_application.
+2025-11-12 15:22:50,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,688 - [HAR] harvester2@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960965.6843653 em (1, 3) (Semente: 2).
+2025-11-12 15:22:50,689 - [HAR] harvester2@localhost - INFO - [PLANT] A viajar para (1, 3). Custo de combustível (ida e volta): 2.50.
+2025-11-12 15:22:50,689 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6850352 ACEITE para plant_application em (1, 2).
+2025-11-12 15:22:50,689 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6850352 REJEITADA para plant_application.
+2025-11-12 15:22:50,689 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6850352 REJEITADA para plant_application.
+2025-11-12 15:22:50,689 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.6850352 REJEITADA para plant_application.
+2025-11-12 15:22:50,689 - [HAR] harvester1@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960965.6850352 em (1, 2) (Semente: 5).
+2025-11-12 15:22:50,689 - [HAR] harvester1@localhost - INFO - [PLANT] A viajar para (1, 2). Custo de combustível (ida e volta): 2.50.
+2025-11-12 15:22:50,916 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960965.0223572. A avaliar propostas.
+2025-11-12 15:22:50,916 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 3.
+2025-11-12 15:22:50,916 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,916 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Recebido inform de drone6@localhost para zona (1, 5). Estado: 0.
+2025-11-12 15:22:50,916 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 0 em (1, 5).
+2025-11-12 15:22:50,916 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 5) enviada para logistics2@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 5) enviada para logistics3@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (1, 5) enviada para logistics4@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960970.9166815 para plant_application em (1, 5).
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960965.9141612. A avaliar propostas.
+2025-11-12 15:22:50,917 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester2@localhost com ETA 4.
+2025-11-12 15:22:50,917 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,917 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:50,917 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:50,918 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.0223572 ACEITE para plant_application em (1, 0).
+2025-11-12 15:22:50,918 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.0223572 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.0223572 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.0223572 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:50,918 - [HAR] harvester1@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960965.0223572 em (1, 0) (Semente: 5).
+2025-11-12 15:22:50,918 - [HAR] harvester1@localhost - INFO - [PLANT] A viajar para (1, 0). Custo de combustível (ida e volta): 1.50.
+2025-11-12 15:22:50,918 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (1, 5) adicionada à lista
+2025-11-12 15:22:50,918 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (1, 5) adicionada à lista
+2025-11-12 15:22:50,918 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (1, 5) adicionada à lista
+2025-11-12 15:22:50,918 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.9141612 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.9141612 ACEITE para plant_application em (1, 4).
+2025-11-12 15:22:50,918 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.9141612 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960965.9141612 REJEITADA para plant_application.
+2025-11-12 15:22:50,918 - [HAR] harvester2@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960965.9141612 em (1, 4) (Semente: 3).
+2025-11-12 15:22:50,918 - [HAR] harvester2@localhost - INFO - [PLANT] A viajar para (1, 4). Custo de combustível (ida e volta): 2.00.
+2025-11-12 15:22:51,017 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960970.9166815 para plant_application em [1, 5].
+2025-11-12 15:22:51,018 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:51,019 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960970.9166815.
+2025-11-12 15:22:51,020 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960970.9166815 para plant_application em [1, 5].
+2025-11-12 15:22:51,021 - [HAR] harvester2@localhost - INFO - [CFP] Agente ocupado (plant). Rejeitando proposta.
+2025-11-12 15:22:51,022 - [HAR] harvester2@localhost - INFO - [REJECT] Proposta rejeitada para CFP cfp_task_1762960970.9166815.
+2025-11-12 15:22:51,022 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960970.9166815 para plant_application em [1, 5].
+2025-11-12 15:22:51,023 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/5.50.
+2025-11-12 15:22:51,023 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960970.9166815.
+2025-11-12 15:22:51,023 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960970.9166815 para plant_application em [1, 5].
+2025-11-12 15:22:51,024 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:51,024 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960970.9166815.
+2025-11-12 15:22:51,025 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:51,025 - [LOG] logistics1@localhost - WARNING - [ACCEPT_RECHARGE] Recebido ACCEPT para CFP cfp_task_1762960970.9166815 desconhecido.
+2025-11-12 15:22:51,026 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 11, Custo: 5.5.
+2025-11-12 15:22:51,027 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:55,022 - [DRO] drone1@localhost - INFO - Patrulhando zona (2,0). Energia: 99.40%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,022 - [DRO] drone1@localhost - INFO - [DRO] Solicitando dados de drone para (2,0) ao Environment Agent.
+2025-11-12 15:22:55,024 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone1@localhost
+2025-11-12 15:22:55,024 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 0}
+2025-11-12 15:22:55,025 - [DRO] drone1@localhost - INFO - [DRO] Dados de drone recebidos para (2,0): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,025 - [DRO] drone1@localhost - INFO - Zona (2,0) não plantada. Informando Logistics.
+2025-11-12 15:22:55,026 - [DRO] drone1@localhost - INFO - [DRO] Mensagem enviada para logistics3@localhost (inform_crop).
+2025-11-12 15:22:55,026 - [DRO] drone1@localhost - INFO - Recursos: Energia=99.40%, Pesticida=10.00.
+2025-11-12 15:22:55,027 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Recebido inform de drone1@localhost para zona (2, 0). Estado: 0.
+2025-11-12 15:22:55,027 - [LOG] logistics3@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 0 em (2, 0).
+2025-11-12 15:22:55,027 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 0) enviada para logistics1@localhost.
+2025-11-12 15:22:55,027 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 0) enviada para logistics2@localhost.
+2025-11-12 15:22:55,027 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 0) enviada para logistics4@localhost.
+2025-11-12 15:22:55,028 - [LOG] logistics3@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.0277662 para plant_application em (2, 0).
+2025-11-12 15:22:55,028 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,028 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,028 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,028 - [LOG] logistics3@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,028 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,028 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,028 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 0) adicionada à lista
+2025-11-12 15:22:55,028 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 0) adicionada à lista
+2025-11-12 15:22:55,028 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 0) adicionada à lista
+2025-11-12 15:22:55,028 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.0277662 para plant_application em [2, 0].
+2025-11-12 15:22:55,028 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/2.00.
+2025-11-12 15:22:55,028 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.0277662.
+2025-11-12 15:22:55,028 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.0277662 para plant_application em [2, 0].
+2025-11-12 15:22:55,028 - [HAR] harvester2@localhost - INFO - [CFP] Agente ocupado (plant). Rejeitando proposta.
+2025-11-12 15:22:55,028 - [HAR] harvester2@localhost - INFO - [REJECT] Proposta rejeitada para CFP cfp_task_1762960975.0277662.
+2025-11-12 15:22:55,028 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.0277662 para plant_application em [2, 0].
+2025-11-12 15:22:55,029 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:55,029 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.0277662.
+2025-11-12 15:22:55,029 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.0277662 para plant_application em [2, 0].
+2025-11-12 15:22:55,029 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/5.00.
+2025-11-12 15:22:55,029 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.0277662.
+2025-11-12 15:22:55,029 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 4, Custo: 2.0.
+2025-11-12 15:22:55,029 - [LOG] logistics3@localhost - WARNING - [ACCEPT_RECHARGE] Recebido ACCEPT para CFP cfp_task_1762960975.0277662 desconhecido.
+2025-11-12 15:22:55,029 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:55,029 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 10, Custo: 5.0.
+2025-11-12 15:22:55,454 - [DRO] drone2@localhost - INFO - Patrulhando zona (2,1). Energia: 98.63%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,454 - [DRO] drone2@localhost - INFO - [DRO] Solicitando dados de drone para (2,1) ao Environment Agent.
+2025-11-12 15:22:55,484 - [HAR] harvester1@localhost - ERROR - [PLANT] Timeout ou resposta inesperada do Environment Agent.
+2025-11-12 15:22:55,485 - [HAR] harvester1@localhost - WARNING - [FAILURE] Tarefa cfp_task_1762960965.4532092 falhou.
+2025-11-12 15:22:55,485 - [HAR] harvester1@localhost - INFO - [PLANT] Tarefa cfp_task_1762960965.4532092 concluída. Agente IDLE.
+2025-11-12 15:22:55,486 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone2@localhost
+2025-11-12 15:22:55,486 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 1}
+2025-11-12 15:22:55,486 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:55,487 - FarmEnvironmentAgent - INFO - Mensagem recebida: plant_seed de harvester1@localhost
+2025-11-12 15:22:55,487 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'act', 'language': 'json', 'ontology': 'farm_action'} body={"action": "plant_seed", "row": 1, "col": 1, "plant_type": 2}
+2025-11-12 15:22:55,488 - [DRO] drone2@localhost - INFO - [DRO] Dados de drone recebidos para (2,1): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,488 - [DRO] drone2@localhost - INFO - Zona (2,1) não plantada. Informando Logistics.
+2025-11-12 15:22:55,489 - [DRO] drone2@localhost - INFO - [DRO] Mensagem enviada para logistics1@localhost (inform_crop).
+2025-11-12 15:22:55,489 - [DRO] drone2@localhost - INFO - Recursos: Energia=98.63%, Pesticida=10.00.
+2025-11-12 15:22:55,490 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Recebido inform de drone2@localhost para zona (2, 1). Estado: 0.
+2025-11-12 15:22:55,490 - [LOG] logistics1@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 1 em (2, 1).
+2025-11-12 15:22:55,491 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 1) enviada para logistics2@localhost.
+2025-11-12 15:22:55,492 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 1) enviada para logistics3@localhost.
+2025-11-12 15:22:55,492 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 1) enviada para logistics4@localhost.
+2025-11-12 15:22:55,492 - [LOG] logistics1@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.4910395 para plant_application em (2, 1).
+2025-11-12 15:22:55,493 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,493 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,494 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,494 - [LOG] logistics1@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,495 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,495 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,496 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 1) adicionada à lista
+2025-11-12 15:22:55,496 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 1) adicionada à lista
+2025-11-12 15:22:55,496 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 1) adicionada à lista
+2025-11-12 15:22:55,497 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.4910395 para plant_application em [2, 1].
+2025-11-12 15:22:55,497 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 1: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:55,497 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.4910395.
+2025-11-12 15:22:55,498 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.4910395 para plant_application em [2, 1].
+2025-11-12 15:22:55,498 - [HAR] harvester2@localhost - INFO - [CFP] Agente ocupado (plant). Rejeitando proposta.
+2025-11-12 15:22:55,498 - [HAR] harvester2@localhost - INFO - [REJECT] Proposta rejeitada para CFP cfp_task_1762960975.4910395.
+2025-11-12 15:22:55,499 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.4910395 para plant_application em [2, 1].
+2025-11-12 15:22:55,499 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 1: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:55,499 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.4910395.
+2025-11-12 15:22:55,499 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.4910395 para plant_application em [2, 1].
+2025-11-12 15:22:55,500 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 1: 100, Combustível: 100.00/4.50.
+2025-11-12 15:22:55,500 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.4910395.
+2025-11-12 15:22:55,501 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:55,501 - [LOG] logistics1@localhost - WARNING - [ACCEPT_RECHARGE] Recebido ACCEPT para CFP cfp_task_1762960975.4910395 desconhecido.
+2025-11-12 15:22:55,502 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:55,502 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 9, Custo: 4.5.
+2025-11-12 15:22:55,682 - [DRO] drone4@localhost - INFO - Patrulhando zona (2,3). Energia: 99.22%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,682 - [DRO] drone4@localhost - INFO - [DRO] Solicitando dados de drone para (2,3) ao Environment Agent.
+2025-11-12 15:22:55,682 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone4@localhost
+2025-11-12 15:22:55,683 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 3}
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - Patrulhando zona (2,2). Energia: 98.86%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - [DRO] Solicitando dados de drone para (2,2) ao Environment Agent.
+2025-11-12 15:22:55,683 - [DRO] drone4@localhost - INFO - [DRO] Dados de drone recebidos para (2,3): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,683 - [DRO] drone4@localhost - INFO - Zona (2,3) não plantada. Informando Logistics.
+2025-11-12 15:22:55,683 - [DRO] drone4@localhost - INFO - [DRO] Mensagem enviada para logistics2@localhost (inform_crop).
+2025-11-12 15:22:55,683 - [DRO] drone4@localhost - INFO - Recursos: Energia=99.22%, Pesticida=10.00.
+2025-11-12 15:22:55,683 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone3@localhost
+2025-11-12 15:22:55,683 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 2}
+2025-11-12 15:22:55,683 - [LOG] logistics2@localhost - INFO - [INFORM_CROP] Recebido inform de drone4@localhost para zona (2, 3). Estado: 0.
+2025-11-12 15:22:55,683 - [LOG] logistics2@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 2 em (2, 3).
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - [DRO] Dados de drone recebidos para (2,2): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - Zona (2,2) não plantada. Informando Logistics.
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - [DRO] Mensagem enviada para logistics4@localhost (inform_crop).
+2025-11-12 15:22:55,683 - [DRO] drone3@localhost - INFO - Recursos: Energia=98.86%, Pesticida=10.00.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 3) enviada para logistics1@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 3) enviada para logistics3@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 3) enviada para logistics4@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.683816 para plant_application em (2, 3).
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,684 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,684 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,684 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,684 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Recebido inform de drone3@localhost para zona (2, 2). Estado: 0.
+2025-11-12 15:22:55,684 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 5 em (2, 2).
+2025-11-12 15:22:55,684 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 3) adicionada à lista
+2025-11-12 15:22:55,685 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 3) adicionada à lista
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 3) adicionada à lista
+2025-11-12 15:22:55,685 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.683816 para plant_application em [2, 3].
+2025-11-12 15:22:55,685 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:55,685 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.683816.
+2025-11-12 15:22:55,685 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.683816 para plant_application em [2, 3].
+2025-11-12 15:22:55,685 - [HAR] harvester2@localhost - INFO - [CFP] Agente ocupado (plant). Rejeitando proposta.
+2025-11-12 15:22:55,685 - [HAR] harvester2@localhost - INFO - [REJECT] Proposta rejeitada para CFP cfp_task_1762960975.683816.
+2025-11-12 15:22:55,685 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.683816 para plant_application em [2, 3].
+2025-11-12 15:22:55,685 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:55,685 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.683816.
+2025-11-12 15:22:55,685 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.683816 para plant_application em [2, 3].
+2025-11-12 15:22:55,685 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 2: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:55,685 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.683816.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 2) enviada para logistics1@localhost.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 2) enviada para logistics2@localhost.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 2) enviada para logistics3@localhost.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.684943 para plant_application em (2, 2).
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,685 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,686 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,686 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,686 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,686 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:55,686 - [LOG] logistics2@localhost - WARNING - [ACCEPT_RECHARGE] Recebido ACCEPT para CFP cfp_task_1762960975.683816 desconhecido.
+2025-11-12 15:22:55,686 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 2) adicionada à lista
+2025-11-12 15:22:55,686 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 2) adicionada à lista
+2025-11-12 15:22:55,686 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 2) adicionada à lista
+2025-11-12 15:22:55,686 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.684943 para plant_application em [2, 2].
+2025-11-12 15:22:55,686 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:55,686 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.684943.
+2025-11-12 15:22:55,686 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.684943 para plant_application em [2, 2].
+2025-11-12 15:22:55,686 - [HAR] harvester2@localhost - INFO - [CFP] Agente ocupado (plant). Rejeitando proposta.
+2025-11-12 15:22:55,686 - [HAR] harvester2@localhost - INFO - [REJECT] Proposta rejeitada para CFP cfp_task_1762960975.684943.
+2025-11-12 15:22:55,686 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.684943 para plant_application em [2, 2].
+2025-11-12 15:22:55,687 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/3.50.
+2025-11-12 15:22:55,687 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.684943.
+2025-11-12 15:22:55,687 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.684943 para plant_application em [2, 2].
+2025-11-12 15:22:55,687 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 5: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:55,687 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.684943.
+2025-11-12 15:22:55,687 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:55,687 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:55,687 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:55,687 - [LOG] logistics4@localhost - WARNING - [ACCEPT_RECHARGE] Recebido ACCEPT para CFP cfp_task_1762960975.684943 desconhecido.
+2025-11-12 15:22:55,687 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 7, Custo: 3.5.
+2025-11-12 15:22:55,687 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:55,689 - [HAR] harvester2@localhost - ERROR - [PLANT] Timeout ou resposta inesperada do Environment Agent.
+2025-11-12 15:22:55,689 - [HAR] harvester2@localhost - WARNING - [FAILURE] Tarefa cfp_task_1762960965.6843653 falhou.
+2025-11-12 15:22:55,689 - [HAR] harvester2@localhost - INFO - [PLANT] Tarefa cfp_task_1762960965.6843653 concluída. Agente IDLE.
+2025-11-12 15:22:55,689 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:55,689 - FarmEnvironmentAgent - INFO - Mensagem recebida: plant_seed de harvester2@localhost
+2025-11-12 15:22:55,689 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'act', 'language': 'json', 'ontology': 'farm_action'} body={"action": "plant_seed", "row": 1, "col": 3, "plant_type": 2}
+2025-11-12 15:22:55,689 - [HAR] harvester1@localhost - ERROR - [PLANT] Timeout ou resposta inesperada do Environment Agent.
+2025-11-12 15:22:55,689 - [HAR] harvester1@localhost - WARNING - [FAILURE] Tarefa cfp_task_1762960965.6850352 falhou.
+2025-11-12 15:22:55,689 - [HAR] harvester1@localhost - INFO - [PLANT] Tarefa cfp_task_1762960965.6850352 concluída. Agente IDLE.
+2025-11-12 15:22:55,689 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:55,689 - FarmEnvironmentAgent - INFO - Mensagem recebida: plant_seed de harvester1@localhost
+2025-11-12 15:22:55,689 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'act', 'language': 'json', 'ontology': 'farm_action'} body={"action": "plant_seed", "row": 1, "col": 2, "plant_type": 5}
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - Patrulhando zona (2,4). Energia: 99.04%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - [DRO] Solicitando dados de drone para (2,4) ao Environment Agent.
+2025-11-12 15:22:55,912 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone5@localhost
+2025-11-12 15:22:55,912 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 4}
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - [DRO] Dados de drone recebidos para (2,4): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - Zona (2,4) não plantada. Informando Logistics.
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - [DRO] Mensagem enviada para logistics4@localhost (inform_crop).
+2025-11-12 15:22:55,912 - [DRO] drone5@localhost - INFO - Recursos: Energia=99.04%, Pesticida=10.00.
+2025-11-12 15:22:55,912 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Recebido inform de drone5@localhost para zona (2, 4). Estado: 0.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 0 em (2, 4).
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 4) enviada para logistics1@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 4) enviada para logistics2@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 4) enviada para logistics3@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.9130437 para plant_application em (2, 4).
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,913 - [LOG] logistics4@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,913 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,913 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,913 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 4) adicionada à lista
+2025-11-12 15:22:55,913 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 4) adicionada à lista
+2025-11-12 15:22:55,913 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 4) adicionada à lista
+2025-11-12 15:22:55,913 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9130437 para plant_application em [2, 4].
+2025-11-12 15:22:55,913 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/4.00.
+2025-11-12 15:22:55,914 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9130437.
+2025-11-12 15:22:55,914 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9130437 para plant_application em [2, 4].
+2025-11-12 15:22:55,914 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:55,914 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9130437.
+2025-11-12 15:22:55,914 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9130437 para plant_application em [2, 4].
+2025-11-12 15:22:55,914 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/4.50.
+2025-11-12 15:22:55,914 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9130437.
+2025-11-12 15:22:55,914 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9130437 para plant_application em [2, 4].
+2025-11-12 15:22:55,914 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 0: 100, Combustível: 100.00/3.00.
+2025-11-12 15:22:55,914 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9130437.
+2025-11-12 15:22:55,914 - [DRO] drone6@localhost - INFO - Patrulhando zona (2,5). Energia: 99.41%. 10.00 kg de pesticida restante.
+2025-11-12 15:22:55,914 - [DRO] drone6@localhost - INFO - [DRO] Solicitando dados de drone para (2,5) ao Environment Agent.
+2025-11-12 15:22:55,914 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 8, Custo: 4.0.
+2025-11-12 15:22:55,914 - FarmEnvironmentAgent - INFO - Mensagem recebida: get_drone de drone6@localhost
+2025-11-12 15:22:55,914 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'request', 'language': 'json', 'ontology': 'farm_data'} body={"action": "get_drone", "row": 2, "col": 5}
+2025-11-12 15:22:55,914 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:55,914 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 9, Custo: 4.5.
+2025-11-12 15:22:55,915 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 6, Custo: 3.0.
+2025-11-12 15:22:55,915 - [DRO] drone6@localhost - INFO - [DRO] Dados de drone recebidos para (2,5): {'crop_stage': 0, 'crop_type': 0, 'pest_level': 0}
+2025-11-12 15:22:55,915 - [DRO] drone6@localhost - INFO - Zona (2,5) não plantada. Informando Logistics.
+2025-11-12 15:22:55,915 - [DRO] drone6@localhost - INFO - [DRO] Mensagem enviada para logistics2@localhost (inform_crop).
+2025-11-12 15:22:55,915 - [DRO] drone6@localhost - INFO - Recursos: Energia=99.41%, Pesticida=10.00.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [INFORM_CROP] Recebido inform de drone6@localhost para zona (2, 5). Estado: 0.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [INFORM_CROP] Ação: Plantar semente 3 em (2, 5).
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 5) enviada para logistics1@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 5) enviada para logistics3@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [INFORM_LOG] Zona (2, 5) enviada para logistics4@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [CFP_INIT] A iniciar CFP cfp_task_1762960975.9153557 para plant_application em (2, 5).
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester1@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester2@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester3@localhost.
+2025-11-12 15:22:55,915 - [LOG] logistics2@localhost - INFO - [CFP_INIT] CFP enviado para harvester4@localhost.
+2025-11-12 15:22:55,915 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/InformOtherLogs with exit code: None
+2025-11-12 15:22:55,915 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/CFPTaskInitiator with exit code: None
+2025-11-12 15:22:55,916 - [LOG] logistics1@localhost - INFO - [INFORM_LOG] Zona (2, 5) adicionada à lista
+2025-11-12 15:22:55,916 - [LOG] logistics3@localhost - INFO - [INFORM_LOG] Zona (2, 5) adicionada à lista
+2025-11-12 15:22:55,916 - [LOG] logistics4@localhost - INFO - [INFORM_LOG] Zona (2, 5) adicionada à lista
+2025-11-12 15:22:55,916 - [HAR] harvester1@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9153557 para plant_application em [2, 5].
+2025-11-12 15:22:55,916 - [HAR] harvester1@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/4.50.
+2025-11-12 15:22:55,916 - [HAR] harvester1@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9153557.
+2025-11-12 15:22:55,916 - [HAR] harvester2@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9153557 para plant_application em [2, 5].
+2025-11-12 15:22:55,916 - [HAR] harvester2@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/2.00.
+2025-11-12 15:22:55,916 - [HAR] harvester2@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9153557.
+2025-11-12 15:22:55,916 - [HAR] harvester3@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9153557 para plant_application em [2, 5].
+2025-11-12 15:22:55,916 - [HAR] harvester3@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/5.00.
+2025-11-12 15:22:55,916 - [HAR] harvester3@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9153557.
+2025-11-12 15:22:55,916 - [HAR] harvester4@localhost - INFO - [CFP] Recebido CFP cfp_task_1762960975.9153557 para plant_application em [2, 5].
+2025-11-12 15:22:55,916 - [HAR] harvester4@localhost - INFO - [CFP] Plantação: Sementes e Combustível OK. Sementes 3: 100, Combustível: 100.00/2.50.
+2025-11-12 15:22:55,916 - [HAR] harvester4@localhost - INFO - [ACCEPT] Proposta aceite para CFP cfp_task_1762960975.9153557.
+2025-11-12 15:22:55,916 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester1@localhost. ETA: 9, Custo: 4.5.
+2025-11-12 15:22:55,916 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester2@localhost. ETA: 4, Custo: 2.0.
+2025-11-12 15:22:55,917 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester3@localhost. ETA: 10, Custo: 5.0.
+2025-11-12 15:22:55,917 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Proposta recebida de harvester4@localhost. ETA: 5, Custo: 2.5.
+2025-11-12 15:22:55,918 - [HAR] harvester1@localhost - ERROR - [PLANT] Timeout ou resposta inesperada do Environment Agent.
+2025-11-12 15:22:55,918 - [HAR] harvester1@localhost - WARNING - [FAILURE] Tarefa cfp_task_1762960965.0223572 falhou.
+2025-11-12 15:22:55,918 - [HAR] harvester1@localhost - INFO - [PLANT] Tarefa cfp_task_1762960965.0223572 concluída. Agente IDLE.
+2025-11-12 15:22:55,918 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:55,918 - FarmEnvironmentAgent - INFO - Mensagem recebida: plant_seed de harvester1@localhost
+2025-11-12 15:22:55,918 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'act', 'language': 'json', 'ontology': 'farm_action'} body={"action": "plant_seed", "row": 1, "col": 0, "plant_type": 5}
+2025-11-12 15:22:55,918 - [HAR] harvester2@localhost - ERROR - [PLANT] Timeout ou resposta inesperada do Environment Agent.
+2025-11-12 15:22:55,918 - [HAR] harvester2@localhost - WARNING - [FAILURE] Tarefa cfp_task_1762960965.9141612 falhou.
+2025-11-12 15:22:55,918 - [HAR] harvester2@localhost - INFO - [PLANT] Tarefa cfp_task_1762960965.9141612 concluída. Agente IDLE.
+2025-11-12 15:22:55,919 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:55,919 - FarmEnvironmentAgent - INFO - Mensagem recebida: plant_seed de harvester2@localhost
+2025-11-12 15:22:55,919 - FarmEnvironmentAgent - INFO - Recebida mensagem: metadata={'performative': 'act', 'language': 'json', 'ontology': 'farm_action'} body={"action": "plant_seed", "row": 1, "col": 4, "plant_type": 3}
+2025-11-12 15:22:56,502 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960970.9166815. A avaliar propostas.
+2025-11-12 15:22:56,503 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester4@localhost com ETA 6.
+2025-11-12 15:22:56,503 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:56,503 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:56,503 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960970.9166815 REJEITADA para plant_application.
+2025-11-12 15:22:56,503 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960970.9166815 REJEITADA para plant_application.
+2025-11-12 15:22:56,503 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960970.9166815 ACEITE para plant_application em (1, 5).
+2025-11-12 15:22:56,503 - [HAR] harvester4@localhost - INFO - [PLANT] A iniciar plantação para CFP cfp_task_1762960970.9166815 em (1, 5) (Semente: 0).
+2025-11-12 15:22:56,503 - [HAR] harvester4@localhost - INFO - [PLANT] A viajar para (1, 5). Custo de combustível (ida e volta): 3.00.
+2025-11-12 15:22:59,307 - FarmEnvironmentAgent - INFO - Limite de ticks atingido. Parando EnvironmentTicker.
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
+2025-11-12 15:22:59,307 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/EnvironmentTicker with exit code: None
+2025-11-12 15:22:59,308 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,308 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,715 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/EnvironmentManager with exit code: None
+2025-11-12 15:22:59,920 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/HumanInteractionBehaviour with exit code: None
+2025-11-12 15:22:59,920 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,920 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,921 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,921 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,922 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,922 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,922 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,923 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,923 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:22:59,923 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,924 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,924 - [HAR] harvester1@localhost - INFO - harvester1@localhost guardou o resto da colheita no agente storage
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,924 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,924 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,925 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,925 - [HAR] harvester2@localhost - INFO - harvester2@localhost guardou o resto da colheita no agente storage
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,925 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,925 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,925 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,926 - [HAR] harvester3@localhost - INFO - harvester3@localhost guardou o resto da colheita no agente storage
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,926 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,926 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,926 - [HAR] harvester4@localhost - INFO - harvester4@localhost guardou o resto da colheita no agente storage
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior OneShotBehaviour/PlantExecutionBehaviour with exit code: None
+2025-11-12 15:22:59,926 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,927 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/HarvestYieldBehaviour with exit code: None
+2025-11-12 15:22:59,927 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,927 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - =================================== STOR ===================================
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - storage@localhost guardou em toda a simulação:
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Tomate: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Pimento: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Trigo: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Couve: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Alface: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - Cenoura: 0
+2025-11-12 15:22:59,927 - [STO] storage@localhost - INFO - =================================== STOR ===================================
+2025-11-12 15:22:59,927 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformHarvestReceiver with exit code: None
+2025-11-12 15:22:59,928 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,928 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,928 - [IRRI] irrig1@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,928 - [IRRI] irrig1@localhost - INFO - irrig1@localhost usou 0 L de água
+2025-11-12 15:22:59,928 - [IRRI] irrig1@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,928 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,928 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,928 - [IRRI] irrig2@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,928 - [IRRI] irrig2@localhost - INFO - irrig2@localhost usou 0 L de água
+2025-11-12 15:22:59,928 - [IRRI] irrig2@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,928 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,929 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,929 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,929 - [IRRI] irrig3@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,929 - [IRRI] irrig3@localhost - INFO - irrig3@localhost usou 0 L de água
+2025-11-12 15:22:59,929 - [IRRI] irrig3@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,929 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,929 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,930 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,930 - [IRRI] irrig4@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,930 - [IRRI] irrig4@localhost - INFO - irrig4@localhost usou 0 L de água
+2025-11-12 15:22:59,930 - [IRRI] irrig4@localhost - INFO - =================================== IRRI ===================================
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,930 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,930 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,930 - [FERT] fert1@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,930 - [FERT] fert1@localhost - INFO - fert1@localhost usou 0 KG de fertelizante
+2025-11-12 15:22:59,930 - [FERT] fert1@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,930 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,931 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,931 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,931 - [FERT] fert2@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,931 - [FERT] fert2@localhost - INFO - fert2@localhost usou 0 KG de fertelizante
+2025-11-12 15:22:59,931 - [FERT] fert2@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,931 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,931 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,931 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,931 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,931 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,932 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,932 - [FERT] fert3@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,932 - [FERT] fert3@localhost - INFO - fert3@localhost usou 0 KG de fertelizante
+2025-11-12 15:22:59,932 - [FERT] fert3@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,932 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,932 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,932 - [FERT] fert4@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,932 - [FERT] fert4@localhost - INFO - fert4@localhost usou 0 KG de fertelizante
+2025-11-12 15:22:59,932 - [FERT] fert4@localhost - INFO - =================================== FERT ===================================
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckRechargeBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveCFPTaskBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,932 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalResponseBehaviour with exit code: None
+2025-11-12 15:22:59,933 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,933 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,933 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,933 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,933 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,933 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,933 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,934 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,934 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,934 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,934 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,934 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,934 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,934 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,934 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,935 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,935 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,935 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,935 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,935 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,935 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,935 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,935 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveDoneBehaviour with exit code: None
+2025-11-12 15:22:59,935 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/ScanBehaviour with exit code: None
+2025-11-12 15:22:59,936 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,936 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,936 - [DRO] drone1@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,936 - [DRO] drone1@localhost - INFO - drone1@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,936 - [DRO] drone1@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,936 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,936 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,936 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,936 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,936 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,937 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,937 - [DRO] drone2@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,937 - [DRO] drone2@localhost - INFO - drone2@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,937 - [DRO] drone2@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,937 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,937 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,937 - [DRO] drone3@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,937 - [DRO] drone3@localhost - INFO - drone3@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,937 - [DRO] drone3@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,937 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,938 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,938 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,938 - [DRO] drone4@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,938 - [DRO] drone4@localhost - INFO - drone4@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,938 - [DRO] drone4@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,938 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,938 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,938 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,938 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,938 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,938 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,938 - [DRO] drone5@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,938 - [DRO] drone5@localhost - INFO - drone5@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,938 - [DRO] drone5@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,939 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,939 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,939 - [DRO] drone6@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,939 - [DRO] drone6@localhost - INFO - drone6@localhost usou 0 KG de pesticada
+2025-11-12 15:22:59,939 - [DRO] drone6@localhost - INFO - =================================== DRONE ===================================
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/PatrolBehaviour with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveProposalsBehaviour with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,939 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:22:59,940 - slixmpp.xmlstream.xmlstream - INFO - connection_lost: (None,)
+2025-11-12 15:22:59,940 - spade.Agent - INFO - Client disconnected.
+2025-11-12 15:22:59,940 - MainStarter - INFO - Todos os agentes foram parados com sucesso.
+2025-11-12 15:23:00,025 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,025 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,026 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:23:00,026 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:23:00,026 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,029 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformCropReceiver with exit code: None
+2025-11-12 15:23:00,030 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.0277662. A avaliar propostas.
+2025-11-12 15:23:00,030 - [LOG] logistics3@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 4.
+2025-11-12 15:23:00,032 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,032 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,032 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,033 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960975.0277662 ACEITE para plant_application em (2, 0).
+2025-11-12 15:23:00,033 - [HAR] harvester3@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960975.0277662 REJEITADA para plant_application.
+2025-11-12 15:23:00,034 - [HAR] harvester4@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960975.0277662 REJEITADA para plant_application.
+2025-11-12 15:23:00,034 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:23:00,035 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:23:00,035 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:23:00,237 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AutoRechargeBehaviour with exit code: None
+2025-11-12 15:23:00,238 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPRechargeReceiver with exit code: None
+2025-11-12 15:23:00,238 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,485 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,485 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,514 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.4910395. A avaliar propostas.
+2025-11-12 15:23:00,514 - [LOG] logistics1@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 5.
+2025-11-12 15:23:00,515 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,516 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:23:00,516 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,516 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,685 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,685 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,686 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,686 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,688 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/AcceptRejectRechargeReceiver with exit code: None
+2025-11-12 15:23:00,689 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:23:00,689 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:23:00,694 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:23:00,695 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:23:00,696 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformHarvestReceiver with exit code: None
+2025-11-12 15:23:00,696 - spade.behaviour - INFO - Killing behavior PeriodicBehaviour/CheckResourcesBehaviour with exit code: None
+2025-11-12 15:23:00,697 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/InformReceivedReceiver with exit code: None
+2025-11-12 15:23:00,914 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,914 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,915 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,916 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/DoneFailure with exit code: None
+2025-11-12 15:23:00,916 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:23:00,917 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.684943. A avaliar propostas.
+2025-11-12 15:23:00,917 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 6.
+2025-11-12 15:23:00,919 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,919 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.9130437. A avaliar propostas.
+2025-11-12 15:23:00,919 - [LOG] logistics4@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester2@localhost com ETA 5.
+2025-11-12 15:23:00,920 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,921 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,922 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.683816. A avaliar propostas.
+2025-11-12 15:23:00,922 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester1@localhost com ETA 7.
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,923 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Tempo limite atingido para CFP cfp_task_1762960975.9153557. A avaliar propostas.
+2025-11-12 15:23:00,923 - [LOG] logistics2@localhost - INFO - [CFP_TASK_RECV] Harvester selecionado: harvester2@localhost com ETA 4.
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,923 - [HAR] harvester1@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960975.9130437 REJEITADA para plant_application.
+2025-11-12 15:23:00,923 - [HAR] harvester2@localhost - INFO - [PROPOSAL] Proposta cfp_task_1762960975.9130437 ACEITE para plant_application em (2, 4).
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ReceiveInformOtherLogs with exit code: None
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:23:00,923 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/CFPTaskReceiver with exit code: None
+2025-11-12 15:23:00,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/TaskDoneReceiver with exit code: None
+2025-11-12 15:23:00,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:23:00,924 - spade.behaviour - INFO - Killing behavior CyclicBehaviour/ProposalResponseReceiver with exit code: None
+2025-11-12 15:23:00,941 - MainStarter - INFO - Simulação encerrada com sucesso.
