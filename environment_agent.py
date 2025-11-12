@@ -24,27 +24,26 @@ ONTOLOGY_FARM_ACTION = "farm_action"
 ONTOLOGY_DYNAMIC_EVENT = "dynamic_event"
 
 
+def print_matrix(title, matrix):
+    logger.info(f"\n{title}:")
+    for row in matrix:
+        logger.info(" ".join(f"{x:6.2f}" for x in row))
+
 def display_matrix(field):
-    """Imprime o estado atual do ambiente."""
-    print("\n==================================================================")
-    print("==================================================================")
-    print("==================================================================\n")
-    print(f"Day: {field.day} \t Hour: {field.hours}")
-    print(f"Temperatura: {field.temperature.temperature}")
-    print(f"Rain: {field.rain.rain}   Hours_remaining: {field.rain._rain_hours_remaining}")
-    print("Humidade:")
-    print(np.array2string(field.moisture.moisture, precision=2, separator=', ', suppress_small=True))
-    print("\nNutrientes:")
-    print(np.array2string(field.nutrients.nutrients, precision=2, separator=', ', suppress_small=True))
-    print("\nCrop_stage:")
-    print(np.array2string(field.crop.crop_stage, precision=2, separator=', ', suppress_small=True))
-    print("\nCrop_type:")
-    print(np.array2string(field.crop.crop_type, precision=2, separator=', ', suppress_small=True))
-    print("\nCrop_health:")
-    print(np.array2string(field.crop.crop_health, precision=2, separator=', ', suppress_small=True))
-    print("\nPest:")
-    print(np.array2string(field.pest.pest, precision=2, separator=', ', suppress_small=True))
-    print("\n==================================================================")
+
+    logger.info("="*70)
+    logger.info(f"Dia: {field.day}\tHora: {field.hours}")
+    logger.info(f"Temperatura: {field.temperature.temperature:.2f}")
+    logger.info(f"Chuva: {field.rain.rain} | Horas restantes: {field.rain._rain_hours_remaining:.2f}")
+    
+    print_matrix("Humidade", field.moisture.moisture)
+    print_matrix("Nutrientes", field.nutrients.nutrients)
+    print_matrix("Estágio da Cultura", field.crop.crop_stage)
+    print_matrix("Tipo de Cultura", field.crop.crop_type)
+    print_matrix("Saúde da Cultura", field.crop.crop_health)
+    print_matrix("Pragas", field.pest.pest)
+    logger.info("="*70)
+
 
 # --- Comportamentos ---
 
@@ -58,10 +57,19 @@ class EnvironmentTicker(PeriodicBehaviour):
         self.field = field_instance
 
     async def run(self):
+        #logger.info(f"{'=' * 35} ENV {'=' * 35}")
+        if self.agent.numb_ticks >= 1: 
+            logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
+            self.kill()
+            asyncio.create_task(self.agent.stop())
+            return
+
         self.field.step()
         logger.info(50*"=")
         logger.info(f"TICK: Ambiente avançou para o dia {self.field.day}, hora {self.field.hours}. Seca: {self.field.drought}, Peste: {self.field.isPestActive}, Temperatura: {self.field.temperature.temperature}")
         logger.info(50*"=")
+        self.agent.numb_ticks += 1
+        #logger.info(f"{'=' * 35} ENV {'=' * 35}")
 
 class EnvironmentManager(CyclicBehaviour):
     """
@@ -78,12 +86,14 @@ class EnvironmentManager(CyclicBehaviour):
         msg = await self.receive(timeout=5)
         if msg:
             try:
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
                 logger.debug(f"Mensagem recebida raw: from={msg.sender}, metadata={msg.metadata}, body={msg.body}")
                 content = json.loads(msg.body)
                 action = content.get("action")
                 
                 if not action:
                     logger.warning(f"Mensagem recebida sem 'action': {msg.body}")
+                    logger.info(f"{'=' * 35} ENV {'=' * 35}")
                     return
 
                 logger.info(f"Mensagem recebida: {action} de {msg.sender}")
@@ -98,11 +108,15 @@ class EnvironmentManager(CyclicBehaviour):
                 
                 else:
                     logger.warning(f"Ontology desconhecida: {msg.metadata.get('ontology')}")
-
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
             except json.JSONDecodeError:
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
                 logger.exception(f"Erro ao descodificar JSON: {msg.body}")
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
             except Exception as e:
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
                 logger.exception(f"Erro ao processar mensagem: {e}")
+                #logger.info(f"{'=' * 35} ENV {'=' * 35}")
         else:
             # Sem mensagem, espera um pouco antes do próximo ciclo
             await asyncio.sleep(0.1)
@@ -148,6 +162,7 @@ class EnvironmentManager(CyclicBehaviour):
         reply = Message(to=str(msg.sender), body=json.dumps(response_body))
         reply.set_metadata("performative", PERFORMATIVE_INFORM)
         reply.set_metadata("ontology", ONTOLOGY_DYNAMIC_EVENT)
+        #logger.info(f"{'=' * 35} ENV {'=' * 35}")
         await self.send(reply)
 
 
@@ -223,6 +238,7 @@ class EnvironmentManager(CyclicBehaviour):
         reply = Message(to=msg.sender, body=json.dumps(response_body))
         reply.set_metadata("performative", PERFORMATIVE_INFORM)
         reply.set_metadata("ontology", msg.metadata.get("ontology"))
+        #logger.info(f"{'=' * 35} ENV {'=' * 35}")
         await self.send(reply)
 
 # --- Agente ---
@@ -235,7 +251,8 @@ class FarmEnvironmentAgent(Agent):
     def __init__(self, jid, password, Field, verify_security=False):
         super().__init__(jid, password, verify_security=verify_security)
         self.field = Field
-        self.ticker_period = 15 # 30 segundos por "tick" de simulação (pode ser ajustado)
+        self.ticker_period = 20 # 20 segundos por "tick" de simulação (pode ser ajustado)
+        self.numb_ticks = 0
 
     async def setup(self):
         logger.info(f"FarmEnvironmentAgent {self.jid} a iniciar...")

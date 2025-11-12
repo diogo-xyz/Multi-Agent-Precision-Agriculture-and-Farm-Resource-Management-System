@@ -538,15 +538,6 @@ class LogisticsAgent(Agent):
             4: 1000, # 4: Alface
             5: 1000  # 5: Cenoura
         }
-
-        self.yield_storage = {
-            0: 0, # 0: Tomate
-            1: 0, # 1: Pimento
-            2: 0, # 2: Trigo
-            3: 0, # 3: Couve
-            4: 0, # 4: Alface
-            5: 0  # 5: Cenoura
-        }
         
         # Estado de gestão de tarefas
         self.pending_recharge_proposals = {} # {cfp_id: proposal_details}
@@ -585,6 +576,8 @@ class LogisticsAgent(Agent):
     # =====================
     #   FUNÇÕES DE ENVIO DE MENSAGENS
     # =====================
+    async def stop(self):
+        await super().stop()
 
     async def send_propose_recharge(self, to, cfp_id, eta_ticks, resources):
         msg = make_message(

@@ -274,6 +274,7 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
 
                     self.agent.fertilize_capacity -= fertilizer_needed
                     self.agent.energy -= energy_cost
+                    self.agent.used_fertilizer += fertilizer_needed
 
                     self.agent.logger.info(f"[FERT] Fertilizante restante: {self.agent.fertilize_capacity}kg. Energia restante: {self.agent.energy}.")
                     
@@ -420,10 +421,8 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
                         energy_used = 0
                         fertilizer_replenished = 0
                         # O utilizador forneceu um exemplo com "fertilizer_used" e "time_taken".
-                        # Assumindo que "fertilizer_used" é a quantidade de fertilizante recarregada.
                         if (details["resource_type"] == "battery"): energy_used = details.get("amount_delivered", 0) 
                         # Para a bateria, o LogisticAgent deve enviar a quantidade recarregada.
-                        # Vamos assumir a chave "energy_used" para consistência.
                         else: fertilizer_replenished = details.get("amount_delivered", 0)
                         
                         if fertilizer_replenished > 0:
@@ -475,6 +474,7 @@ class FertilizerAgent(Agent):
         self.soil_jid = soil_jid
         self.log_jid = log_jid
 
+        self.used_fertilizer = 0
         self.fertilize = 1
         self.energy = 100.0
         self.fertilize_capacity = 100.0
@@ -516,6 +516,11 @@ class FertilizerAgent(Agent):
         # O comportamento de recarga (ReceiveRechargeProposalsBehaviour e ExecuteRechargeBehaviour)
         # é adicionado dinamicamente pelo CheckRechargeBehaviour.
 
+    async def stop(self):
+        self.logger.info(f"{'=' * 35} FERT {'=' * 35}")
+        self.logger.info(f"{self.jid} usou {self.used_fertilizer} KG de fertelizante")
+        self.logger.info(f"{'=' * 35} FERT {'=' * 35}")
+        await super().stop()
 
     # =====================
     #   Funções de Comunicação

@@ -49,11 +49,15 @@ def calculate_fuel_cost(distance):
 class HarvestYieldBehaviour(PeriodicBehaviour):
     """Verifica o rendimento e inicia o processo de colheita quando atinge o limite."""
 
+    def __init__(self, period, stop_beha = None):
+        super().__init__(period=period)
+        self.stop_beha = stop_beha
+
     async def run(self):
-        if self.agent.status == "idle": # Só pode iniciar a colheita se estiver livre
+        if self.agent.status == "idle" or self.stop_beha: # Só pode iniciar a colheita se estiver livre
             harvest_ready = False
             for seed_type, amount in self.agent.yield_seed.items():
-                if amount >= 100:
+                if amount >= 100 or self.stop_beha:
                     harvest_ready = True
                     break
             
@@ -63,14 +67,15 @@ class HarvestYieldBehaviour(PeriodicBehaviour):
                 # Escolhe um logístico aleatoriamente
                 
                 # Inicia o comportamento de entrega
-                delivery_behaviour = DeliverHarvestBehaviour(self.agent.sto_jid)
+                delivery_behaviour = DeliverHarvestBehaviour(self.agent.sto_jid,self.stop_beha)
                 self.agent.add_behaviour(delivery_behaviour)
 
 class DeliverHarvestBehaviour(OneShotBehaviour):
     """Simula a viagem e envia a colheita para um agente logístico."""
-    def __init__(self, sto_jid):
+    def __init__(self, sto_jid,stop_beha):
         super().__init__()
         self.sto_jid = sto_jid
+        self.stop_beha = stop_beha
 
     async def run(self):
         self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.sto_jid}.")
@@ -81,13 +86,14 @@ class DeliverHarvestBehaviour(OneShotBehaviour):
         # Prepara a mensagem com os dados da colheita
         amount_type_list = []
         for seed_type, amount in self.agent.yield_seed.items():
-            if amount >= 100:
+            if amount >= 100 or self.stop_beha:
                 amount_type_list.append({"seed_type": seed_type, "amount": amount})
 
         # Envia a mensagem `inform_harvest`
         msg = await self.agent.send_inform_harvest(self.sto_jid, amount_type_list)
         await self.send(msg)
         self.agent.logger.info(f"[DELIVERY] Mensagem 'inform_harvest' enviada para {self.sto_jid}.")
+        if self.stop_beha: self.kill()
 
 class InformReceivedReceiver(CyclicBehaviour):
     """Recebe a confirmação 'inform_received' do agente Storage."""
@@ -110,6 +116,7 @@ class InformReceivedReceiver(CyclicBehaviour):
                         # Atualiza o yield_seed, subtraindo a quantidade entregue
                         if seed_type in self.agent.yield_seed:
                             self.agent.yield_seed[seed_type] -= amount_received
+                            self.agent.machine_inventory -= amount_received
                             self.agent.logger.info(f"[DELIVERY] Yield de semente {seed_type} atualizado. Novo valor: {self.agent.yield_seed[seed_type]}.")
                 # O agente volta ao estado 'idle' após a confirmação
                 self.agent.status = "idle"
@@ -704,6 +711,11 @@ class HarvesterAgent(Agent):
     # =====================
     # MÉTODOS DE COMUNICAÇÃO
     # =====================
+
+    async def stop(self):
+        self.add_behaviour(HarvestYieldBehaviour(period=15,stop_beha=1))
+        self.logger.info(f"{self.jid} guardou o resto da colheita no agente storage")
+        await super().stop()
     
     async def send_propose_task(self, to, cfp_id, distance, fuel_cost):
         """Envia uma proposta de tarefa ao Logistic Agent."""

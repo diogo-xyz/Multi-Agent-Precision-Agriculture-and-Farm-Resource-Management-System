@@ -430,7 +430,10 @@ class SoilSensorAgent(Agent):
         
         # 2. Comportamento Periódico para realizar o Scan
         # O período deve ser ajustado à simulação, aqui usamos 30 segundos como exemplo
-        scan_b = ScanBehaviour(period=30, row=self.row, col=self.col, env_jid=self.env_jid)
+        scan_b = ScanBehaviour(period=90, row=self.row, col=self.col, env_jid=self.env_jid)
         self.add_behaviour(scan_b)
         
         self.logger.info("SoilSensorAgent iniciado com sucesso.")
+
+    async def stop(self):
+        await super().stop()

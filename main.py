@@ -40,7 +40,7 @@ console_handler.setLevel(logging.INFO)
 # Handler para ficheiro (guarda logs em disco)
 file_handler = RotatingFileHandler(
     "agentes.log",          # nome do ficheiro
-    maxBytes=5_000_000,     # tamanho máximo antes de criar novo ficheiro (~5 MB)
+    maxBytes=10_000_000,     # tamanho máximo antes de criar novo ficheiro (~5 MB)
     backupCount=3,          # quantos ficheiros antigos manter
     encoding="utf-8"
 )
@@ -77,9 +77,10 @@ async def main():
     soils = []
     drones = []
 
+    
     # ===  Criar agentes logísticos ===
     pos_logistics = [[-1, 3], [6, 3], [3, -1], [4, 6]]
-    for i in range(4):
+    for i in range(1):
         logistics_agents.append(
             LogisticsAgent(
                 LOG_JID[i],
@@ -93,7 +94,7 @@ async def main():
 
     # ===  Criar agentes de colheita (harvesters) ===
     pos_agents = [[-1, -1], [-1, 6], [6, -1], [6, 6]]
-    for i in range(4):
+    for i in range(1):
         harvesters.append(
             HarvesterAgent(
                 HARVESTERS_JID[i],
@@ -107,7 +108,7 @@ async def main():
         )
 
     # === Criar agentes de irrigação ===
-    for i in range(4):
+    for i in range(1):
         irrigations.append(
             IrrigationAgent(
                 IRRIG_JID[i],
@@ -120,7 +121,7 @@ async def main():
         )
 
     # ===  Criar agentes de fertilização ===
-    for i in range(4):
+    for i in range(1):
         fertilizers.append(
             FertilizerAgent(
                 FERT_JID[i],
@@ -143,9 +144,9 @@ async def main():
         *[agent.start() for agent in fertilizers],
     )
     logger.info("Agentes principais, logísticos, colheitadeiras, irrigação e fertilização em execução.")
-
+    
     # ===  Criar e iniciar agentes sensores de solo ===
-    for i in range(6):
+    for i in range(1):
         soils.append(
             SoilSensorAgent(
                 SOIL_JID[i],
@@ -158,7 +159,7 @@ async def main():
                 i
             )
         )
-
+    
     await asyncio.gather(*[agent.start() for agent in soils])
     logger.info("Agentes Sensores de Solo em execução.")
 
@@ -171,7 +172,7 @@ async def main():
         [(0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4)],
         [(0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5)],
     ]
-    for i in range(6):
+    for i in range(1):
         drones.append(
             DroneAgent(
                 DRONE_JID[i],
@@ -196,15 +197,24 @@ async def main():
     finally:
         # Parar todos os agentes com segurança
         all_agents = [
-            human_agent, storage_agent, env_agent,
-            *logistics_agents, *harvesters,
+            human_agent, env_agent,
+            *logistics_agents, *harvesters,storage_agent,
             *irrigations, *fertilizers,
             *soils, *drones
         ]
         for agent in all_agents:
             if agent.is_alive():
-                await agent.stop()
+                print(f"Stopping {agent.jid}...")
+                try:
+                    await asyncio.wait_for(agent.stop(), timeout=5)
+                except asyncio.TimeoutError:
+                    logger.warning(f"Timeout ao parar {agent.jid}")
         logger.info("Todos os agentes foram parados com sucesso.")
+
+        await asyncio.sleep(1)
+        logger.info("Simulação encerrada com sucesso.")
+        os._exit(0)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -274,7 +274,7 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
                     # 3. Atualizar estado e simular viagem de volta
                     self.agent.water_capacity -= water_needed
                     self.agent.energy -= energy_cost
-                    
+                    self.agent.used_water += water_needed
                     self.agent.logger.info(f"[IRRI] Água restante: {self.agent.water_capacity}L. Energia restante: {self.agent.energy}.")
                     
                     # Simular Viagem de Volta
@@ -479,6 +479,7 @@ class IrrigationAgent(Agent):
         self.energy = 100.0
         self.water_capacity = 100.0 # capacidade 
         self.water_capacity_max = 100 
+        self.used_water = 0
 
         # Estrutura para armazenar propostas enviadas e aguardando resposta (por cfp_id)
         self.awaiting_proposals = {}
@@ -515,6 +516,11 @@ class IrrigationAgent(Agent):
         # O comportamento de recarga (ReceiveRechargeProposalsBehaviour e ExecuteRechargeBehaviour)
         # é adicionado dinamicamente pelo CheckRechargeBehaviour.
 
+    async def stop(self):
+        self.logger.info(f"{'=' * 35} IRRI {'=' * 35}")
+        self.logger.info(f"{self.jid} usou {self.used_water} L de água")
+        self.logger.info(f"{'=' * 35} IRRI {'=' * 35}")
+        await super().stop()
 
     # =====================
     #   Funções de Comunicação

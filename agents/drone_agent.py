@@ -241,6 +241,7 @@ class PatrolBehaviour(PeriodicBehaviour):
                 content = json.loads(reply.body)
                 if content.get("status") == "success" and content.get("action") == "apply_pesticide":
                     # Se a aplicação for bem-sucedida no ambiente, gasta os recursos do drone
+                    self.agent.used_pesticed += 0.5
                     self.agent.pesticide_amount -= 0.5
                     self.agent.energy -= np.random.uniform(1, 3)  # Gasto de energia
                     self.agent.logger.info(
@@ -262,11 +263,11 @@ class PatrolBehaviour(PeriodicBehaviour):
         if self.agent.status == "charging":
             # Se já estiver a carregar, não faz mais nada
             return
-
+        #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
         if self.agent.energy < BATTERY_LOW_THRESHOLD:
             self.agent.logger.warning(f"Bateria baixa ({self.agent.energy:.2f}%). Solicitando recarga.")
             self.agent.status = "charging"
-
+            #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             # Adiciona o comportamento CFP para solicitar recarga
             self.agent.add_behaviour(
                 CFPBehaviour(
@@ -284,6 +285,7 @@ class PatrolBehaviour(PeriodicBehaviour):
             self.agent.status = "charging"
             self.agent.logger.warning(f"Pesticida baixo ({self.agent.pesticide_amount:.2f} kg). Solicitando reabastecimento.")
             # Adiciona o comportamento CFP para solicitar reabastecimento
+            #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             self.agent.add_behaviour(
                 CFPBehaviour(
                     timeout_wait=2,
@@ -323,16 +325,19 @@ class PatrolBehaviour(PeriodicBehaviour):
             self.agent.logger.warning(f"Alto nível de pragas ({pest_level:.2f}) em ({row},{col}). Aplicando pesticida.")
             # A chamada foi corrigida para usar o método do Behaviour
             self.agent.status = "handling_task"
+            #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             await self._apply_pesticide(row, col)
         
         if crop_stage == 4:
             self.agent.logger.info(f"Cultura madura em ({row},{col}). Informando Logistics.")
             # A chamada foi corrigida para usar o método do Behaviour
+            #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             await self._inform_crop(row, col, 4, crop_type)
         
         if crop_stage == 0:
             self.agent.logger.info(f"Zona ({row},{col}) não plantada. Informando Logistics.")
             # A chamada foi corrigida para usar o método do Behaviour
+            #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             await self._inform_crop(row, col, 0, None)
 
         self.agent.status = "idle"
@@ -341,6 +346,7 @@ class PatrolBehaviour(PeriodicBehaviour):
         self.agent.logger.info(
             f"Recursos: Energia={self.agent.energy:.2f}%, Pesticida={self.agent.pesticide_amount:.2f}."
         )
+        #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
 
 
 
@@ -360,6 +366,8 @@ class DroneAgent(Agent):
         self.environment_jid = env_jid  # JID do agente Environment
         self.logistics_jid = log_jid  # JID do agente Logistics
 
+        self.used_pesticed = 0
+
         # Estrutura para armazenar propostas recebidas (por cfp_id)
         self.awaiting_proposals = {}
 
@@ -372,7 +380,7 @@ class DroneAgent(Agent):
         self.logger.info(f"DroneAgent {self.jid} iniciado. Posição: {self.position}")
 
         # Adiciona comportamentos principais
-        patrol_b = PatrolBehaviour(period=6)  # patrulha a cada 10 ticks
+        patrol_b = PatrolBehaviour(period=10)  # patrulha a cada 10 ticks
         self.add_behaviour(patrol_b)
 
         # 2. Comportamento de Receção de Propostas (CFP)
@@ -396,3 +404,9 @@ class DroneAgent(Agent):
 
         # O DoneFailure e o CFPBehaviour são adicionados dinamicamente pelo PatrolBehaviour
         # quando é necessário solicitar uma recarga/reabastecimento.
+
+    async def stop(self):
+        self.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
+        self.logger.info(f"{self.jid} usou {self.used_pesticed} KG de pesticada")
+        self.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
+        await super().stop()

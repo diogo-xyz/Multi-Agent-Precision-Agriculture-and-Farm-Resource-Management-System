@@ -64,6 +64,15 @@ class StorageAgent(Agent):
             4: 0, # 4: Alface
             5: 0  # 5: Cenoura
         }
+
+        self.numb_to_string = {
+            0: "Tomate",
+            1: "Pimento",
+            2: "Trigo",
+            3: "Couve",
+            4: "Alface",
+            5: "Cenoura"
+        }
     
     async def setup(self):
         self.logger.info("Storage started")
@@ -72,6 +81,14 @@ class StorageAgent(Agent):
         template.set_metadata("performative", PERFORMATIVE_INFORM_HARVEST)
 
         self.add_behaviour(InformHarvestReceiver(),template=template)
+
+    async def stop(self):
+        self.logger.info(f"{'=' * 35} STOR {'=' * 35}")
+        self.logger.info(f"{self.jid} guardou em toda a simulação:")
+        for seed, amount in self.yield_storage.items():
+            self.logger.info(f"{self.numb_to_string[seed]}: {amount}")
+        self.logger.info(f"{'=' * 35} STOR {'=' * 35}")
+        await super().stop()
 
     
     async def send_inform_received(self, to, details):

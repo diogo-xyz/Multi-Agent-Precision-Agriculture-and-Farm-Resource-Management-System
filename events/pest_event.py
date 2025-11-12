@@ -15,7 +15,6 @@ class Pest:
         """
         self.pest = np.zeros((rows, cols), dtype=int)
 
-
     def update_pest(self):
         """
         Atualiza o estado da peste.
