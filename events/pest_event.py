@@ -72,7 +72,7 @@ class Pest:
 
         # Retorna o número de novas infeções para fins de monitorização
         #return np.sum(new_infections)
-        return
+        return np.sum(self.pest)
     
     def apply_pesticide(self, row, col, neighbor_effect=0.75):
         """

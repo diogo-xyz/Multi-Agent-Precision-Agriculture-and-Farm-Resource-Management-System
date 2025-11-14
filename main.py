@@ -28,36 +28,229 @@ from config_agents import (
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from TB_Sistemas.environment.field import Field
 
-
 # --- Configuração Centralizada de Logging ---
+
+# ========== HANDLER CUSTOMIZADO PARA TERMINAL ==========
+class FarmTaskPrinter(logging.Handler):
+    """Handler customizado para mostrar apenas eventos importantes da farm no terminal"""
+    
+    def __init__(self):
+        super().__init__()
+        self.in_environment_view = False  # Flag para controlar visualização do ambiente
+    
+    def emit(self, record):
+        msg = record.getMessage()
+        agent = record.name  # Nome do logger (ex: "[LOG] logistics1@localhost")
+        
+        # ========== VISUALIZAÇÃO DO AMBIENTE (comando 6) ==========
+        if "======================================================================" in msg and agent == "FarmEnvironmentAgent":
+            if not self.in_environment_view:
+                # Início da visualização
+                self.in_environment_view = True
+                print(f"\n{'='*70}")
+                print("🌍 VISUALIZAÇÃO DO AMBIENTE")
+                print(f"{'='*70}")
+            else:
+                # Fim da visualização
+                self.in_environment_view = False
+                print(f"{'='*70}\n")
+            return
+        
+        # Se estamos dentro da visualização do ambiente, mostra tudo
+        if self.in_environment_view and agent == "FarmEnvironmentAgent":
+            # Remove o prefixo de log para ficar mais limpo
+            clean_msg = msg.strip()
+            
+            # Adiciona emojis para as seções
+            if "Dia:" in clean_msg and "Hora:" in clean_msg:
+                print(f"📅 {clean_msg}")
+            elif "Temperatura:" in clean_msg:
+                print(f"🌡️  {clean_msg}")
+            elif "Chuva:" in clean_msg:
+                print(f"🌧️  {clean_msg}")
+            elif clean_msg == "Humidade:":
+                print(f"\n💧 {clean_msg}")
+            elif clean_msg == "Nutrientes:":
+                print(f"\n🧪 {clean_msg}")
+            elif clean_msg == "Estágio da Cultura:":
+                print(f"\n🌱 {clean_msg}")
+            elif clean_msg == "Tipo de Cultura:":
+                print(f"\n🌾 {clean_msg}")
+            elif clean_msg == "Saúde da Cultura:":
+                print(f"\n💚 {clean_msg}")
+            elif clean_msg == "Pragas:":
+                print(f"\n🐛 {clean_msg}")
+            else:
+                # Valores das matrizes
+                print(f"  {clean_msg}")
+            return
+        
+        # ========== PEDIDOS AO ENVIRONMENT AGENT ==========
+        if "Mensagem recebida:" in msg and " de " in msg:
+            # Extrai: "Mensagem recebida: get_soil de soil1@localhost"
+            try:
+                parts = msg.split("Mensagem recebida: ")[1].split(" de ")
+                action = parts[0]
+                requester = parts[1]
+                
+                # Emojis específicos por tipo de ação
+                emoji_map = {
+                    "get_soil": "🌱",
+                    "get_drone": "🚁",
+                    "apply_irrigation": "💧",
+                    "apply_fertilize": "🧪",
+                    "apply_pesticide": "🐛",
+                    "plant_seed": "🌾",
+                    "harvest": "🚜"
+                }
+                emoji = emoji_map.get(action, "📨")
+                print(f"{emoji} {requester} pediu ao Environment: {action}")
+            except:
+                pass
+        
+        # ========== PEDIDOS DE RECARGA (CFP para Logistics) ==========
+        # Quando um agente PEDE recarga
+        elif "[CFP_RECHARGE]" in msg and "Enviando CFP" in msg:
+            print(f"🔋 {agent} pediu recarga ao Logistics")
+        
+        elif "[CFP_RECHARGE]" in msg and "A iniciar CFP" in msg:
+            if "para" in msg:
+                try:
+                    requester = msg.split("para ")[1].split(" (")[0]
+                    resource_type = msg.split("(")[1].split(")")[0] if "(" in msg else "recurso"
+                    print(f"🔔 {agent} recebeu pedido de recarga: {requester} ({resource_type})")
+                except:
+                    print(f"🔔 {agent} criou CFP de recarga")
+        
+        # Quando um agente ACEITA fazer a recarga
+        elif "[ACCEPT_RECHARGE]" in msg and "aceite" in msg.lower():
+            if "para" in msg:
+                try:
+                    target = msg.split("para ")[1].split(" ")[0].strip()
+                    print(f"✅ {agent} aceitou recarregar: {target}")
+                except:
+                    print(f"✅ {agent} aceitou fazer recarga")
+        
+        # Quando Logistics SELECIONA quem vai recarregar
+        elif "selecionado para recarga" in msg.lower() or "[CFP_RECHARGE] Logistics selecionado:" in msg:
+            try:
+                selected = msg.split("selecionado: ")[1].split(" ")[0] if "selecionado:" in msg else "desconhecido"
+                print(f"✅ Logistics escolhido para recarga: {selected}")
+            except:
+                pass
+        
+        # ========== TAREFAS DE PLANTAÇÃO/COLHEITA ==========
+        # Quando um CFP de tarefa é iniciado
+        elif "[CFP_INIT]" in msg and "A iniciar CFP" in msg:
+            if "para" in msg and "em" in msg:
+                try:
+                    task_type = msg.split("para ")[1].split(" em")[0]
+                    location = msg.split("em ")[1].split(".")[0]
+                    
+                    # Simplifica o nome da tarefa
+                    task_name = task_type.replace("_application", "").replace("_", " ")
+                    print(f"🔔 {agent} criou tarefa: {task_name} em {location}")
+                except:
+                    pass
+        
+        # Quando um harvester é ESCOLHIDO para uma tarefa
+        elif "[CFP_TASK_RECV] Harvester selecionado:" in msg:
+            try:
+                parts = msg.split("selecionado: ")[1].split(" com ETA")
+                selected = parts[0]
+                eta = parts[1].strip().replace(".", "")
+                print(f"✅ {agent} escolheu: {selected} (ETA:{eta})")
+            except:
+                pass
+        
+        # Quando um harvester ACEITA uma proposta de tarefa
+        elif "[PROPOSAL]" in msg and "ACEITE" in msg and "para" in msg:
+            if "em (" in msg:
+                try:
+                    task = msg.split("para ")[1].split(" em")[0]
+                    location = msg.split("em ")[1].split(".")[0]
+                    
+                    # Emoji por tipo de tarefa
+                    if "plant" in task:
+                        emoji = "🌱"
+                    elif "harvest" in task:
+                        emoji = "🚜"
+                    elif "irrigation" in task:
+                        emoji = "💧"
+                    elif "fertilize" in task:
+                        emoji = "🧪"
+                    else:
+                        emoji = "✓"
+                    
+                    task_name = task.replace("_application", "").replace("_", " ")
+                    print(f"{emoji} {agent} vai executar: {task_name} em {location}")
+                except:
+                    pass
+        
+        # ========== EXECUÇÃO E CONCLUSÃO DE TAREFAS ==========
+        elif "[PLANT]" in msg and "concluída" in msg.lower():
+            try:
+                if "CFP" in msg or "cfp" in msg:
+                    print(f"✔️ {agent} concluiu tarefa de plantação")
+            except:
+                pass
+        
+        elif "[HARVEST]" in msg and "concluída" in msg.lower():
+            print(f"✔️ {agent} concluiu colheita")
+        
+        # Quando há FALHA
+        elif "[FAILURE]" in msg or "falhou" in msg.lower():
+            if "Tarefa" in msg:
+                print(f"❌ {agent} - Tarefa falhou")
+        
+        # ========== RECARGA REALIZADA ==========
+        elif "[RECHARGE]" in msg and "concluída" in msg.lower():
+            print(f"🔋 {agent} completou recarga")
+        
+        elif "recarregado com sucesso" in msg.lower():
+            print(f"🔋 {agent} foi recarregado")
+        
+        # ========== INFORMAÇÕES DE RECURSOS CRÍTICOS ==========
+        elif "Bateria baixa" in msg or "Combustível baixo" in msg or "Recursos baixos" in msg:
+            print(f"⚠️ {agent} - Recursos baixos!")
+        
+        # ========== TICKS DO AMBIENTE ==========
+        elif "TICK: Ambiente avançou" in msg:
+            try:
+                day = msg.split("dia ")[1].split(",")[0]
+                hour = msg.split("hora ")[1].split(".")[0]
+                print(f"\n{'='*60}")
+                print(f"⏰ DIA {day}, HORA {hour}")
+                print(f"{'='*60}\n")
+            except:
+                pass
 
 # ===  Criar handlers ===
 
-# Handler para consola (terminal)
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+# Handler customizado para terminal
+task_printer = FarmTaskPrinter()
+task_printer.setLevel(logging.INFO)
 
 # Handler para ficheiro (guarda logs em disco)
 file_handler = RotatingFileHandler(
-    "agentes.log",          # nome do ficheiro
-    maxBytes=10_000_000,     # tamanho máximo antes de criar novo ficheiro (~5 MB)
-    backupCount=3,          # quantos ficheiros antigos manter
+    "agentes.log",
+    maxBytes=10_000_000,
+    backupCount=3,
     encoding="utf-8"
 )
 file_handler.setLevel(logging.INFO)
 
-# ===  Criar formatter (formato comum para ambos os handlers) ===
+# ===  Criar formatter (apenas para o ficheiro) ===
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-console_handler.setFormatter(formatter)
 file_handler.setFormatter(formatter)
 
 # ===  Configurar logger raiz ===
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
-root_logger.addHandler(console_handler)
-root_logger.addHandler(file_handler)
+root_logger.addHandler(task_printer)  # Handler customizado para terminal
+root_logger.addHandler(file_handler)  # Handler para ficheiro
 
 # === Criar logger específico para o teu módulo principal ===
 logger = logging.getLogger("MainStarter")
@@ -143,7 +336,6 @@ async def main():
         *[agent.start() for agent in irrigations],
         *[agent.start() for agent in fertilizers],
     )
-    logger.info("Agentes principais, logísticos, colheitadeiras, irrigação e fertilização em execução.")
     
     # ===  Criar e iniciar agentes sensores de solo ===
     for i in range(6):
@@ -161,7 +353,6 @@ async def main():
         )
     
     await asyncio.gather(*[agent.start() for agent in soils])
-    logger.info("Agentes Sensores de Solo em execução.")
 
     # ===  Criar e iniciar agentes drones (últimos) ===
     zonas = [
@@ -186,14 +377,13 @@ async def main():
         )
 
     await asyncio.gather(*[agent.start() for agent in drones])
-    logger.info("Agentes Drones em execução.")
 
     # === Loop principal de execução ===
     try:
         while env_agent.is_alive():
             await asyncio.sleep(1)
     except KeyboardInterrupt:
-        logger.info("Encerrando todos os agentes...")
+        pass
     finally:
         # Parar todos os agentes com segurança
         all_agents = [
@@ -208,11 +398,9 @@ async def main():
                 try:
                     await asyncio.wait_for(agent.stop(), timeout=5)
                 except asyncio.TimeoutError:
-                    logger.warning(f"Timeout ao parar {agent.jid}")
-        logger.info("Todos os agentes foram parados com sucesso.")
+                    pass
 
         await asyncio.sleep(1)
-        logger.info("Simulação encerrada com sucesso.")
         os._exit(0)
 
 

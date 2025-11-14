@@ -58,7 +58,7 @@ class EnvironmentTicker(PeriodicBehaviour):
 
     async def run(self):
         #logger.info(f"{'=' * 35} ENV {'=' * 35}")
-        if self.agent.numb_ticks >= 1: 
+        if self.agent.numb_ticks >= 10000: 
             logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
             self.kill()
             asyncio.create_task(self.agent.stop())

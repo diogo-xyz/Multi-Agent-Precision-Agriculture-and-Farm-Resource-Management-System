@@ -320,7 +320,7 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
-        self.timeout = 5 # Tempo para esperar por todas as propostas
+        self.timeout = 3 # Tempo para esperar por todas as propostas
 
     async def run(self):
         self.agent.logger.info(f"[IRRI] A aguardar propostas de recarga para CFP {self.cfp_id}...")

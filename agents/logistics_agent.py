@@ -19,6 +19,7 @@ PERFORMATIVE_INFORM_CROP = "inform_crop"
 PERFORMATIVE_ACCEPT_PROPOSAL = "accept-proposal"
 PERFORMATIVE_REJECT_PROPOSAL = "reject-proposal"
 PERFORMATIVE_DONE = "Done"
+PERFORMATIVE_FAILURE = "failure"
 ONTOLOGY_FARM_ACTION = "farm_action"
 
 MAX_CAPACITY = 1000
@@ -395,7 +396,7 @@ class CFPTaskReceiver(CyclicBehaviour):
         self.task_type = task_type
         self.seed_or_crop_type = seed_or_crop_type
         self.proposals = {}
-        self.timeout = time.time() + 5 # Tempo limite para receber propostas
+        self.timeout = time.time() + 2 # Tempo limite para receber propostas
 
     async def run(self):
         # 1. Receber propostas
@@ -455,7 +456,14 @@ class CFPTaskReceiver(CyclicBehaviour):
             
             # 4. Adicionar o comportamento para receber o DONE
             self.agent.status = "idle"
-            self.agent.add_behaviour(TaskDoneReceiver(self.cfp_id, self.zone), template=Template(metadata={"performative": "Done"}))
+            template_accept = Template()
+            template_accept.set_metadata("performative", PERFORMATIVE_DONE)
+
+            template_failure = Template()
+            template_failure.set_metadata("performative", PERFORMATIVE_FAILURE)
+
+            self.agent.add_behaviour(TaskDoneReceiver(self.cfp_id, self.zone), template=template_accept)
+            self.agent.add_behaviour(TaskDoneReceiver(self.cfp_id, self.zone), template=template_failure)
             
             self.kill()
 
@@ -494,7 +502,8 @@ class TaskDoneReceiver(CyclicBehaviour):
                         self.agent.logger.info(f"[TASK_FAILURE] Recebido FAILURE de {sender_jid} para CFP {cfp_id} na zona {self.zone}.")
                         if self.zone in self.agent.pending_crop_tasks:
                             del self.agent.pending_crop_tasks[self.zone]
-                            self.agent.logger.info(f"[TASK_DONE] Tarefa da zona {self.zone} removida da lista de pendentes.")
+                            self.agent.logger.info(f"[TASK_FAILURE] Tarefa da zona {self.zone} removida da lista de pendentes.")
+                    
                     
                     inform_log = InformOtherLogs(self.zone,0)
                     self.agent.add_behaviour(inform_log)

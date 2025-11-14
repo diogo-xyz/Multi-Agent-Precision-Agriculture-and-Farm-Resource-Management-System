@@ -54,7 +54,9 @@ class Field:
                                                                    self.pest.pest,
                                                                    TICK_HOURS)
 
-        if (self.isPestActive): self.pest.update_pest()
+        if (self.isPestActive): 
+            on_or_off = self.pest.update_pest()
+            self.isPestActive = 1 if on_or_off > 0 else 0
 
         self.crop.update_crop(
             self.moisture.moisture,

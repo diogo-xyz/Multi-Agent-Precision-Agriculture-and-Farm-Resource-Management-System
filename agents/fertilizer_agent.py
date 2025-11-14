@@ -321,7 +321,7 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
-        self.timeout = 5 # Tempo para esperar por todas as propostas
+        self.timeout = 3 # Tempo para esperar por todas as propostas
 
     async def run(self):
         self.agent.logger.info(f"[FERT] A aguardar propostas de recarga para CFP {self.cfp_id}...")
@@ -400,10 +400,6 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
             self.kill()
             return
 
-        # Template para receber DONE do LogisticAgent
-        template = Template()
-        template.set_metadata("performative", PERFORMATIVE_DONE)
-
         msg = await self.receive(timeout=5)
         
         if msg:
@@ -447,7 +443,7 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
                 self.agent.logger.warning(f"[FERT] Mensagem inesperada recebida durante a recarga: {performative} de {sender}")
 
         # Timeout para o DONE (se for muito longo, pode ser um problema)
-        if time.time() - self.start_time > self.eta_ticks + 60: # 60 segundos extra de tolerância
+        if time.time() - self.start_time > self.eta_ticks + 5: # 5 segundos extra de tolerância
             self.agent.logger.error(f"[FERT] Timeout ao esperar mensagem DONE de recarga de {self.logistic_jid}. Assumindo falha e voltando a 'idle'.")
             self.agent.status = "idle"
             self.awaiting_done = False

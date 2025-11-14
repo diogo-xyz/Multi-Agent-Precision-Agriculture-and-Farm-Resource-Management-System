@@ -44,7 +44,7 @@ class DoneFailure(CyclicBehaviour):
                 self.agent.pesticide_amount = self.agent.pesticide_amount + details.get("amount_delivered")
                 self.agent.logger.info("[DRO] Reabastecimento de pesticida concluído com sucesso.")
             self.agent.status = "idle"
-        elif msg.get_metadata("performative") == "Failure":
+        elif msg.get_metadata("performative") == "failure":
             self.agent.logger.error(f"[DRO] Falha na tarefa de {details.get('resource_type', 'desconhecido')}: {content.get('message', 'Sem detalhes')}")
             self.agent.status = "idle"
         else:
@@ -395,7 +395,7 @@ class DroneAgent(Agent):
         template_done.set_metadata("performative", "Done")
 
         template_fail = Template()
-        template_fail.set_metadata("performative", "Failure")
+        template_fail.set_metadata("performative", "failure")
 
         # Adiciona o comportamento DoneFailure para esperar pelo resultado
 

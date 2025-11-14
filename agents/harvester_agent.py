@@ -124,6 +124,7 @@ class InformReceivedReceiver(CyclicBehaviour):
 
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[DELIVERY] Erro ao descodificar JSON da confirmação: {msg.body}")
+                self.agent.status = "idle" # Garante que o agente não fica bloqueado
             except Exception as e:
                 self.agent.logger.exception(f"[DELIVERY] Erro ao processar 'inform_received': {e}")
                 self.agent.status = "idle" # Garante que o agente não fica bloqueado
@@ -436,6 +437,14 @@ class ProposalResponseReceiver(CyclicBehaviour):
                 proposal_data = self.agent.awaiting_proposals.pop(cfp_id)
                 
                 if decision == "accept":
+                    
+                    if (self.agent.status != "idle"):
+                        self.agent.logger.warning(f"[PROPOSAL] Proposta {cfp_id} aceite, mas o agente está ocupado ({self.agent.status}). Ignorando.")
+                        msg = await self.agent.send_failure(proposal_data["sender"],cfp_id)
+                        await self.send(msg)
+                        return
+
+                    self.agent.status = proposal_data["task_type"].split('_')[0] # harvesting ou planting
                     self.agent.logger.info(f"[PROPOSAL] Proposta {cfp_id} ACEITE para {proposal_data['task_type']} em {proposal_data['zone']}.")
                     
                     # Iniciar o comportamento de execução da tarefa
@@ -447,7 +456,6 @@ class ProposalResponseReceiver(CyclicBehaviour):
                         self.agent.logger.error(f"[PROPOSAL] Tipo de tarefa desconhecido após aceitação: {proposal_data['task_type']}")
                         return
                     
-                    self.agent.status = proposal_data["task_type"].split('_')[0] # harvesting ou planting
                     self.agent.add_behaviour(b)
                     
                 elif decision == "reject":
@@ -483,7 +491,6 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
         self.agent.logger.info(f"[HARVEST] A iniciar colheita para CFP {self.cfp_id} em {self.zone}.")
         
         try:
-            self.status = "moving"
             # 1. Simular ida ao local
             self.agent.logger.info(f"[HARVEST] A viajar para {self.zone}. Custo de combustível (ida e volta): {self.fuel_cost:.2f}.")
             await asyncio.sleep(5) # Simular tempo de viagem

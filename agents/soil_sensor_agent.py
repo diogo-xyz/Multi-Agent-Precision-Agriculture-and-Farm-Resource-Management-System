@@ -17,6 +17,7 @@ MIN_ENERGY_FOR_SCAN = 2.0 # Energia mínima para iniciar um scan (2% é o máxim
 
 # Protocolos e Ontologias
 PERFORMATIVE_DONE = "Done"
+PERFORMATIVE_FAILURE = "failure"
 PERFORMATIVE_CFP = "cfp_task"
 PROTOCOL_INFORM = "inform"
 ONTOLOGY_FARM_DATA = "farm_data"
@@ -199,7 +200,7 @@ class CallForProposal(OneShotBehaviour):
             await self.send(msg)
         # 2. Receber Propostas
         proposals = []
-        timeout = 5 # Tempo para receber propostas
+        timeout = 3 # Tempo para receber propostas
         start_time = time.time()
         
         while time.time() - start_time < timeout:
@@ -290,7 +291,7 @@ class RequestRecharge(OneShotBehaviour):
 
         # 2. Receber Propostas (Propose_recharge)
         proposals = []
-        timeout = 5
+        timeout = 3
         start_time = time.time()
         
         while time.time() - start_time < timeout:
@@ -360,27 +361,36 @@ class ReceiveDoneBehaviour(CyclicBehaviour):
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
                 sender = str(msg.sender)
-                details = content.get("details", {}) 
+                status = content.get("status")
                 
                 self.agent.logger.info(f"Mensagem 'Done' recebida de {sender} para CFP ID: {cfp_id}")
 
                 # 1. Verificar se o 'Done' é para a tarefa atual
                 if self.agent.current_task and self.agent.current_task["cfp_id"] == cfp_id:
-                    task_type = self.agent.current_task["type"]
-                    
-                    if task_type == "recharge":
-                        # 2. Aumentar a energia (o Logistic Agent deve ter feito a recarga)
-                        # Assumimos que a recarga é total para simplificar, ou podemos usar um valor do 'details'
-                        self.agent.energy += details.get("amount_delivered")
-                        self.agent.logger.info(f"Recarga de bateria concluída. Energia atual: {self.agent.energy:.2f}%.")
+
+                    if status == "done":
+                        details = content.get("details", {}) 
+                        task_type = self.agent.current_task["type"]
                         
-                    elif task_type in ["irrigation_application", "fertilize_application"]:
-                        self.agent.logger.info(f"Tarefa de {task_type} concluída com sucesso.")
-                        
-                    # 3. Resetar o estado e a tarefa
-                    self.agent.status = "idle"
-                    self.agent.current_task = None
-                    self.agent.logger.info("Agente regressa ao estado 'idle'. Pronto para o próximo scan.")
+                        if task_type == "recharge":
+                            # 2. Aumentar a energia (o Logistic Agent deve ter feito a recarga)
+                            # Assumimos que a recarga é total para simplificar, ou podemos usar um valor do 'details'
+                            self.agent.energy += details.get("amount_delivered")
+                            self.agent.logger.info(f"Recarga de bateria concluída. Energia atual: {self.agent.energy:.2f}%.")
+                            
+                        elif task_type in ["irrigation_application", "fertilize_application"]:
+                            self.agent.logger.info(f"Tarefa de {task_type} concluída com sucesso.")
+                            
+                        # 3. Resetar o estado e a tarefa
+                        self.agent.status = "idle"
+                        self.agent.current_task = None
+                        self.agent.logger.info("Agente regressa ao estado 'idle'. Pronto para o próximo scan.")
+                    else:
+                        sender_jid = str(msg.sender)
+                        self.agent.logger.info(f"[TASK_FAILURE] Recebido FAILURE de {sender_jid} para CFP {cfp_id}.")
+                        self.agent.status = "idle"
+                        self.agent.current_task = None
+                        self.agent.logger.info("Agente regressa ao estado 'idle'. Pronto para o próximo scan.")
                     
                 else:
                     self.agent.logger.warning(f"Mensagem 'Done' recebida para CFP ID desconhecido ou não ativo: {cfp_id}")
@@ -391,6 +401,7 @@ class ReceiveDoneBehaviour(CyclicBehaviour):
                 self.agent.logger.exception(f"Erro ao processar mensagem 'Done': {e}")
         
         # Pequena pausa para não consumir CPU
+        self.agent.status = "idle"
         await asyncio.sleep(0.1)
 
 
@@ -425,8 +436,11 @@ class SoilSensorAgent(Agent):
         template_done = Template()
         template_done.set_metadata("performative", PERFORMATIVE_DONE)
 
-        done_b = ReceiveDoneBehaviour()
-        self.add_behaviour(done_b,template=template_done)
+        template_failure = Template()
+        template_failure.set_metadata("performative", PERFORMATIVE_FAILURE)
+
+        self.add_behaviour(ReceiveDoneBehaviour(),template=template_done)
+        self.add_behaviour(ReceiveDoneBehaviour(),template=template_failure)
         
         # 2. Comportamento Periódico para realizar o Scan
         # O período deve ser ajustado à simulação, aqui usamos 30 segundos como exemplo
