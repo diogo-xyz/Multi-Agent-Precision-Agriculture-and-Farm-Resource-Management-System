@@ -257,11 +257,12 @@ logger = logging.getLogger("MainStarter")
 
 
 async def main():
+    field = Field()
     # ===  Inicializar agentes principais ===
     human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
     storage_agent = StorageAgent(STORAGE_JID[0], STORAGE_PASS[0])
-    env_agent = FarmEnvironmentAgent(ENV_JID[0], ENV_PASS[0], Field())
-
+    env_agent = FarmEnvironmentAgent(ENV_JID[0], ENV_PASS[0], field)
+    
     # ===  Inicializar listas de agentes auxiliares ===
     logistics_agents = []
     harvesters = []
@@ -281,7 +282,8 @@ async def main():
                 HARVESTERS_JID,
                 LOG_JID,
                 pos_logistics[i][0],
-                pos_logistics[i][1]
+                pos_logistics[i][1],
+                field
             )
         )
 

@@ -40,6 +40,66 @@ def calculate_eta(distance):
     # Tempo total = 2 * distância (ida e volta)
     return ceil(2 * distance)
 
+def get_seasaon(day):
+    """Retorna a estação do ano com base no dia do ano."""
+    if 80 <= day < 172:
+        return "Spring"
+    elif 172 <= day < 264:
+        return "Summer"
+    elif 264 <= day < 355:
+        return "Autumn"
+    else:
+        return "Winter"    
+
+def get_probs(season):
+    """Retorna as probabilidades de plantio por tipo de planta com base na estação."""
+    plants = {
+        0: "Tomate",
+        1: "Pimento",
+        2: "Trigo",
+        3: "Couve",
+        4: "Alface",
+        5: "Cenoura"
+    }
+
+    
+    summer = [0, 1]      # Tomate, Pimento
+    winter = [3, 5]    # Couve, Cenoura
+    any_season = [4, 2]   # Alface, Trigo
+
+    probs = {i: 0.0 for i in plants.keys()}
+
+    if season == "Summer":
+        for i in summer:
+            probs[i] = 0.25
+        for i in any_season:
+            probs[i] = 0.15
+        for i in winter:
+            probs[i] = 0.10
+
+    elif season == "Winter":
+        for i in winter:
+            probs[i] = 0.25
+        for i in any_season:
+            probs[i] = 0.15
+        for i in summer:
+            probs[i] = 0.10
+    
+    else:
+        p = 1.0 / len(plants)  # igual para todas
+        for i in probs:
+            probs[i] = p
+
+    return probs
+
+def get_seed(probs):
+    """Seleciona um tipo de planta com base nas probabilidades fornecidas."""
+    indices = list(probs.keys())
+    pesos = [probs[i] for i in indices]
+
+    chosen = random.choices(indices, weights=pesos, k=1)[0]
+
+    return chosen
 
 # =====================
 #   BEHAVIOURS
@@ -317,7 +377,12 @@ class InformCropReceiver(CyclicBehaviour):
                 if state == 0: # not planted -> Plantar
                     task_type = "plant_application"
                     # Escolher semente aleatoriamente
-                    seed_type = random.choice(list(self.agent.seed_storage.keys()))
+
+                    day = self.agent.field.day
+                    season = get_seasaon(day)
+                    probs = get_probs(season)
+                    seed_type = get_seed(probs)
+                    #print(f"Estação: {season}, Probabilidades: {probs}, Semente escolhida: {seed_type}")
                     self.agent.logger.info(f"[INFORM_CROP] Ação: Plantar semente {seed_type} em {zone}.")
                     
                     # Iniciar CFP para Harvester Agents
@@ -521,12 +586,14 @@ class TaskDoneReceiver(CyclicBehaviour):
 
 class LogisticsAgent(Agent):
 
-    def __init__(self, jid, password, harv_jid, log_jid, row, col):
+    def __init__(self, jid, password, harv_jid, log_jid, row, col, field):
         super().__init__(jid, password)
 
         self.logger = logging.getLogger(f"[LOG] {jid}")
         self.logger.setLevel(logging.INFO)
         
+        self.field = field  # Representação do campo 
+
         self.harv_jid = harv_jid
         self.log_jid = log_jid
         self.position = (row, col)
