@@ -35,7 +35,7 @@ class InformHarvestReceiver(CyclicBehaviour):
                         details_received.append({"seed_type": seed_type, "amount": amount})
                         self.agent.logger.info(f"[INFORM_HARVEST] Yield de semente {seed_type} atualizado. Adicionado: {amount}. Total: {self.agent.yield_storage[seed_type]}.")
 
-                print(self.agent.yield_storage)
+                #print(self.agent.yield_storage)
                 # Enviar confirmação `inform_received`
                 if details_received:
                     msg = await self.agent.send_inform_received(sender_jid, details_received)

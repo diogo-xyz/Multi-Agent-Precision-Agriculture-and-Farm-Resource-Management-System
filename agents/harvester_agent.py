@@ -144,10 +144,8 @@ class DeliverHarvestBehaviour(OneShotBehaviour):
         envia uma mensagem inform_harvest ao agente Storage.
         """
         self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.sto_jid}.")
-        
         # Simula o tempo de viagem (ida e volta)
-        await asyncio.sleep(5)
-        
+        if not self.stop_beha: await asyncio.sleep(5)
         # Prepara a mensagem com os dados da colheita
         amount_type_list = []
         for seed_type, amount in self.agent.yield_seed.items():
@@ -158,7 +156,6 @@ class DeliverHarvestBehaviour(OneShotBehaviour):
         msg = await self.agent.send_inform_harvest(self.sto_jid, amount_type_list)
         await self.send(msg)
         self.agent.logger.info(f"[DELIVERY] Mensagem 'inform_harvest' enviada para {self.sto_jid}.")
-        if self.stop_beha: self.kill()
 
 class InformReceivedReceiver(CyclicBehaviour):
     """Comportamento que recebe confirmações de entrega do agente Storage.
@@ -1075,7 +1072,9 @@ class HarvesterAgent(Agent):
             A flag stop_beha=1 força a entrega imediata independentemente
             da quantidade acumulada.
         """
-        self.add_behaviour(HarvestYieldBehaviour(period=15,stop_beha=1))
+        self.add_behaviour(DeliverHarvestBehaviour(self.sto_jid,stop_beha=1))
+        # espera o comportamento terminar
+        await asyncio.sleep(3)
         self.logger.info(f"{self.jid} guardou o resto da colheita no agente storage")
         await super().stop()
     
