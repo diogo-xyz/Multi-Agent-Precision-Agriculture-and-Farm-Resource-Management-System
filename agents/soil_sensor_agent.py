@@ -1,3 +1,12 @@
+"""Módulo do Agente de Sensor de Solo para monitorização de fazenda inteligente.
+
+Este módulo implementa um agente SPADE responsável por:
+- Monitorização contínua de condições do solo (humidade, nutrientes, temperatura)
+- Gestão de energia da bateria e solicitação de recarga
+- Coordenação de tarefas de irrigação e fertilização via CFP (Call For Proposals)
+- Comunicação com Environment Agent, Irrigation Agents, Fertilization Agents e Logistic Agents
+"""
+
 import asyncio
 import json
 import logging
@@ -26,16 +35,40 @@ ONTOLOGY_FARM_ACTION = "farm_action"
 # --- Funções Auxiliares ---
 
 def calculate_energy_loss():
-    """Calcula a perda de energia aleatória entre 1% e 2%."""
+    """Calcula a perda de energia aleatória entre 0% e 1%.
+    
+    Returns:
+        float: Valor de perda de energia em percentagem.
+    """
     return random.uniform(0.0, 1.0)
 
 # --- Comportamentos ---
 
 class ScanBehaviour(PeriodicBehaviour):
+    """Comportamento periódico para realizar scan do solo e tomar decisões.
+    
+    Este comportamento executa periodicamente e é responsável por:
+    - Verificar o nível de energia da bateria
+    - Realizar scan do solo solicitando dados ao Environment Agent
+    - Determinar se é necessário irrigação ou fertilização
+    - Iniciar processos de CFP quando necessário
+    
+    Attributes:
+        row (int): Linha da posição do sensor na quinta.
+        col (int): Coluna da posição do sensor na quinta.
+        env_jid (str): JID do Environment Agent.
+        task_in_progress (bool): Flag para garantir que só faz um scan de cada vez.
     """
-    Comportamento principal para realizar o scan, verificar o estado e tomar decisões.
-    """
+
     def __init__(self, period, row, col, env_jid):
+        """Inicializa o comportamento de scan.
+        
+        Args:
+            period (float): Período em segundos entre cada execução.
+            row (int): Linha da posição do sensor.
+            col (int): Coluna da posição do sensor.
+            env_jid (str): JID do Environment Agent.
+        """
         super().__init__(period)
         self.row = row
         self.col = col
@@ -43,9 +76,19 @@ class ScanBehaviour(PeriodicBehaviour):
         self.task_in_progress = False # Flag para garantir que só faz um scan de cada vez
 
     async def on_start(self):
+        """Callback executado ao iniciar o comportamento."""
         self.agent.logger.info("ScanBehaviour iniciado.")
 
     async def run(self):
+        """Executa o ciclo de scan e tomada de decisão.
+        
+        O método segue os seguintes passos:
+        1. Verifica se há tarefa em curso
+        2. Verifica nível de energia
+        3. Consome energia do scan
+        4. Solicita dados do solo ao Environment Agent
+        5. Adiciona comportamento para receber resposta
+        """
         # 1. Verificar se há tarefa em curso (irrigação/fertilização)
         if self.agent.status != "idle":
             #self.agent.logger.info(f"Tarefa em curso ({self.agent.status}). A aguardar 'done' antes de novo scan.")
@@ -88,10 +131,22 @@ class ScanBehaviour(PeriodicBehaviour):
 
 
 class ReceiveDataBehaviour(OneShotBehaviour):
+    """Comportamento para processar resposta do Environment Agent após scan.
+    
+    Este comportamento é responsável por:
+    - Receber dados do solo do Environment Agent
+    - Analisar os valores de humidade e nutrientes
+    - Iniciar CFP para irrigação ou fertilização se necessário
     """
-    Comportamento para receber a resposta do Environment Agent após o scan.
-    """
+
     async def run(self):
+        """Recebe e processa dados do solo, iniciando ações necessárias.
+        
+        O método analisa os dados recebidos e:
+        - Se humidade baixa: inicia CFP para irrigação
+        - Se nutrientes baixos: inicia CFP para fertilização
+        - Se condições ideais: retorna ao estado idle
+        """
         # Espera pela mensagem de resposta do Environment Agent
         template = Template()
         template.set_metadata("performative", "inform")
@@ -169,10 +224,28 @@ class ReceiveDataBehaviour(OneShotBehaviour):
 
 
 class CallForProposal(OneShotBehaviour):
-    """
-    Comportamento para iniciar um CFP (Contract-Net Protocol) para uma tarefa.
+    """Comportamento para gerir processo de CFP (Contract-Net Protocol).
+    
+    Este comportamento implementa o protocolo Contract-Net para:
+    - Enviar CFP para agentes relevantes (irrigação/fertilização)
+    - Receber e avaliar propostas
+    - Selecionar a melhor proposta 
+    - Enviar aceitação/rejeição
+    
+    Attributes:
+        task_type (str): Tipo de tarefa (irrigation_application ou fertilize_application).
+        agents_jids (list): Lista de JIDs dos agentes para enviar CFP.
+        required_resource (dict): Recurso necessário (tipo e quantidade).
+        cfp_id (str): Identificador único do CFP.
     """
     def __init__(self, task_type, agents_jids, required_resource):
+        """Inicializa o comportamento de CFP.
+        
+        Args:
+            task_type (str): Tipo de tarefa a ser executada.
+            agents_jids (list): Lista de JIDs dos agentes candidatos.
+            required_resource (dict): Dicionário com tipo e quantidade de recurso.
+        """
         super().__init__()
         self.task_type = task_type
         self.agents_jids = agents_jids
@@ -180,6 +253,14 @@ class CallForProposal(OneShotBehaviour):
         self.cfp_id = f"cfp_{task_type}_{time.time()}"
 
     async def run(self):
+        """Executa o processo completo de CFP.
+        
+        O método:
+        1. Envia CFP para todos os agentes candidatos
+        2. Aguarda e coleta propostas
+        3. Seleciona a melhor proposta baseado em ETA
+        4. Envia aceitação/rejeição
+        """
         self.agent.logger.info(f"A enviar CFP ({self.task_type}) com ID: {self.cfp_id}")
         
         # 1. Enviar CFP para todos os agentes
@@ -261,14 +342,33 @@ class CallForProposal(OneShotBehaviour):
 
 
 class RequestRecharge(OneShotBehaviour):
+    """Comportamento para solicitar recarga de bateria via CFP.
+    
+    Este comportamento implementa CFP para recarga de bateria:
+    - Envia CFP para Logistic Agents
+    - Recebe e avalia propostas de recarga
+    - Seleciona a melhor proposta (menor ETA)
+    - Envia aceitação/rejeição
+    
+    Attributes:
+        cfp_id (str): Identificador único do CFP de recarga.
     """
-    Comportamento para solicitar recarga de bateria aos Logistic Agents.
-    """
+
     def __init__(self, period=None):
+        """Inicializa o comportamento de solicitação de recarga.
+        """
         super().__init__()
         self.cfp_id = f"cfp_recharge_{time.time()}"
 
     async def run(self):
+        """Executa o processo de CFP para recarga de bateria.
+        
+        O método:
+        1. Envia CFP para todos os Logistic Agents
+        2. Aguarda e coleta propostas de recarga
+        3. Seleciona a melhor proposta baseado em ETA
+        4. Envia aceitação/rejeição
+        """
         self.agent.logger.info(f"A enviar CFP de Recarga (Bateria) com ID: {self.cfp_id}")
         
         # 1. Enviar CFP para todos os Logistic Agents
@@ -348,10 +448,22 @@ class RequestRecharge(OneShotBehaviour):
 
 
 class ReceiveDoneBehaviour(CyclicBehaviour):
-    """
-    Comportamento cíclico para receber mensagens 'Done' e atualizar o estado do agente.
+    """Comportamento cíclico para processar mensagens 'Done' e 'Failure'.
+    
+    Este comportamento aguarda continuamente por mensagens de conclusão:
+    - Mensagens 'Done' indicam sucesso na tarefa
+    - Mensagens 'Failure' indicam falha na tarefa
+    - Atualiza estado do agente e energia (no caso de recarga)
     """
     async def run(self):
+        """Processa mensagens de conclusão de tarefas.
+        
+        O método:
+        - Recebe mensagens 'Done' ou 'Failure'
+        - Valida se a mensagem corresponde à tarefa atual
+        - Atualiza energia (no caso de recarga bem-sucedida)
+        - Retorna agente ao estado idle
+        """
         # Template para receber 'Done' de qualquer agente
         
         msg = await self.receive(timeout=5)
@@ -408,8 +520,41 @@ class ReceiveDoneBehaviour(CyclicBehaviour):
 # --- Agente Principal ---
 
 class SoilSensorAgent(Agent):
-
+    """Agente SPADE para monitorização de sensores de solo.
+        
+        Este agente é responsável por:
+        - Monitorizar continuamente condições do solo (humidade, nutrientes, temperatura)
+        - Gerir energia da bateria e solicitar recarga quando necessário
+        - Coordenar com outros agentes via CFP para irrigação e fertilização
+        - Comunicar com Environment Agent para obter dados do solo
+        
+        Attributes:
+            logger (logging.Logger): Logger para o agente.
+            position (tuple): Posição (linha, coluna) do sensor na quinta.
+            status (str): Estado atual do agente (idle, charging, irrigating, fertilizing).
+            irrig_jid (list): Lista de JIDs dos Irrigation Agents.
+            fert_jid (list): Lista de JIDs dos Fertilization Agents.
+            log_jid (list): Lista de JIDs dos Logistic Agents.
+            env_jid (str): JID do Environment Agent.
+            row (int): Linha da posição do sensor.
+            col (int): Coluna da posição do sensor.
+            energy (float): Nível atual de energia da bateria (0-100%).
+            last_value (dict): Últimos valores lidos do solo.
+            current_task (dict): Informação sobre a tarefa atualmente em execução.
+    """
     def __init__(self,jid,password,log_jid,irrig_jid,fert_jid,env_jid,row,col):
+        """Inicializa o Soil Sensor Agent.
+        
+        Args:
+            jid (str): JID (Jabber ID) do agente.
+            password (str): Password para autenticação XMPP.
+            log_jid (list): Lista de JIDs dos Logistic Agents.
+            irrig_jid (list): Lista de JIDs dos Irrigation Agents.
+            fert_jid (list): Lista de JIDs dos Fertilization Agents.
+            env_jid (str): JID do Environment Agent.
+            row (int): Linha da posição do sensor na quinta.
+            col (int): Coluna da posição do sensor na quinta.
+        """
         super().__init__(jid,password)
         
         # Configuração de Logging
@@ -430,6 +575,13 @@ class SoilSensorAgent(Agent):
         self.current_task = None # Guarda a tarefa em curso: {"cfp_id": ..., "agent": ..., "type": ...}
 
     async def setup(self):
+        """Configura e inicializa os comportamentos do agente.
+        
+        Este método:
+        - Adiciona comportamento cíclico para receber mensagens 'Done'/'Failure'
+        - Adiciona comportamento periódico para realizar scans do solo
+        - Configura templates de mensagens para filtragem
+        """
         self.logger.info(f"SoilSensorAgent {self.jid} a iniciar...")
         
         # 1. Comportamento Cíclico para receber 'Done'
@@ -443,11 +595,15 @@ class SoilSensorAgent(Agent):
         self.add_behaviour(ReceiveDoneBehaviour(),template=template_failure)
         
         # 2. Comportamento Periódico para realizar o Scan
-        # O período deve ser ajustado à simulação, aqui usamos 30 segundos como exemplo
+        # O período deve ser ajustado à simulação, aqui usamos 90 segundos como exemplo
         scan_b = ScanBehaviour(period=90, row=self.row, col=self.col, env_jid=self.env_jid)
         self.add_behaviour(scan_b)
         
         self.logger.info("SoilSensorAgent iniciado com sucesso.")
 
     async def stop(self):
+        """Para o agente e limpa recursos.
+        
+        Este método garante que o agente é terminado corretamente.
+        """
         await super().stop()

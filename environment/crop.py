@@ -1,3 +1,11 @@
+"""
+Módulo Crop para simulação do ciclo de vida de culturas agrícolas.
+
+Este módulo implementa a lógica de crescimento, saúde e desenvolvimento de
+culturas, considerando fatores ambientais como humidade, nutrientes, temperatura
+e pragas.
+"""
+
 import numpy as np
 
 from ..config import (
@@ -10,23 +18,43 @@ from ..config import (
 
 class Crop():
     """
-    Simula o estado das culturas no campo.
+    Simula o estado e dinâmica das culturas numa grelha 2D.
     
-    Atributos:
-        crop_stage: Matriz com o estágio de cada célula (0-4)
-                    0: Sem plantação
-                    1: Semente
-                    2: Germinar
-                    3: Vegetação
-                    4: Maduro
-        crop_type: Matriz com o tipo de planta (0-5)
-                   0: Tomate, 1: Pimento, 2: Trigo, 3: Couve, 4: Alface, 5: Cenoura
-        crop_health: Matriz com a saúde das plantas (0-100)
-        crop_hours_remaining: Matriz com horas restantes até próximo estágio ou apodrecimento
-        crop_days_mature: Matriz com dias desde que atingiu maturação (para apodrecimento)
+    Esta classe modela o ciclo de vida completo das plantas, incluindo:
+    - Plantação e crescimento através de múltiplos estágios
+    - Cálculo de stress ambiental (humidade, nutrientes, temperatura)
+    - Efeitos de pragas na saúde das plantas
+    - Apodrecimento de culturas maduras não colhidas
+    - Morte de plantas por condições adversas
+    
+    Attributes:
+        rows (int): Número de linhas da grelha.
+        cols (int): Número de colunas da grelha.
+        crop_stage (np.ndarray): Matriz com o estágio de cada célula.
+            0 = Sem plantação
+            1 = Semente
+            2 = Germinação
+            3 = Vegetação
+            4 = Maduro
+        crop_type (np.ndarray): Matriz com o tipo de planta.
+            0 = Tomate, 1 = Pimento, 2 = Trigo, 3 = Couve, 4 = Alface, 5 = Cenoura
+        crop_health (np.ndarray): Matriz com a saúde das plantas (0-100%).
+        crop_hours_remaining (np.ndarray): Horas restantes até próximo estágio.
+        crop_days_mature (np.ndarray): Dias desde que atingiu maturação (para apodrecimento).
     """
 
     def __init__(self, rows, cols):
+        """
+        Inicializa a grelha de culturas.
+        
+        Cria matrizes vazias para armazenar o estado de todas as células.
+        Inicialmente, nenhuma célula tem plantação.
+        
+        Args:
+            rows (int): Número de linhas da grelha.
+            cols (int): Número de colunas da grelha.
+        """
+
         self.rows = rows
         self.cols = cols
         
@@ -47,8 +75,23 @@ class Crop():
         
     def plant_seed(self, row, col, plant_type):
         """
-        Planta uma semente na posição (row, col).
+        Planta uma semente numa posição específica.
+        
+        Inicializa uma nova planta no estágio 1 (Semente) com saúde máxima
+        e define a duração até o próximo estágio baseada no tipo de planta.
+        
+        Args:
+            row (int): Índice da linha onde plantar.
+            col (int): Índice da coluna onde plantar.
+            plant_type (int): Tipo de planta (0-5).
+            
+        Returns:
+            bool: True se a plantação foi bem-sucedida.
+            
+        Note:
+            Sobrescreve qualquer plantação existente na posição.
         """
+
         self.crop_stage[row, col] = 1  # Estágio 1: Semente
         self.crop_type[row, col] = plant_type
         self.crop_health[row, col] = 100.0
@@ -59,9 +102,23 @@ class Crop():
 
     def harvest(self, row, col):
         """
-        Colhe a planta na posição (row, col) e limpa a célula.
-        Retorna a saúde da planta colhida.
+        Colhe a planta numa posição específica e limpa a célula.
+        
+        Remove a planta da grelha e retorna a sua saúde final, que pode
+        ser usada para calcular o rendimento da colheita.
+        
+        Args:
+            row (int): Índice da linha onde colher.
+            col (int): Índice da coluna onde colher.
+            
+        Returns:
+            float: Saúde da planta colhida (0-100%).
+            
+        Note:
+            A célula é completamente limpa após a colheita, podendo receber
+            nova plantação.
         """
+
         health = self.crop_health[row, col]
         self.crop_stage[row, col] = 0
         self.crop_type[row, col] = 0
@@ -72,14 +129,23 @@ class Crop():
 
     def _calculate_moisture_stress(self, moisture, crop_type_matrix):
         """
-        Calcula o stress hídrico das plantas (0.0 = stress máximo, 1.0 = sem stress).
+        Calcula o stress hídrico das plantas baseado na humidade do solo.
+        
+        Cada tipo de planta tem uma humidade ideal e tolerância específicas.
+        O stress aumenta linearmente quando o desvio da humidade ideal excede
+        a tolerância da planta.
         
         Args:
-            moisture: Matriz de humidade do solo (0-100%)
-            crop_type_matrix: Matriz com tipos de plantas
+            moisture (np.ndarray): Matriz de humidade do solo (0-100%).
+            crop_type_matrix (np.ndarray): Matriz com tipos de plantas.
             
         Returns:
-            Matriz com fatores de stress (0.0-1.0)
+            np.ndarray: Matriz com fatores de stress (0.0-1.0).
+                1.0 = sem stress, 0.0 = stress máximo.
+                
+        Note:
+            - Dentro da tolerância: stress = 1.0 (sem stress)
+            - Fora da tolerância: stress diminui linearmente com o desvio
         """
         stress = np.ones_like(moisture, dtype=float)
         
@@ -104,19 +170,27 @@ class Crop():
 
     def _calculate_nutrient_stress(self, nutrients):
         """
-        Calcula o stress por deficiência de nutrientes (0.0 = stress máximo, 1.0 = sem stress).
+        Calcula o stress por deficiência de nutrientes.
+        
+        As plantas sofrem stress quando os nutrientes do solo estão abaixo
+        de 55%. O stress aumenta linearmente à medida que os nutrientes diminuem.
         
         Args:
-            nutrients: Matriz de nutrientes do solo (0-100%)
+            nutrients (np.ndarray): Matriz de nutrientes do solo (0-100%).
             
         Returns:
-            Matriz com fatores de stress (0.0-1.0)
+            np.ndarray: Matriz com fatores de stress (0.0-1.0).
+                1.0 = sem stress (≥55% nutrientes)
+                0.0 = stress máximo (0% nutrientes)
+                
+        Note:
+            Células sem plantação têm stress = 1.0 (não aplicável).
         """
-        # Stress aumenta quando nutrientes < 40%
+        # Stress aumenta quando nutrientes < 55%
         # 100% nutrientes = 1.0 (sem stress)
-        # 40% nutrientes = 1.0 (sem stress)
+        # 55% nutrientes = 1.0 (sem stress)
         # 0% nutrientes = 0.0 (stress máximo)
-        stress = np.clip(nutrients / 40.0, 0.0, 1.0)
+        stress = np.clip(nutrients / 55.0, 0.0, 1.0)
         
         # Só aplica stress onde há plantas
         mask = (self.crop_stage == 0)
@@ -126,13 +200,22 @@ class Crop():
 
     def _calculate_temperature_stress(self, temperature):
         """
-        Calcula o stress térmico das plantas (0.0 = stress máximo, 1.0 = sem stress).
+        Calcula o stress térmico das plantas baseado na temperatura do ar.
+        
+        A temperatura ideal para as plantas está entre 15-30°C. Fora deste
+        intervalo, o stress aumenta linearmente até temperaturas extremas
+        (5°C ou 40°C).
         
         Args:
-            temperature: Temperatura do ar (°C)
+            temperature (float): Temperatura do ar em graus Celsius.
             
         Returns:
-            float: Fator de stress (0.0-1.0)
+            float: Fator de stress (0.0-1.0).
+                1.0 = sem stress (15-30°C)
+                0.0 = stress máximo (≤5°C ou ≥40°C)
+                
+        Note:
+            Este valor é aplicado uniformemente a todas as células da grelha.
         """
         # Temperatura ideal: 15-30°C
         # Stress aumenta fora desse intervalo
@@ -147,13 +230,19 @@ class Crop():
 
     def _calculate_pest_damage(self, pest_matrix):
         """
-        Calcula o dano causado por pestes às plantas.
+        Calcula o dano causado por pragas às plantas.
+        
+        Células com pragas (valor 1) causam 2% de dano à saúde da planta
+        por hora.
         
         Args:
-            pest_matrix: Matriz de pestes (0 ou 1)
+            pest_matrix (np.ndarray): Matriz de pragas (0 ou 1).
             
         Returns:
-            Matriz com dano por pestes (% de saúde perdida por hora)
+            np.ndarray: Matriz com dano por pragas (% de saúde perdida por hora).
+                
+        Note:
+            Células sem plantação têm dano = 0.0 (não aplicável).
         """
         # Pestes causam 2% de dano por hora
         damage = pest_matrix.astype(float) * 2.0
@@ -166,14 +255,34 @@ class Crop():
 
     def update_crop(self, moisture, nutrients, temperature, pest_matrix, dt_hours=1.0):
         """
-        Atualiza o estado das culturas.
+        Atualiza o estado completo das culturas considerando fatores ambientais.
+        
+        Este método é o núcleo da simulação de culturas, realizando:
+        1. Cálculo de fatores de stress (humidade, nutrientes, temperatura)
+        2. Atualização da saúde das plantas (dano e regeneração)
+        3. Processamento de apodrecimento de culturas maduras
+        4. Verificação e remoção de plantas mortas
+        5. Progressão de estágios de crescimento
+        
+        O crescimento é afetado por stress ambiental:
+        - Stress alto (baixo valor): crescimento mais lento e perda de saúde
+        - Stress baixo (alto valor): crescimento normal e possível regeneração
         
         Args:
-            moisture: Matriz de humidade do solo (0-100%)
-            nutrients: Matriz de nutrientes do solo (0-100%)
-            temperature: Temperatura do ar (°C)
-            pest_matrix: Matriz de pestes (0 ou 1)
-            dt_hours: Intervalo de tempo em horas (padrão: 1.0)
+            moisture (np.ndarray): Matriz de humidade do solo (0-100%).
+            nutrients (np.ndarray): Matriz de nutrientes do solo (0-100%).
+            temperature (float): Temperatura em graus Celsius.
+            pest_matrix (np.ndarray): Matriz de pragas (0 ou 1).
+            dt_hours (float, optional): Intervalo de tempo em horas. Defaults to 1.0.
+            
+        Note:
+            - Plantas com saúde ≤0 são removidas
+            - Plantas maduras começam a apodrecer após DAYS_BEFORE_ROT dias
+            - Taxa de regeneração: 2% por hora com stress mínimo
+            - Taxa de dano por stress: 1% por hora com stress máximo
+            - Taxa de dano por pragas: 2% por hora
+            - Taxa de apodrecimento: definida por ROT_RATE
+            
         """
         # Máscara de células com plantas
         has_plant = (self.crop_stage > 0)

@@ -1,3 +1,11 @@
+"""
+Módulo FertilizerAgent para gestão e aplicação de fertilizantes em culturas agrícolas.
+
+Este módulo implementa um agente autónomo responsável pela fertilização de zonas
+agrícolas, coordenando-se com agentes de solo e logística através do protocolo
+FIPA Contract Net para negociação de tarefas e reabastecimento de recursos.
+"""
+
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
@@ -26,11 +34,29 @@ ONTOLOGY_FARM_ACTION = "farm_action"
 # =================================================================================
 
 def calculate_manhattan_distance(pos1, pos2):
-    """Calcula a distância de Manhattan entre duas posições (row, col)."""
+    """
+    Calcula a distância de Manhattan entre duas posições.
+    
+    Args:
+        pos1 (tuple): Primeira posição (row, col).
+        pos2 (tuple): Segunda posição (row, col).
+        
+    Returns:
+        int: Distância de Manhattan entre as duas posições.
+    
+    """
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 def calculate_energy_cost(distance):
-    """Calcula o custo de energia: 1 de energia por cada 2 unidades de distância."""
+    """
+    Calcula o custo de energia baseado na distância.
+    
+    Args:
+        distance (int): Distância a percorrer em unidades.
+        
+    Returns:
+        int: Custo de energia (1 unidade por cada 2 unidades de distância).
+    """
     return distance // 2
 
 # =================================================================================
@@ -39,8 +65,30 @@ def calculate_energy_cost(distance):
 
 
 class CheckRechargeBehaviour(PeriodicBehaviour):
-    """Verifica periodicamente se é necessário recarregar água ou energia."""
+    """
+    Comportamento periódico para verificar necessidade de reabastecimento.
+    
+    Verifica periodicamente os níveis de fertilizante e energia, solicitando
+    reabastecimento aos agentes de logística quando abaixo dos limiares críticos.
+    
+    Limiares:
+    - Fertilizante: < 15% da capacidade máxima
+    - Energia: < 15% (de 100)
+    """
     async def run(self):
+        """
+        Verifica níveis de recursos e solicita reabastecimento se necessário.
+        
+        O processo:
+        1. Ignora se o agente não estiver idle
+        2. Verifica fertilizante e energia
+        3. Se baixo, muda status para 'charging' e envia CFP a todos os agentes de logística
+        4. Adiciona comportamento para receber propostas
+        
+        Note:
+            - Processa apenas um tipo de recarga por ciclo (prioriza fertilizante)
+            - O agente fica bloqueado até recarga completa
+        """
         # Se o agente estiver ocupado ou já a carregar, não faz nada
         if self.agent.status != "idle":
             return
@@ -84,8 +132,30 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
 
 
 class ReceiveCFPTaskBehaviour(CyclicBehaviour):
-    """Recebe e processa mensagens CFP (Call For Proposal) para fertilização."""
+    """
+    Comportamento para receber e processar CFPs de tarefas de fertilização.
+    
+    Recebe Call For Proposals de agentes de solo, avalia viabilidade
+    (recursos e energia disponíveis) e envia proposta se capaz de executar.
+    """
     async def run(self):
+        """
+        Processa CFPs de fertilização e decide se propõe ou rejeita.
+        
+        O processo de decisão:
+        1. Valida que é tarefa de fertilização
+        2. Extrai quantidade de fertilizante necessária
+        3. Calcula distância (Manhattan) e custo de energia (ida + volta)
+        4. Verifica capacidade de fertilizante disponível
+        5. Verifica energia disponível para a viagem
+        6. Se viável, armazena proposta e envia PROPOSE
+        7. Se inviável, envia REJECT
+        
+        Note:
+            - Distância total = 2 * distância (ida e volta)
+            - ETA = distância total (1 tick por unidade)
+            - Timeout de 5 segundos para receber mensagens
+        """
         # Template para receber CFP de qualquer SoilAgent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
@@ -170,8 +240,27 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.1)
 
 class ReceiveProposalResponseBehaviour(CyclicBehaviour):
-    """Recebe a resposta (Accept/Reject) à proposta enviada."""
+    """
+    Comportamento para receber respostas (Accept/Reject) a propostas enviadas.
+    
+    Processa as decisões dos agentes de solo sobre propostas de fertilização,
+    iniciando a execução da tarefa se aceite ou retornando a idle se rejeitada.
+    """
+
     async def run(self):
+        """
+        Processa respostas Accept ou Reject às propostas de fertilização.
+        
+        O processo:
+        1. Recebe mensagem com performativa Accept ou Reject
+        2. Valida cfp_id e recupera dados da proposta
+        3. Se Accept: inicia ExecuteTaskBehaviour
+        4. Se Reject: retorna ao estado idle
+        
+        Note:
+            - Timeout de 5 segundos
+            - Respostas para CFPs desconhecidos geram warning
+        """
         # Template para receber Accept ou Reject de qualquer SoilAgent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
@@ -212,13 +301,51 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.1)
 
 class ExecuteTaskBehaviour(OneShotBehaviour):
-    """Executa a tarefa de fertilização após a proposta ser aceite."""
+    """
+    Comportamento para executar tarefa de fertilização após proposta aceite.
+    
+    Coordena todo o processo de fertilização:
+    - Viagem até o local
+    - Interação com Environment Agent para aplicar fertilizante
+    - Atualização de recursos
+    - Viagem de regresso
+    - Notificação de conclusão
+    
+    Attributes:
+        proposal_data (dict): Dados da proposta aceite.
+        cfp_id (str): Identificador da tarefa.
+    """
     def __init__(self, proposal_data,cfp_id):
+        """
+        Inicializa o comportamento de execução de tarefa.
+        
+        Args:
+            proposal_data (dict): Dicionário com dados da proposta aceite.
+            cfp_id (str): Identificador único da tarefa.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.cfp_id = cfp_id
 
     async def run(self):
+        """
+        Executa o ciclo completo de fertilização.
+        
+        O processo segue estas etapas:
+        1. Viagem de ida 
+        2. Envio de ACT ao Environment Agent
+        3. Espera por confirmação INFORM
+        4. Se sucesso:
+           - Atualiza recursos (fertilizante e energia)
+           - Viagem de volta
+           - Envia DONE ao solicitante
+        5. Se falha: Envia FAILURE ao solicitante
+        
+        Note:
+            - JID do Environment Agent: "environment@localhost"
+            - Timeout de 10 segundos para resposta do Environment Agent
+            - Tolerância adicional de 5 segundos para DONE
+        """
         sender_jid = self.proposal_data["sender"]
         cfp_id = self.cfp_id
         target_pos = self.proposal_data["zone"]
@@ -316,14 +443,43 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
             await self.send(msg)
 
 class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
-    """Recebe propostas de recarga de todos os LogisticAgents, seleciona a melhor e aceita/rejeita."""
+    """
+    Comportamento para receber, avaliar e selecionar propostas de reabastecimento.
+    
+    Aguarda propostas de múltiplos agentes de logística durante um período,
+    seleciona a melhor proposta e aceita/rejeita conforme.
+    
+    Attributes:
+        cfp_id (str): Identificador do CFP de reabastecimento.
+        proposals (list): Lista de propostas recebidas.
+        timeout (int): Tempo de espera por propostas em segundos.
+    """
     def __init__(self, cfp_id):
+        """
+        Inicializa o comportamento de receção de propostas de reabastecimento.
+        
+        Args:
+            cfp_id (str): Identificador único do CFP de reabastecimento.
+        """
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
         self.timeout = 3 # Tempo para esperar por todas as propostas
 
     async def run(self):
+        """
+        Recolhe, avalia e seleciona a melhor proposta de reabastecimento.
+        
+        O processo:
+        1. Aguarda propostas durante timeout (3 segundos)
+        2. Recolhe todas as propostas recebidas
+        3. Seleciona a proposta com menor ETA
+        4. Envia Accept à melhor e Reject às restantes
+        5. Inicia ExecuteRechargeBehaviour para aguardar reabastecimento
+        
+        Note:
+            - Se nenhuma proposta for recebida, retorna ao estado idle
+        """
         self.agent.logger.info(f"[FERT] A aguardar propostas de recarga para CFP {self.cfp_id}...")
 
         # Espera por todas as propostas até ao timeout
@@ -379,8 +535,28 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 self.agent.logger.info(f"[FERT] Proposta de {proposal['sender']} REJEITADA.")
 
 class ExecuteRechargeBehaviour(CyclicBehaviour):
-    """Aguarda a mensagem DONE do LogisticAgent após a proposta ser aceite e repõe os recursos."""
+    """
+    Comportamento para aguardar e processar reabastecimento de recursos.
+    
+    Aguarda a chegada do agente de logística durante o ETA e processa a
+    mensagem DONE para repor os recursos (bateria ou fertilizante).
+    
+    Attributes:
+        proposal_data (dict): Dados da proposta aceite.
+        logistic_jid (str): JID do agente de logística selecionado.
+        cfp_id (str): Identificador da tarefa de reabastecimento.
+        eta_ticks (int): Tempo estimado de chegada.
+        start_time (float): Timestamp de início.
+        awaiting_done (bool): Flag indicando se ainda aguarda DONE.
+    """
     def __init__(self, proposal_data,cfp_id):
+        """
+        Inicializa o comportamento de execução de reabastecimento.
+        
+        Args:
+            proposal_data (dict): Dicionário com dados da proposta aceite.
+            cfp_id (str): Identificador único da tarefa de reabastecimento.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.logistic_jid = proposal_data["sender"]
@@ -390,12 +566,33 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
         self.awaiting_done = True
 
     async def on_start(self):
+        """
+        Simula a espera pela chegada do agente de logística.
+        
+        Aguarda o tempo de ETA antes de começar a processar a mensagem DONE.
+        """
         self.agent.logger.info(f"[FERT] A aguardar a chegada do LogisticAgent ({self.logistic_jid}). ETA: {self.eta_ticks} ticks.")
         # Simular o tempo de espera pela chegada do LogisticAgent
         await asyncio.sleep(self.eta_ticks)
         self.agent.logger.info(f"[FERT] Tempo de espera pela chegada do LogisticAgent ({self.logistic_jid}) concluído. A aguardar mensagem DONE.")
 
     async def run(self):
+        """
+        Aguarda e processa a mensagem DONE de reabastecimento.
+        
+        O processo:
+        1. Aguarda mensagem DONE do agente de logística correto
+        2. Valida cfp_id
+        3. Extrai quantidade de recursos entregues
+        4. Repõe recursos (fertilizante ou bateria)
+        5. Retorna ao estado idle
+        
+        Implementa timeout de segurança (ETA + 5 segundos).
+        
+        Note:
+            - Mensagens de outros agentes ou performativas geram warnings
+            - Timeout resulta em falha assumida e retorno a idle
+        """
         if not self.awaiting_done:
             self.kill()
             return
@@ -455,8 +652,51 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
 # =================================================================================
 
 class FertilizerAgent(Agent):
-
+    """Agente autónomo responsável pela fertilização de zonas agrícolas.
+    
+    Este agente coordena-se com agentes de solo e logística através do protocolo
+    FIPA Contract Net para negociação de tarefas de fertilização e reabastecimento
+    de recursos (fertilizante e energia).
+    
+    O agente segue um ciclo de trabalho que inclui:
+    - Receção e avaliação de CFPs de fertilização
+    - Execução de tarefas de fertilização aceites
+    - Monitorização e requisição de reabastecimento
+    - Coordenação com Environment Agent para aplicação de fertilizante
+    
+    Attributes:
+        jid (str): Identificador único do agente (Jabber ID).
+        password (str): Password de autenticação do agente.
+        logger (logging.Logger): Logger configurado para este agente.
+        position (tuple): Posição atual do agente (row, col).
+        row (int): Linha da posição base do agente.
+        col (int): Coluna da posição base do agente.
+        status (str): Estado atual do agente ('idle', 'charging', 'fertilizing', 'moving').
+        soil_jid (list): Lista de JIDs dos agentes de solo.
+        log_jid (list): Lista de JIDs dos agentes de logística.
+        used_fertilizer (float): Quantidade total de fertilizante usado pelo agente.
+        fertilize (int): Flag indicando se o agente pode fertilizar (1=sim, 0=não).
+        energy (float): Nível atual de energia (0-100).
+        fertilize_capacity (float): Capacidade atual de fertilizante.
+        fertilize_capacity_max (float): Capacidade máxima de fertilizante.
+        awaiting_proposals (dict): Propostas enviadas aguardando resposta, indexadas por cfp_id.
+        recharge_cfp_id (str): ID do CFP de recarga atual (se houver).
+    
+    Note:
+        - Recarga é solicitada quando fertilizante < 15% ou energia < 15
+        - O agente retorna sempre à posição base após cada tarefa
+    """
     def __init__(self,jid,password,log_jid,soil_jid,row,col):
+        """Inicializa o FertilizerAgent com configurações e recursos iniciais.
+        
+        Args:
+            jid (str): Identificador único do agente (Jabber ID).
+            password (str): Password para autenticação.
+            log_jid (list): Lista de JIDs dos agentes de logística disponíveis.
+            soil_jid (list): Lista de JIDs dos agentes de solo a monitorizar.
+            row (int): Linha da posição base do agente no grid.
+            col (int): Coluna da posição base do agente no grid.
+        """
         super().__init__(jid,password)
         
         # Configuração de Logging
@@ -486,6 +726,18 @@ class FertilizerAgent(Agent):
     #   SETUP
     # =====================
     async def setup(self):
+        """Configura e inicia os comportamentos do agente.
+        
+        Inicializa três comportamentos principais:
+        1. CheckRechargeBehaviour: Verifica periodicamente níveis de recursos
+        2. ReceiveCFPTaskBehaviour: Escuta e processa CFPs de fertilização
+        3. ReceiveProposalResponseBehaviour: Processa respostas a propostas enviadas
+        
+        Os comportamentos de recarga são adicionados dinamicamente quando necessário.
+        
+        Note:
+            Este método é chamado automaticamente quando o agente é iniciado.
+        """
         self.logger.info(f"[FERT] FertilizerAgent {self.jid} iniciado.")
         
         # 1. Comportamento para verificar necessidade de recarga
@@ -513,6 +765,14 @@ class FertilizerAgent(Agent):
         # é adicionado dinamicamente pelo CheckRechargeBehaviour.
 
     async def stop(self):
+        """Termina o agente e apresenta estatísticas de uso.
+        
+        Apresenta um relatório final com a quantidade total de fertilizante
+        utilizado durante a operação do agente.
+        
+        Note:
+            Este método é chamado quando o agente é encerrado.
+        """
         self.logger.info(f"{'=' * 35} FERT {'=' * 35}")
         self.logger.info(f"{self.jid} usou {self.used_fertilizer} KG de fertelizante")
         self.logger.info(f"{'=' * 35} FERT {'=' * 35}")
@@ -523,7 +783,20 @@ class FertilizerAgent(Agent):
     # =====================
     
     async def send_propose_task(self, to_jid, cfp_id, eta_ticks, energy_cost):
-        """Envia uma proposta de tarefa (fertilização)."""
+        """Envia uma proposta de execução de tarefa de fertilização.
+        
+        Args:
+            to_jid (str): JID do agente de solo destinatário.
+            cfp_id (str): Identificador único do CFP ao qual se está a responder.
+            eta_ticks (int): Tempo estimado para conclusão da tarefa (em ticks).
+            energy_cost (int): Custo de energia estimado para executar a tarefa.
+        
+        Returns:
+            Message: Objeto de mensagem SPADE configurado com a proposta.
+        
+        Note:
+            A mensagem inclui performativa PERFORMATIVE_PROPOSE_TASK.
+        """
         body = {
             "cfp_id": cfp_id,
             "eta_ticks": eta_ticks,
@@ -533,7 +806,19 @@ class FertilizerAgent(Agent):
         return msg
 
     async def send_reject_proposal(self, to_jid, cfp_id):
-        """Envia uma rejeição de proposta de tarefa ou recarga."""
+        """Envia uma rejeição de proposta de tarefa ou recarga.
+        
+        Args:
+            to_jid (str): JID do agente destinatário.
+            cfp_id (str): Identificador único do CFP a rejeitar.
+        
+        Returns:
+            Message: Objeto de mensagem SPADE configurado com a rejeição.
+        
+        Note:
+            Usado tanto para rejeitar tarefas de fertilização quanto
+            propostas de reabastecimento de agentes de logística.
+        """
         body = {
             "cfp_id": cfp_id,
             "decision": "reject",
@@ -542,7 +827,19 @@ class FertilizerAgent(Agent):
         return msg
 
     async def send_failure(self, to_jid, cfp_id):
-        """Envia uma mensagem de falha na execução da tarefa."""
+        """Envia notificação de falha na execução de tarefa.
+        
+        Args:
+            to_jid (str): JID do agente solicitante da tarefa.
+            cfp_id (str): Identificador único da tarefa que falhou.
+        
+        Returns:
+            Message: Objeto de mensagem SPADE configurado com a notificação de falha.
+        
+        Note:
+            Enviado quando ocorrem problemas durante a execução da fertilização,
+            como timeout na resposta do Environment Agent.
+        """
         body = {
             "cfp_id": cfp_id,
             "status": "failed",
@@ -551,7 +848,26 @@ class FertilizerAgent(Agent):
         return msg
 
     async def send_cfp_recharge_to_all(self, low_fertilize, low_energy):
-        """Envia um CFP (Call For Proposal) para recarga de água ou energia a TODOS os LogisticAgents."""
+        """Envia CFP de reabastecimento para todos os agentes de logística.
+        
+        Gera um Call For Proposal solicitando reabastecimento de fertilizante
+        ou bateria, dependendo do recurso em falta.
+        
+        Args:
+            low_fertilize (bool): True se o fertilizante está baixo.
+            low_energy (bool): True se a energia está baixa.
+        
+        Returns:
+            tuple: (cfp_id, body) onde:
+                - cfp_id (str): Identificador único gerado para o CFP.
+                - body (dict): Corpo da mensagem com detalhes do pedido.
+                Retorna None se nenhum recurso estiver baixo.
+        
+        Note:
+            - A quantidade solicitada é calculada como diferença para o máximo
+            - Apenas um tipo de recurso é solicitado por vez
+            - O CFP inclui a posição atual do agente e prioridade Alta
+        """
         
         # Gera um ID único para o CFP de recarga
         cfp_id = f"recharge_{self.jid}_{time.time()}"
@@ -578,7 +894,20 @@ class FertilizerAgent(Agent):
         return cfp_id, body
 
     async def send_accept_proposal(self, to_jid, cfp_id):
-        """Envia uma aceitação de proposta (usado para aceitar proposta de recarga)."""
+        """Envia aceitação de proposta de reabastecimento.
+        
+        Args:
+            to_jid (str): JID do agente de logística cuja proposta foi aceite.
+            cfp_id (str): Identificador único do CFP de recarga.
+        
+        Returns:
+            Message: Objeto de mensagem SPADE configurado com a aceitação.
+        
+        Note:
+            Usado exclusivamente para aceitar propostas de reabastecimento
+            de agentes de logística. A aceitação de tarefas de fertilização
+            é gerida pelos agentes de solo.
+        """
         body = {
             "cfp_id": cfp_id,
             "decision": "accept",

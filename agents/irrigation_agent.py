@@ -1,3 +1,11 @@
+"""
+Módulo do Agente de Irrigação.
+
+Este módulo implementa um agente de irrigação autónomo que utiliza o framework SPADE
+para comunicação multi-agente. O agente é responsável por receber pedidos de irrigação,
+gerir os seus recursos (água e energia) e coordenar com agentes logísticos para recargas.
+"""
+
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
@@ -26,11 +34,28 @@ ONTOLOGY_FARM_ACTION = "farm_action"
 # =================================================================================
 
 def calculate_manhattan_distance(pos1, pos2):
-    """Calcula a distância de Manhattan entre duas posições (row, col)."""
+    """Calcula a distância de Manhattan entre duas posições.
+    
+    Args:
+        pos1 (tuple): Tupla (row, col) representando a primeira posição.
+        pos2 (tuple): Tupla (row, col) representando a segunda posição.
+    
+    Returns:
+        int: Distância de Manhattan entre as duas posições.
+    """
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 def calculate_energy_cost(distance):
-    """Calcula o custo de energia: 1 de energia por cada 2 unidades de distância."""
+    """Calcula o custo de energia para percorrer uma distância.
+    
+    O custo é calculado como 1 unidade de energia por cada 2 unidades de distância.
+    
+    Args:
+        distance (int): Distância total a percorrer.
+    
+    Returns:
+        int: Custo de energia necessário.
+    """
     return distance // 2
 
 # =================================================================================
@@ -39,8 +64,22 @@ def calculate_energy_cost(distance):
 
 
 class CheckRechargeBehaviour(PeriodicBehaviour):
-    """Verifica periodicamente se é necessário recarregar água ou energia."""
+    """Comportamento periódico que verifica a necessidade de recarga de recursos.
+    
+    Este comportamento é executado periodicamente para monitorizar os níveis de água
+    e energia do agente. Quando os recursos estão baixos (água < 15% ou energia < 15),
+    inicia o processo de recarga enviando CFPs aos agentes logísticos.
+    
+    Attributes:
+        agent (IrrigationAgent): Referência ao agente de irrigação proprietário.
+    """
+
     async def run(self):
+        """Executa a verificação periódica de recursos.
+        
+        Verifica os níveis de água e energia. Se algum recurso estiver baixo e o agente
+        estiver idle, inicia o processo de recarga enviando CFPs aos agentes logísticos.
+        """
         # Se o agente estiver ocupado ou já a carregar, não faz nada
         if self.agent.status != "idle":
             return
@@ -84,8 +123,21 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
 
 
 class ReceiveCFPTaskBehaviour(CyclicBehaviour):
-    """Recebe e processa mensagens CFP (Call For Proposal) para irrigação."""
+    """Comportamento cíclico que recebe e processa CFPs de tarefas de irrigação.
+    
+    Este comportamento escuta continuamente por Call For Proposals (CFPs) de agentes
+    de solo que necessitam de irrigação. Avalia cada pedido com base na disponibilidade
+    de recursos e distância, enviando propostas quando possível.
+    """
     async def run(self):
+        """Recebe e processa mensagens CFP de irrigação.
+        
+        Para cada CFP recebido:
+        1. Valida se é uma tarefa de irrigação
+        2. Calcula distância, custo de energia e tempo estimado
+        3. Verifica disponibilidade de água e energia
+        4. Envia proposta se os recursos forem suficientes, ou rejeita caso contrário
+        """
         # Template para receber CFP de qualquer SoilAgent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
@@ -167,8 +219,20 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.1)
 
 class ReceiveProposalResponseBehaviour(CyclicBehaviour):
-    """Recebe a resposta (Accept/Reject) à proposta enviada."""
+    """Comportamento cíclico que recebe respostas a propostas de tarefas enviadas.
+    
+    Este comportamento escuta por mensagens de aceitação ou rejeição de propostas
+    enviadas aos agentes de solo. Quando uma proposta é aceite, inicia a execução
+    da tarefa de irrigação.
+    
+    """
     async def run(self):
+        """Processa respostas (Accept/Reject) às propostas de irrigação.
+        
+        Para cada resposta:
+        - Se ACCEPT: Inicia o comportamento de execução da tarefa
+        - Se REJECT: Volta ao estado idle e descarta a proposta
+        """
         # Template para receber Accept ou Reject de qualquer SoilAgent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_ACCEPT_PROPOSAL)
@@ -210,13 +274,44 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
             await asyncio.sleep(0.1)
 
 class ExecuteTaskBehaviour(OneShotBehaviour):
-    """Executa a tarefa de irrigação após a proposta ser aceite."""
+    """Comportamento de execução única para realizar uma tarefa de irrigação.
+    
+    Este comportamento é responsável por executar todo o processo de irrigação:
+    movimentação até ao local, aplicação da água através do EnvironmentAgent,
+    retorno à base e notificação de conclusão.
+    
+    Attributes:
+        proposal_data (dict): Dados da proposta aceite incluindo destino e recursos.
+        cfp_id (str): Identificador único da tarefa.
+        agent (IrrigationAgent): Referência ao agente de irrigação proprietário.
+    """
+
     def __init__(self, proposal_data,cfp_id):
+        """Inicializa o comportamento de execução de tarefa.
+        
+        Args:
+            proposal_data (dict): Dicionário contendo:
+                - sender: JID do agente solicitante
+                - zone: Posição alvo (row, col)
+                - water_needed: Quantidade de água necessária
+                - energy_cost: Custo energético da tarefa
+                - eta_ticks: Tempo estimado total
+            cfp_id (str): Identificador único do CFP associado.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.cfp_id = cfp_id
 
     async def run(self):
+        """Executa a tarefa de irrigação completa.
+        
+        Processo:
+        1. Move-se para a zona alvo
+        2. Interage com o EnvironmentAgent para aplicar irrigação
+        3. Atualiza recursos (água e energia)
+        4. Retorna à base
+        5. Notifica conclusão ou falha ao solicitante
+        """
         sender_jid = self.proposal_data["sender"]
         cfp_id = self.cfp_id
         target_pos = self.proposal_data["zone"]
@@ -315,14 +410,37 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
             await self.send(msg)
 
 class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
-    """Recebe propostas de recarga de todos os LogisticAgents, seleciona a melhor e aceita/rejeita."""
+    """Comportamento de execução única que recebe e avalia propostas de recarga.
+    
+    Este comportamento aguarda por propostas de recarga de múltiplos agentes logísticos,
+    seleciona a melhor proposta e aceita-a, rejeitando as restantes.
+    
+    Attributes:
+        cfp_id (str): Identificador único do CFP de recarga.
+        proposals (list): Lista de propostas recebidas.
+        timeout (int): Tempo de espera por propostas (segundos).
+        agent (IrrigationAgent): Referência ao agente de irrigação proprietário.
+    """
     def __init__(self, cfp_id):
+        """Inicializa o comportamento de receção de propostas de recarga.
+        
+        Args:
+            cfp_id (str): Identificador único do CFP de recarga emitido.
+        """
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
         self.timeout = 3 # Tempo para esperar por todas as propostas
 
     async def run(self):
+        """Recebe, avalia e seleciona a melhor proposta de recarga.
+        
+        Processo:
+        1. Aguarda propostas durante o período de timeout
+        2. Seleciona a proposta com menor ETA
+        3. Aceita a melhor proposta e rejeita as restantes
+        4. Inicia o comportamento de execução da recarga
+        """
         self.agent.logger.info(f"[IRRI] A aguardar propostas de recarga para CFP {self.cfp_id}...")
         
         # Espera por todas as propostas até ao timeout
@@ -378,8 +496,31 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 self.agent.logger.info(f"[IRRI] Proposta de {proposal['sender']} REJEITADA.")
 
 class ExecuteRechargeBehaviour(CyclicBehaviour):
-    """Aguarda a mensagem DONE do LogisticAgent após a proposta ser aceite e repõe os recursos."""
+    """Comportamento cíclico que aguarda e processa a conclusão da recarga.
+    
+    Este comportamento aguarda a chegada do LogisticAgent e a mensagem DONE que
+    confirma a entrega dos recursos. Após receber a confirmação, atualiza os
+    recursos do agente.
+    
+    Attributes:
+        proposal_data (dict): Dados da proposta de recarga aceite.
+        logistic_jid (str): JID do agente logístico selecionado.
+        cfp_id (str): Identificador único do CFP de recarga.
+        eta_ticks (int): Tempo estimado de chegada.
+        start_time (float): Timestamp do início da espera.
+        awaiting_done (bool): Flag indicando se ainda aguarda a mensagem DONE.
+        agent (IrrigationAgent): Referência ao agente de irrigação proprietário.
+    """
     def __init__(self, proposal_data,cfp_id):
+        """Inicializa o comportamento de execução de recarga.
+        
+        Args:
+            proposal_data (dict): Dicionário contendo:
+                - sender: JID do agente logístico
+                - eta_ticks: Tempo estimado de chegada
+                - resources: Recursos a serem entregues
+            cfp_id (str): Identificador único do CFP de recarga.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.logistic_jid = proposal_data["sender"]
@@ -389,12 +530,23 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
         self.awaiting_done = True
 
     async def on_start(self):
+        """Simula o tempo de espera pela chegada do agente logístico.
+        
+        Este método é executado quando o comportamento é iniciado e simula
+        o tempo de viagem do agente logístico até à posição do agente de irrigação.
+        """
         self.agent.logger.info(f"[IRRI] A aguardar a chegada do LogisticAgent ({self.logistic_jid}). ETA: {self.eta_ticks} ticks.")
         # Simular o tempo de espera pela chegada do LogisticAgent
         await asyncio.sleep(self.eta_ticks)
         self.agent.logger.info(f"[IRRI] Tempo de espera pela chegada do LogisticAgent ({self.logistic_jid}) concluído. A aguardar mensagem DONE.")
 
     async def run(self):
+        """Aguarda e processa a mensagem DONE de conclusão da recarga.
+        
+        Verifica continuamente por mensagens DONE do agente logístico.
+        Quando recebida, atualiza os recursos (água ou energia) e volta
+        ao estado idle. Inclui timeout para evitar espera infinita.
+        """
         if not self.awaiting_done:
             self.kill()
             return
@@ -460,8 +612,37 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
 # =================================================================================
 
 class IrrigationAgent(Agent):
-
+    """Agente autónomo de irrigação para gestão de recursos hídricos.
+    
+    Este agente é responsável por responder a pedidos de irrigação, gerir recursos
+    (água e energia) e coordenar com agentes logísticos para recargas.
+    
+    Attributes:
+        position (tuple): Posição atual (row, col) do agente.
+        row (int): Linha da posição base.
+        col (int): Coluna da posição base.
+        status (str): Estado atual ('idle', 'charging', 'irrigating', 'moving').
+        soil_jid (list): Lista de JIDs dos agentes de solo.
+        log_jid (list): Lista de JIDs dos agentes logísticos.
+        flow_rate (int): Taxa de fluxo de água.
+        energy (float): Energia disponível (0-100).
+        water_capacity (float): Quantidade atual de água disponível.
+        water_capacity_max (int): Capacidade máxima de água.
+        used_water (int): Total de água utilizada.
+        awaiting_proposals (dict): Propostas pendentes indexadas por cfp_id.
+        recharge_cfp_id (str): ID do CFP de recarga atual.
+    """
     def __init__(self,jid,password,log_jid,soil_jid,row,col):
+        """Inicializa o agente de irrigação.
+        
+        Args:
+            jid (str): Jabber ID do agente.
+            password (str): Password para autenticação.
+            log_jid (list): Lista de JIDs dos agentes logísticos.
+            soil_jid (list): Lista de JIDs dos agentes de solo.
+            row (int): Linha da posição inicial.
+            col (int): Coluna da posição inicial.
+        """
         super().__init__(jid,password)
         
         # Configuração de Logging
@@ -491,6 +672,17 @@ class IrrigationAgent(Agent):
     #   SETUP
     # =====================
     async def setup(self):
+        """Configura e inicia os comportamentos do agente.
+        
+        Inicializa três comportamentos principais:
+        - CheckRechargeBehaviour: Verificação periódica de necessidade de recarga
+        - ReceiveCFPTaskBehaviour: Receção de CFPs de tarefas de irrigação
+        - ReceiveProposalResponseBehaviour: Receção de respostas a propostas enviadas
+
+
+        O comportamento de recarga (ReceiveRechargeProposalsBehaviour e ExecuteRechargeBehaviour)
+        é adicionado dinamicamente pelo CheckRechargeBehaviour.
+        """
         self.logger.info(f"[IRRI] IrrigationAgent {self.jid} iniciado.")
         
         # 1. Comportamento para verificar necessidade de recarga
@@ -517,6 +709,7 @@ class IrrigationAgent(Agent):
         # é adicionado dinamicamente pelo CheckRechargeBehaviour.
 
     async def stop(self):
+        """Para o agente e regista a quantidade de agua usada na simulação."""
         self.logger.info(f"{'=' * 35} IRRI {'=' * 35}")
         self.logger.info(f"{self.jid} usou {self.used_water} L de água")
         self.logger.info(f"{'=' * 35} IRRI {'=' * 35}")
@@ -527,7 +720,17 @@ class IrrigationAgent(Agent):
     # =====================
     
     async def send_propose_task(self, to_jid, cfp_id, eta_ticks, energy_cost):
-        """Envia uma proposta de tarefa (irrigação)."""
+        """Envia proposta de execução de tarefa de irrigação.
+        
+        Args:
+            to_jid (str): JID do destinatário.
+            cfp_id (str): ID do CFP a que responde.
+            eta_ticks (int): Tempo estimado de conclusão.
+            energy_cost (int): Custo energético da tarefa.
+            
+        Returns:
+            Message: Mensagem SPADE preparada para envio.
+        """
         body = {
             "cfp_id": cfp_id,
             "eta_ticks": eta_ticks,
@@ -537,7 +740,15 @@ class IrrigationAgent(Agent):
         return msg
 
     async def send_reject_proposal(self, to_jid, cfp_id):
-        """Envia uma rejeição de proposta de tarefa ou recarga."""
+        """Envia rejeição de proposta.
+        
+        Args:
+            to_jid (str): JID do destinatário.
+            cfp_id (str): ID do CFP rejeitado.
+            
+        Returns:
+            Message: Mensagem SPADE de rejeição.
+        """
         body = {
             "cfp_id": cfp_id,
             "decision": "reject",
@@ -546,7 +757,15 @@ class IrrigationAgent(Agent):
         return msg
 
     async def send_failure(self, to_jid, cfp_id):
-        """Envia uma mensagem de falha na execução da tarefa."""
+        """Envia notificação de falha na execução.
+        
+        Args:
+            to_jid (str): JID do destinatário.
+            cfp_id (str): ID da tarefa que falhou.
+            
+        Returns:
+            Message: Mensagem SPADE de falha.
+        """
         body = {
             "cfp_id": cfp_id,
             "status": "failed",
@@ -555,7 +774,16 @@ class IrrigationAgent(Agent):
         return msg
 
     async def send_cfp_recharge_to_all(self, low_water, low_energy):
-        """Envia um CFP (Call For Proposal) para recarga de água ou energia a TODOS os LogisticAgents."""
+        """Cria CFP de recarga para broadcast aos agentes logísticos.
+        
+        Args:
+            low_water (bool): Se True, solicita recarga de água.
+            low_energy (bool): Se True, solicita recarga de energia.
+            
+        Returns:
+            tuple: (cfp_id, body) onde cfp_id é o identificador único e body 
+                   contém os dados do CFP, ou None se ambos os parâmetros forem False.
+        """
         
         # Gera um ID único para o CFP de recarga
         cfp_id = f"recharge_{self.jid}_{time.time()}"
@@ -583,7 +811,15 @@ class IrrigationAgent(Agent):
         return cfp_id,body
 
     async def send_accept_proposal(self, to_jid, cfp_id):
-        """Envia uma aceitação de proposta (usado para aceitar proposta de recarga)."""
+        """Envia aceitação de proposta de recarga.
+        
+        Args:
+            to_jid (str): JID do agente logístico selecionado.
+            cfp_id (str): ID do CFP aceite.
+            
+        Returns:
+            Message: Mensagem SPADE de aceitação.
+        """
         body = {
             "cfp_id": cfp_id,
             "decision": "accept",

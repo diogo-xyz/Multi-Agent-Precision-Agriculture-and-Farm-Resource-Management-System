@@ -1,3 +1,12 @@
+"""Módulo do Agente de Logística para gestão de recursos em fazenda inteligente.
+
+Este módulo implementa um agente SPADE responsável por:
+- Reabastecimento automático de recursos
+- Gestão de CFPs (Call For Proposals) para reabastecimento
+- Coordenação de tarefas de plantio e colheita
+- Comunicação com Harvester Agents e Drone Agents
+"""
+
 import asyncio
 import json
 import logging
@@ -28,20 +37,42 @@ MAX_CAPACITY = 1000
 # =====================
 
 def calculate_distance(pos1, pos2):
-    """Calcula a distância de Manhattan entre duas posições (row, col)."""
+    """Calcula a distância de Manhattan entre duas posições.
+    
+    Args:
+        pos1 (tuple): Posição inicial (row, col).
+        pos2 (tuple): Posição final (row, col).
+    
+    Returns:
+        int: Distância de Manhattan entre as duas posições.
+    """
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 def calculate_eta(distance):
     """Calcula o tempo estimado de chegada (ETA) em segundos.
-    Assumindo uma velocidade de 1 unidade/segundo.
-    O tempo é de ida e volta (2 * distance).
+    
+    Assume uma velocidade de 1 unidade/segundo.
+    O tempo calculado inclui ida e volta (2 * distância).
+    
+    Args:
+        distance (int): Distância a percorrer.
+    
+    Returns:
+        int: Tempo estimado em segundos (arredondado para cima).
     """
     # 1 unidade de distância = 1 segundo de viagem
     # Tempo total = 2 * distância (ida e volta)
     return ceil(2 * distance)
 
 def get_seasaon(day):
-    """Retorna a estação do ano com base no dia do ano."""
+    """Determina a estação do ano com base no dia.
+    
+    Args:
+        day (int): Dia do ano (0-365).
+    
+    Returns:
+        str: Estação do ano ("Spring", "Summer", "Autumn", "Winter").
+    """
     if 80 <= day < 172:
         return "Spring"
     elif 172 <= day < 264:
@@ -52,7 +83,25 @@ def get_seasaon(day):
         return "Winter"    
 
 def get_probs(season):
-    """Retorna as probabilidades de plantio por tipo de planta com base na estação."""
+    """Calcula probabilidades de plantio por tipo de planta com base na estação.
+    
+    As probabilidades são ajustadas conforme a estação:
+    - Verão: favorece tomate e pimento
+    - Inverno: favorece couve e cenoura
+    - Outras estações: distribuição uniforme
+    
+    Args:
+        season (str): Estação do ano ("Spring", "Summer", "Autumn", "Winter").
+    
+    Returns:
+        dict: Dicionário {tipo_planta: probabilidade} onde:
+            - 0: Tomate
+            - 1: Pimento
+            - 2: Trigo
+            - 3: Couve
+            - 4: Alface
+            - 5: Cenoura
+    """
     plants = {
         0: "Tomate",
         1: "Pimento",
@@ -93,7 +142,14 @@ def get_probs(season):
     return probs
 
 def get_seed(probs):
-    """Seleciona um tipo de planta com base nas probabilidades fornecidas."""
+    """Seleciona um tipo de planta aleatoriamente com base nas probabilidades.
+    
+    Args:
+        probs (dict): Dicionário {tipo_planta: probabilidade}.
+    
+    Returns:
+        int: Índice do tipo de planta selecionado (0-5).
+    """
     indices = list(probs.keys())
     pesos = [probs[i] for i in indices]
 
@@ -106,9 +162,18 @@ def get_seed(probs):
 # =====================
 
 class AutoRechargeBehaviour(CyclicBehaviour):
-    """Recarrega automaticamente os recursos (água, combustível, etc.) quando o agente está ocioso."""
+    """Comportamento cíclico para recarga automática de recursos.
+    
+    Recarrega automaticamente água, fertilizante, bateria, pesticida, 
+    combustível e sementes quando o agente está ocioso.
+    """
 
     async def run(self):
+        """Executa um ciclo de recarga automática.
+        
+        Aguarda 5 segundos e, se o agente estiver ocioso, recarrega
+        todos os recursos em 10 unidades até o máximo de 1000.
+        """
         # Espera um período para o próximo ciclo de recarga
         await asyncio.sleep(5) # Recarrega a cada 5 segundos (ajustado conforme o pedido)
 
@@ -142,9 +207,20 @@ class AutoRechargeBehaviour(CyclicBehaviour):
                 
 
 class CFPRechargeReceiver(CyclicBehaviour):
-    """Recebe e processa mensagens CFP (Call For Proposal) de reabastecimento."""
+    """Recebe e processa mensagens CFP para reabastecimento.
+    
+    Avalia CFPs recebidos de outros agentes, verifica disponibilidade
+    de recursos e envia propostas com ETA e quantidade disponível.
+    """
 
     async def run(self):
+        """Processa um CFP de reabastecimento.
+        
+        Verifica:
+        1. Se o agente está disponível
+        2. Se tem recursos suficientes
+        3. Calcula ETA e envia proposta
+        """
         msg = await self.receive(timeout=5)
 
         if msg:
@@ -214,9 +290,18 @@ class CFPRechargeReceiver(CyclicBehaviour):
 
 
 class AcceptRejectRechargeReceiver(CyclicBehaviour):
-    """Recebe a aceitação de uma proposta de reabastecimento e inicia a tarefa."""
+    """Recebe aceitações ou rejeições de propostas de reabastecimento.
+    
+    Processa mensagens ACCEPT_PROPOSAL e REJECT_PROPOSAL,
+    iniciando a tarefa de reabastecimento quando aceite.
+    """
 
     async def run(self):
+        """Processa uma resposta a uma proposta de reabastecimento.
+        
+        Se aceite, inicia o RechargeTaskBehaviour.
+        Se rejeitada, volta ao estado idle.
+        """
         msg = await self.receive(timeout=5)
 
         if msg:
@@ -250,9 +335,34 @@ class AcceptRejectRechargeReceiver(CyclicBehaviour):
 
 
 class RechargeTaskBehaviour(OneShotBehaviour):
-    """Simula a viagem, entrega os recursos e retorna à base."""
+    """Executa uma tarefa de reabastecimento completa.
+    
+    Simula viagem até o destino, entrega recursos e retorno à base.
+    
+    Attributes:
+        receiver_jid (str): JID do agente a reabastecer.
+        proposal (dict): Detalhes da proposta aceite.
+        target_pos (tuple): Posição de destino.
+        eta_ticks (int): Tempo estimado total.
+        task_type (str): Tipo de recurso a entregar.
+        resource_amount (int): Quantidade a entregar.
+        seed_type (int): Tipo de semente (se aplicável).
+        cfp_id (str): ID do CFP.
+    """
 
     def __init__(self, receiver_jid, proposal):
+        """Inicializa o comportamento de reabastecimento.
+        
+        Args:
+            receiver_jid (str): JID do agente destinatário.
+            proposal (dict): Dicionário com detalhes da proposta:
+                - position: posição de destino
+                - eta_ticks: tempo estimado
+                - task_type: tipo de recurso
+                - resource_amount: quantidade
+                - seed_type: tipo de semente (opcional)
+                - cfp_id: ID do CFP
+        """
         super().__init__()
         self.receiver_jid = receiver_jid
         self.proposal = proposal
@@ -264,6 +374,15 @@ class RechargeTaskBehaviour(OneShotBehaviour):
         self.cfp_id = proposal["cfp_id"]
 
     async def run(self):
+        """Executa a tarefa de reabastecimento.
+        
+        Simula:
+        1. Viagem até o destino
+        2. Entrega de recursos
+        3. Atualização de inventário
+        4. Envio de mensagem DONE
+        5. Retorno à base
+        """
         self.agent.logger.info(f"[RECHARGE_TASK] A mover-se para {self.target_pos} para reabastecer {self.receiver_jid}.")
         
         # 1. Simular a viagem (ida e volta)
@@ -299,14 +418,34 @@ class RechargeTaskBehaviour(OneShotBehaviour):
         self.agent.logger.info("[STATUS] Agente voltou ao estado 'idle'.")
 
 class InformOtherLogs(OneShotBehaviour):
-    """Informa os outros Logistic Agentes de uma Area do Campo que já esta a ser tratada"""
+    """Informa outros Logistic Agents sobre zonas em processamento.
+    
+    Evita CFPs duplicados informando outros agentes quando uma zona
+    está a ser tratada ou quando o tratamento termina.
+    
+    Attributes:
+        zone (tuple): Coordenadas da zona (row, col).
+        add_or_remove (int): 1 para adicionar, 0 para remover.
+    """
     
     def __init__(self, zone, add_or_remove):
+        """Inicializa o comportamento de informação.
+        
+        Args:
+            zone (tuple): Coordenadas da zona.
+            add_or_remove (int): 1 para adicionar zona à lista de pendentes,
+                                 0 para remover.
+        """
         super().__init__()
         self.zone = tuple(zone)  # guarda a zona
         self.add_or_remove = add_or_remove # 0 -> remove    1 -> add
 
     async def run(self):
+        """Envia mensagem INFORM_LOGS para outros Logistic Agents.
+        
+        Informa todos os outros agentes logísticos sobre o estado
+        de processamento da zona.
+        """
         for jid in self.agent.log_jid:
             if str(jid) != str(self.agent.jid):
                 msg = make_message(
@@ -323,9 +462,18 @@ class InformOtherLogs(OneShotBehaviour):
         return
         
 class ReceiveInformOtherLogs(CyclicBehaviour):
-    """Recebe a informação de que uma zona já esta a ser tratada para não enviar cfp repetidos"""
+    """Recebe informações sobre zonas em processamento de outros Logistic Agents.
+    
+    Atualiza a lista local de tarefas pendentes para evitar
+    processamento duplicado de zonas.
+    """
 
     async def run(self):
+        """Processa mensagens INFORM_LOGS.
+        
+        Adiciona ou remove zonas da lista de tarefas pendentes
+        conforme a informação recebida.
+        """
         msg = await self.receive(timeout=5)
 
         if msg:
@@ -346,9 +494,21 @@ class ReceiveInformOtherLogs(CyclicBehaviour):
 
 
 class InformCropReceiver(CyclicBehaviour):
-    """Recebe pedidos de plantio/colheita do Drone Agent e gere as tarefas."""
+    """Recebe pedidos de plantio/colheita do Drone Agent.
+    
+    Processa informações sobre o estado das culturas e inicia
+    processos de CFP para Harvester Agents conforme necessário.
+    """
 
     async def run(self):
+        """Processa mensagens INFORM_CROP do Drone Agent.
+        
+        Analisa o estado da zona e:
+        - Se não plantada (state=0): inicia CFP para plantio
+        - Se pronta para colheita (state=4): inicia CFP para colheita
+        - Evita processar zonas já em tratamento
+        """
+
         if self.agent.status == "await": 
             return
 
@@ -411,9 +571,26 @@ class InformCropReceiver(CyclicBehaviour):
 
 
 class CFPTaskInitiator(OneShotBehaviour):
-    """Inicia o processo de CFP para uma tarefa de plantio ou colheita."""
+    """Inicia processo de CFP para tarefas de plantio ou colheita.
+    
+    Envia CFPs para todos os Harvester Agents disponíveis e
+    inicia o processo de recepção e avaliação de propostas.
+    
+    Attributes:
+        zone (tuple): Coordenadas da zona.
+        task_type (str): Tipo de tarefa ("plant_application" ou "harvest_application").
+        seed_or_crop_type (int): Tipo de semente ou cultura.
+        cfp_id (str): ID único do CFP.
+    """
 
     def __init__(self, zone, task_type, seed_or_crop_type):
+        """Inicializa o iniciador de CFP.
+        
+        Args:
+            zone (tuple): Coordenadas da zona a tratar.
+            task_type (str): Tipo de tarefa a executar.
+            seed_or_crop_type (int): Tipo de semente (plantio) ou cultura (colheita).
+        """
         super().__init__()
         self.zone = zone
         self.task_type = task_type
@@ -421,6 +598,11 @@ class CFPTaskInitiator(OneShotBehaviour):
         self.cfp_id = f"cfp_task_{time.time()}"
 
     async def run(self):
+        """Envia CFPs para todos os Harvester Agents.
+        
+        Define recursos necessários e inicia comportamento
+        de recepção de propostas (CFPTaskReceiver).
+        """
         self.agent.logger.info(f"[CFP_INIT] A iniciar CFP {self.cfp_id} para {self.task_type} em {self.zone}.")
         
         # Recursos necessários (simplificado para o CFP inicial)
@@ -452,9 +634,29 @@ class CFPTaskInitiator(OneShotBehaviour):
 
 
 class CFPTaskReceiver(CyclicBehaviour):
-    """Recebe e avalia as propostas dos Harvester Agents."""
+    """Recebe e avalia propostas dos Harvester Agents.
+    
+    Recebe propostas durante um período de timeout, seleciona
+    a melhor com base no ETA e envia aceitação/rejeição.
+    
+    Attributes:
+        cfp_id (str): ID do CFP.
+        zone (tuple): Coordenadas da zona.
+        task_type (str): Tipo de tarefa.
+        seed_or_crop_type (int): Tipo de semente ou cultura.
+        proposals (dict): Propostas recebidas {jid: {eta, cost}}.
+        timeout (float): Timestamp do timeout.
+    """
 
     def __init__(self, cfp_id, zone, task_type, seed_or_crop_type):
+        """Inicializa o receptor de propostas.
+        
+        Args:
+            cfp_id (str): ID do CFP a processar.
+            zone (tuple): Coordenadas da zona.
+            task_type (str): Tipo de tarefa.
+            seed_or_crop_type (int): Tipo de semente ou cultura.
+        """
         super().__init__()
         self.cfp_id = cfp_id
         self.zone = zone
@@ -464,6 +666,15 @@ class CFPTaskReceiver(CyclicBehaviour):
         self.timeout = time.time() + 2 # Tempo limite para receber propostas
 
     async def run(self):
+        """Recebe propostas e seleciona a melhor após timeout.
+        
+        Processo:
+        1. Recebe propostas durante o período de timeout
+        2. Ao atingir timeout, avalia propostas
+        3. Seleciona Harvester com menor ETA
+        4. Envia ACCEPT ao vencedor e REJECT aos demais
+        5. Inicia TaskDoneReceiver para aguardar conclusão
+        """
         # 1. Receber propostas
         self.agent.status = "await"
         msg = await self.receive(timeout=1)
@@ -534,14 +745,38 @@ class CFPTaskReceiver(CyclicBehaviour):
 
 
 class TaskDoneReceiver(CyclicBehaviour):
-    """Recebe a mensagem DONE do Harvester Agent após a conclusão da tarefa."""
+    """Recebe mensagens DONE do Harvester Agent após conclusão de tarefas.
+    
+    Attributes:
+        cfp_id: ID da Call for Proposals.
+        zone: Zona do campo onde a tarefa foi executada.
+    """
 
     def __init__(self, cfp_id, zone):
+        """Inicializa o TaskDoneReceiver.
+        
+        Args:
+            cfp_id (str): Identificador único da CFP.
+            zone (tuple): Tupla (row, col) representando a zona da tarefa.
+        """
         super().__init__()
         self.cfp_id = cfp_id
         self.zone = zone
 
     async def run(self):
+        """Executa o ciclo de recepção de mensagens DONE.
+        
+        Aguarda mensagens com performative DONE, processa o status da tarefa
+        (done ou failure), remove a tarefa da lista de pendentes e notifica
+        outros agentes através do InformOtherLogs behaviour.
+        
+        Returns:
+            None
+            
+        Raises:
+            json.JSONDecodeError: Se o corpo da mensagem não for JSON válido.
+            Exception: Outros erros durante o processamento da mensagem.
+        """
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_DONE)
         msg = await self.receive(timeout=5)
@@ -585,8 +820,40 @@ class TaskDoneReceiver(CyclicBehaviour):
 # =====================
 
 class LogisticsAgent(Agent):
-
+    """Agente de logística responsável por gestão de recursos e reabastecimento.
+    
+    O LogisticsAgent coordena o fornecimento de recursos (água, fertilizantes,
+    sementes, etc.) para outros agentes do sistema, processando CFPs de
+    reabastecimento e gerindo tarefas de cultivo.
+    
+    Attributes:
+        field (Field): Representação do campo agrícola.
+        harv_jid (str): JID do Harvester Agent.
+        log_jid (str): JID de outros Logistics Agents.
+        position (tuple): Posição atual (row, col) do agente.
+        status (str): Estado atual do agente (idle, moving, handling_task, await).
+        water_storage (int): Quantidade de água armazenada.
+        fertilizer_storage (int): Quantidade de fertilizante armazenada.
+        battery_storage (int): Quantidade de bateria armazenada.
+        pesticide_storage (int): Quantidade de pesticida armazenada.
+        fuel_storage (int): Quantidade de combustível armazenada.
+        seed_storage (dict): Dicionário mapeando tipo de semente para quantidade.
+        pending_recharge_proposals (dict): Propostas de reabastecimento pendentes.
+        pending_crop_tasks (dict): Tarefas de cultivo pendentes por zona.
+    """
     def __init__(self, jid, password, harv_jid, log_jid, row, col, field):
+        """Inicializa o LogisticsAgent.
+        
+        Args:
+            jid (str): Jabber ID do agente.
+            password (str): Password para autenticação.
+            harv_jid (str): JID do Harvester Agent.
+            log_jid (str): JID de outros Logistics Agents.
+            row (int): Coordenada de linha da posição inicial.
+            col (int): Coordenada de coluna da posição inicial.
+            field (Field): Objeto representando o campo agrícola.
+        """
+
         super().__init__(jid, password)
 
         self.logger = logging.getLogger(f"[LOG] {jid}")
@@ -621,6 +888,18 @@ class LogisticsAgent(Agent):
 
 
     async def setup(self):
+        """Configura e inicializa os behaviours do agente.
+        
+        Adiciona os behaviours necessários para:
+        - Reabastecimento automático (AutoRechargeBehaviour)
+        - Recepção de CFPs de reabastecimento (CFPRechargeReceiver)
+        - Aceitação/rejeição de propostas (AcceptRejectRechargeReceiver)
+        - Recepção de informações de cultivo (InformCropReceiver)
+        - Recepção de informações de outros logs (ReceiveInformOtherLogs)
+        
+        Returns:
+            None
+        """
         self.logger.info("LogisticsAgent started")
         
         # Adicionar Behaviours
@@ -653,9 +932,29 @@ class LogisticsAgent(Agent):
     #   FUNÇÕES DE ENVIO DE MENSAGENS
     # =====================
     async def stop(self):
+        """Para o agente de forma assíncrona.
+        
+        Returns:
+            None
+        """
         await super().stop()
 
     async def send_propose_recharge(self, to, cfp_id, eta_ticks, resources):
+        """Envia uma proposta de reabastecimento para outro agente.
+        
+        Cria e envia uma mensagem PROPOSE_RECHARGE com detalhes sobre
+        disponibilidade de recursos, ETA e prioridade. Armazena a proposta
+        na lista de propostas pendentes.
+        
+        Args:
+            to (str): JID do agente destinatário.
+            cfp_id (str): Identificador único da CFP.
+            eta_ticks (int): Tempo estimado de chegada em ticks.
+            resources (dict): Dicionário com recursos disponíveis.
+            
+        Returns:
+            Message: Objeto mensagem SPADE preparado para envio.
+        """
         msg = make_message(
             to=to,
             performative=PERFORMATIVE_PROPOSE_RECHARGE,
@@ -682,6 +981,15 @@ class LogisticsAgent(Agent):
         return msg
 
     async def send_accept_proposal(self, to, cfp_id):
+        """Envia uma mensagem de aceitação de proposta.
+        
+        Args:
+            to (str): JID do agente destinatário.
+            cfp_id (str): Identificador único da CFP.
+            
+        Returns:
+            Message: Objeto mensagem SPADE de aceitação.
+        """
         msg = make_message(
             to=to,
             performative=PERFORMATIVE_ACCEPT_PROPOSAL,
@@ -694,6 +1002,15 @@ class LogisticsAgent(Agent):
 
 
     async def send_reject_proposal(self, to, cfp_id):
+        """Envia uma mensagem de rejeição de proposta.
+        
+        Args:
+            to (str): JID do agente destinatário.
+            cfp_id (str): Identificador único da CFP.
+            
+        Returns:
+            Message: Objeto mensagem SPADE de rejeição.
+        """
         msg = make_message(
             to=to,
             performative=PERFORMATIVE_REJECT_PROPOSAL,
@@ -706,6 +1023,16 @@ class LogisticsAgent(Agent):
 
 
     async def send_done(self, to, cfp_id, details):
+        """Envia uma mensagem de confirmação de conclusão de tarefa.
+        
+        Args:
+            to (str): JID do agente destinatário.
+            cfp_id (str): Identificador único da CFP.
+            details (dict): Detalhes adicionais sobre a conclusão da tarefa.
+            
+        Returns:
+            Message: Objeto mensagem SPADE de confirmação.
+        """
         msg = make_message(
             to=to,
             performative=PERFORMATIVE_DONE,

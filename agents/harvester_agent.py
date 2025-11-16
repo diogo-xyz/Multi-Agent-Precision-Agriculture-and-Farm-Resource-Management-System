@@ -1,3 +1,11 @@
+"""
+Módulo do Agente Harvester (Colheitadeira/Plantadora).
+
+Este módulo implementa um agente autónomo para um sistema multi-agente de gestão agrícola.
+O agente é responsável por realizar tarefas de colheita e plantação, gerenciar recursos
+(combustível e sementes), e comunicar com agentes logísticos e de armazenamento.
+"""
+
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour, CyclicBehaviour
 from spade.template import Template
@@ -32,11 +40,29 @@ PERFORMATIVE_INFORM_RECEIVED = "inform_received"
 
 
 def calculate_distance(pos1, pos2):
-    """Calcula a distância de Manhattan entre duas posições (row, col)."""
+    """Calcula a distância de Manhattan entre duas posições.
+    
+    Args:
+        pos1 (tuple): Primeira posição no formato (row, col).
+        pos2 (tuple): Segunda posição no formato (row, col).
+        
+    Returns:
+        int: Distância de Manhattan entre as duas posições.
+    """
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 def calculate_fuel_cost(distance):
-    """Calcula o custo de combustível (ida e volta) com base na distância de Manhattan."""
+    """Calcula o custo de combustível para ida e volta.
+    
+    O custo é calculado considerando que cada 2 valores de distância
+    consomem 0.5 unidades de combustível, para ida e volta.
+    
+    Args:
+        distance (int): Distância de Manhattan até o destino.
+        
+    Returns:
+        float: Custo total de combustível para ida e volta.
+    """
     # Cada 2 valores de distância é -0.5 de combustível.
     # Custo de ida: (distance / 2) * 0.5
     # Custo de ida e volta: 2 * (distance / 2) * 0.5 = distance * 0.5
@@ -47,13 +73,33 @@ def calculate_fuel_cost(distance):
 # =====================
 
 class HarvestYieldBehaviour(PeriodicBehaviour):
-    """Verifica o rendimento e inicia o processo de colheita quando atinge o limite."""
+    """Comportamento periódico que verifica o rendimento das colheitas.
+    
+    Monitora os níveis de colheita armazenados e inicia o processo de entrega
+    quando qualquer tipo de semente atinge 100 unidades ou quando o agente
+    está a ser terminado.
+    
+    Attributes:
+        stop_beha (bool, optional): Flag para forçar entrega durante o shutdown.
+    """
+
 
     def __init__(self, period, stop_beha = None):
+        """Inicializa o comportamento de verificação de rendimento.
+        
+        Args:
+            period (float): Período em segundos entre verificações.
+            stop_beha (bool, optional): Se True, força a entrega imediata. Defaults to None.
+        """
         super().__init__(period=period)
         self.stop_beha = stop_beha
 
     async def run(self):
+        """Executa a verificação periódica do rendimento de colheita.
+        
+        Verifica se algum tipo de semente atingiu o limite de 100 unidades
+        ou se o agente está a ser terminado. Se sim, inicia o processo de entrega.
+        """
         if self.agent.status == "idle" or self.stop_beha: # Só pode iniciar a colheita se estiver livre
             harvest_ready = False
             for seed_type, amount in self.agent.yield_seed.items():
@@ -71,13 +117,32 @@ class HarvestYieldBehaviour(PeriodicBehaviour):
                 self.agent.add_behaviour(delivery_behaviour)
 
 class DeliverHarvestBehaviour(OneShotBehaviour):
-    """Simula a viagem e envia a colheita para um agente logístico."""
+    """Comportamento de entrega de colheita ao agente de armazenamento.
+    
+    Simula a viagem até ao armazém e envia a colheita acumulada para
+    o agente Storage através de uma mensagem inform_harvest.
+    
+    Attributes:
+        sto_jid (str): JID do agente Storage destinatário.
+        stop_beha (bool): Flag indicando se é uma entrega de shutdown.
+    """
     def __init__(self, sto_jid,stop_beha):
+        """Inicializa o comportamento de entrega.
+        
+        Args:
+            sto_jid (str): JID do agente Storage.
+            stop_beha (bool): True se for uma entrega durante o shutdown.
+        """
         super().__init__()
         self.sto_jid = sto_jid
         self.stop_beha = stop_beha
 
     async def run(self):
+        """Executa o processo de entrega da colheita.
+        
+        Simula a viagem, prepara os dados da colheita e
+        envia uma mensagem inform_harvest ao agente Storage.
+        """
         self.agent.logger.info(f"[DELIVERY] A viajar para entregar a colheita ao logístico {self.sto_jid}.")
         
         # Simula o tempo de viagem (ida e volta)
@@ -96,8 +161,19 @@ class DeliverHarvestBehaviour(OneShotBehaviour):
         if self.stop_beha: self.kill()
 
 class InformReceivedReceiver(CyclicBehaviour):
-    """Recebe a confirmação 'inform_received' do agente Storage."""
+    """Comportamento que recebe confirmações de entrega do agente Storage.
+    
+    Processa mensagens inform_received que confirmam a receção da colheita
+    pelo agente Storage e atualiza o inventário do Harvester em conformidade.
+    """
+
     async def run(self):
+        """Aguarda e processa confirmações de entrega.
+        
+        Recebe mensagens inform_received, extrai os detalhes da entrega confirmada,
+        atualiza o yield_seed e o inventário da máquina, e retorna o agente ao
+        estado idle.
+        """
         msg = await self.receive(timeout=5)
 
         if msg:
@@ -131,13 +207,34 @@ class InformReceivedReceiver(CyclicBehaviour):
 
 
 class CheckResourcesBehaviour(PeriodicBehaviour):
-    """Verifica periodicamente o nível de combustível e sementes e solicita reabastecimento se necessário."""
+    """Comportamento periódico que monitoriza níveis de recursos.
+    
+    Verifica periodicamente os níveis de combustível e sementes do agente.
+    Quando algum recurso está baixo (< 10), inicia um processo de negociação
+    com agentes logísticos para reabastecimento.
+    
+    Attributes:
+        agent (HarvesterAgent): Referência ao agente pai.
+    """
     
     def __init__(self, period, agent):
+        """Inicializa o comportamento de verificação de recursos.
+        
+        Args:
+            period (float): Período em segundos entre verificações.
+            agent (HarvesterAgent): Referência ao agente Harvester.
+        """
         super().__init__(period)
         self.agent = agent
 
     async def run(self):
+        """Verifica níveis de combustível e sementes.
+        
+        Se o combustível estiver abaixo de 10 ou qualquer tipo de semente
+        estiver abaixo de 10 unidades, envia CFPs (Call for Proposals) para
+        todos os agentes logísticos e inicia o processo de negociação.
+        """
+        
         # 1. Verificar Combustível
         if self.agent.fuel_level < 10 and self.agent.status != "refueling":
             self.agent.logger.warning(f"Nível de combustível baixo ({self.agent.fuel_level:.2f}). Solicitando reabastecimento.")
@@ -182,9 +279,25 @@ class CheckResourcesBehaviour(PeriodicBehaviour):
                 break # Apenas um pedido de recarga de cada vez
 
 class CFPTaskReceiver(CyclicBehaviour):
-    """Recebe e processa mensagens CFP (Call For Proposal) do Logistic Agent."""
+    """Comportamento que recebe e processa CFPs de tarefas agrícolas.
+    
+    Recebe Call for Proposals do agente Logistic para tarefas de colheita
+    ou plantação. Avalia a viabilidade da tarefa com base em recursos disponíveis
+    e responde com proposta ou rejeição.
+    """
 
     async def run(self):
+        """Processa mensagens CFP_TASK recebidas.
+        
+        Avalia cada CFP considerando:
+        - Status atual do agente (deve estar idle)
+        - Distância até a zona alvo
+        - Combustível necessário vs disponível
+        - Capacidade de armazenamento (para colheita)
+        - Sementes disponíveis (para plantação)
+        
+        Responde com PROPOSE_TASK se puder aceitar ou REJECT_PROPOSAL caso contrário.
+        """
         # Espera por mensagens CFP do Logistic Agent
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
@@ -281,14 +394,36 @@ class CFPTaskReceiver(CyclicBehaviour):
 
 
 class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
-    """Recebe propostas de recarga de todos os LogisticAgents, seleciona a melhor e aceita/rejeita."""
+    """Comportamento que recebe e seleciona propostas de reabastecimento.
+    
+    Aguarda propostas de múltiplos agentes logísticos durante um período de timeout,
+    seleciona a melhor proposta (menor ETA) e aceita/rejeita as propostas recebidas.
+    
+    Attributes:
+        cfp_id (str): Identificador do Call for Proposal de reabastecimento.
+        proposals (list): Lista de propostas recebidas.
+        timeout (int): Tempo de espera em segundos para receber propostas.
+    """
+
     def __init__(self, cfp_id):
+        """Inicializa o comportamento de receção de propostas.
+        
+        Args:
+            cfp_id (str): Identificador único do CFP de reabastecimento.
+        """
         super().__init__()
         self.cfp_id = cfp_id
         self.proposals = []
         self.timeout = 3 # Tempo para esperar por todas as propostas
 
     async def run(self):
+        """Recebe, avalia e seleciona propostas de reabastecimento.
+        
+        Aguarda propostas durante o timeout, seleciona a proposta com menor ETA
+        (tempo estimado de chegada), aceita a melhor proposta e rejeita as restantes.
+        Inicia o comportamento de execução da recarga para a proposta aceite.
+        """
+
         self.agent.logger.info(f"[RECHARGE] A aguardar propostas de recarga para CFP {self.cfp_id}...")
 
         # Espera por todas as propostas até ao timeout
@@ -344,8 +479,28 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 self.agent.logger.info(f"[RECHARGE] Proposta de {proposal['sender']} REJEITADA.")
 
 class ExecuteRechargeBehaviour(CyclicBehaviour):
-    """Aguarda a mensagem DONE do LogisticAgent após a proposta ser aceite e repõe os recursos."""
+    """Comportamento que executa o processo de reabastecimento.
+    
+    Aguarda a chegada do agente logístico (simulando o ETA) e processa
+    a mensagem DONE para reabastecer os recursos do Harvester.
+    
+    Attributes:
+        proposal_data (dict): Dados da proposta aceite.
+        logistic_jid (str): JID do agente logístico selecionado.
+        cfp_id (str): Identificador do CFP de reabastecimento.
+        eta_ticks (int): Tempo estimado de chegada em ticks.
+        start_time (float): Timestamp de início da espera.
+        awaiting_done (bool): Flag indicando se está a aguardar mensagem DONE.
+    """
+
     def __init__(self, proposal_data,cfp_id):
+        """Inicializa o comportamento de execução de recarga.
+        
+        Args:
+            proposal_data (dict): Dicionário com sender, eta_ticks e resources.
+            cfp_id (str): Identificador único do CFP.
+        """
+
         super().__init__()
         self.proposal_data = proposal_data
         self.logistic_jid = proposal_data["sender"]
@@ -355,12 +510,23 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
         self.awaiting_done = True
 
     async def on_start(self):
+        """Simula o tempo de espera pela chegada do agente logístico.
+        
+        Aguarda o tempo correspondente ao ETA antes de começar a processar
+        a mensagem DONE.
+        """
         self.agent.logger.info(f"[RECHARGE] A aguardar a chegada do LogisticAgent ({self.logistic_jid}). ETA: {self.eta_ticks} ticks.")
         # Simular o tempo de espera pela chegada do LogisticAgent
         await asyncio.sleep(self.eta_ticks)
         self.agent.logger.info(f"[RECHARGE] Tempo de espera pela chegada do LogisticAgent ({self.logistic_jid}) concluído. A aguardar mensagem DONE.")
 
     async def run(self):
+        """Processa a mensagem DONE e reabastece os recursos.
+        
+        Recebe a mensagem DONE do agente logístico, extrai os detalhes dos
+        recursos entregues (combustível ou sementes) e atualiza o estado
+        do Harvester. Retorna o agente ao estado idle após conclusão.
+        """
         if not self.awaiting_done:
             self.kill()
             return
@@ -419,9 +585,33 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
 
 
 class ProposalResponseReceiver(CyclicBehaviour):
-    """Recebe e processa a resposta (Accept/Reject) à proposta enviada."""
+    """Recebe e processa respostas (Accept/Reject) às propostas de tarefas enviadas.
+    
+    Este comportamento cíclico aguarda mensagens de aceitação ou rejeição do
+    Logistic Agent em resposta às propostas de tarefas (colheita/plantação)
+    previamente enviadas pelo Harvester.
+    
+    Attributes:
+        agent (HarvesterAgent): Referência ao agente Harvester pai.
+    """
+
 
     async def run(self):
+        """Processa mensagens de resposta às propostas de tarefas.
+        
+        Aguarda mensagens do tipo Accept ou Reject do Logistic Agent. Se a proposta
+        for aceite e o agente estiver disponível, inicia o comportamento de execução
+        correspondente. Se for rejeitada, retorna o agente ao estado idle.
+        
+        Raises:
+            json.JSONDecodeError: Se a mensagem recebida não contiver JSON válido.
+            Exception: Para outros erros durante o processamento.
+        
+        Notes:
+            - Valida se o CFP_ID corresponde a uma proposta pendente
+            - Verifica o status do agente antes de aceitar tarefas
+            - Remove propostas processadas da fila de espera
+        """
         # Espera por mensagens Accept ou Reject do Logistic Agent
         msg = await self.receive(timeout=5)
         if msg:
@@ -475,9 +665,25 @@ class ProposalResponseReceiver(CyclicBehaviour):
 
 
 class HarvestExecutionBehaviour(OneShotBehaviour):
-    """Executa a tarefa de colheita após a aceitação da proposta."""
+    """Executa a tarefa de colheita após aceitação da proposta pelo Logistic Agent.
+    
+    Este comportamento coordena todo o processo de colheita, incluindo viagem,
+    interação com o Environment Agent, atualização de recursos e comunicação
+    de conclusão ou falha.
+    """
     
     def __init__(self, proposal_data,cfp_id):
+        """Inicializa o comportamento de execução de colheita.
+        
+        Args:
+            proposal_data (dict): Dicionário contendo:
+                - sender (str): JID do Logistic Agent
+                - zone (tuple): Coordenadas da zona alvo
+                - fuel_cost (float): Custo de combustível
+                - seed_type (int): Tipo de semente
+                - required_resources (list): Recursos necessários
+            cfp_id (str): Identificador único do CFP.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.cfp_id = cfp_id
@@ -488,6 +694,28 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
         self.required_storage = next((res["amount"] for res in self.proposal_data["required_resources"] if res["type"] == "storage"), 0)
 
     async def run(self):
+        """Executa o processo completo de colheita.
+        
+        O processo inclui:
+            1. Viagem até à zona de colheita (simulada)
+            2. Interação com Environment Agent para realizar colheita
+            3. Atualização do inventário e combustível
+            4. Viagem de retorno (simulada)
+            5. Envio de mensagem Done ou Failure ao Logistic Agent
+        
+        Returns:
+            None
+            
+        Raises:
+            Exception: Captura e loga qualquer erro durante a execução.
+            
+        Notes:
+            - Consome combustível conforme fuel_cost calculado
+            - Atualiza machine_inventory e yield_seed após colheita bem-sucedida
+            - Retorna sempre o agente ao estado 'idle' no final
+            - Envia mensagem de falha em caso de erro ou timeout
+        """
+
         self.agent.logger.info(f"[HARVEST] A iniciar colheita para CFP {self.cfp_id} em {self.zone}.")
         
         try:
@@ -557,9 +785,25 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
 
 
 class PlantExecutionBehaviour(OneShotBehaviour):
-    """Executa a tarefa de plantação após a aceitação da proposta."""
+    """Executa a tarefa de plantação após aceitação da proposta pelo Logistic Agent.
+    
+    Este comportamento coordena todo o processo de plantação, incluindo viagem,
+    interação com o Environment Agent, consumo de recursos e comunicação
+    de conclusão ou falha.
+    """
     
     def __init__(self, proposal_data,cfp_id):
+        """Inicializa o comportamento de execução de plantação.
+        
+        Args:
+            proposal_data (dict): Dicionário contendo:
+                - sender (str): JID do Logistic Agent
+                - zone (tuple): Coordenadas da zona alvo
+                - fuel_cost (float): Custo de combustível
+                - seed_type (int): Tipo de semente
+                - required_resources (list): Recursos necessários
+            cfp_id (str): Identificador único do CFP.
+        """
         super().__init__()
         self.proposal_data = proposal_data
         self.cfp_id = cfp_id
@@ -570,6 +814,27 @@ class PlantExecutionBehaviour(OneShotBehaviour):
         self.required_seeds = next((res["amount"] for res in self.proposal_data["required_resources"] if res["type"] == "seed"), 0)
 
     async def run(self):
+        """Executa o processo completo de plantação.
+        
+        O processo inclui:
+            1. Viagem até à zona de plantação (simulada)
+            2. Interação com Environment Agent para realizar plantação
+            3. Consumo de sementes e combustível
+            4. Viagem de retorno (simulada)
+            5. Envio de mensagem Done ou Failure ao Logistic Agent
+        
+        Returns:
+            None
+            
+        Raises:
+            Exception: Captura e loga qualquer erro durante a execução.
+            
+        Notes:
+            - Consome sementes do inventário conforme required_seeds
+            - Consome combustível conforme fuel_cost calculado
+            - Retorna sempre o agente ao estado 'idle' no final
+            - Envia mensagem de falha em caso de erro ou timeout
+        """
         self.agent.logger.info(f"[PLANT] A iniciar plantação para CFP {self.cfp_id} em {self.zone} (Semente: {self.seed_type}).")
         
         try:
@@ -642,9 +907,69 @@ class PlantExecutionBehaviour(OneShotBehaviour):
 # =====================
 
 class HarvesterAgent(Agent):
+    """Agente autónomo para gestão de colheita e plantação em sistema multi-agente agrícola.
+    
+    O HarvesterAgent é responsável por executar tarefas de colheita e plantação,
+    gerir recursos (combustível e sementes), comunicar com agentes logísticos
+    para negociação de tarefas e reabastecimento, e entregar colheitas ao
+    agente de armazenamento.
+    
+    Attributes:
+        pos_initial (tuple): Posição inicial (row, col) do agente no ambiente.
+        row (int): Coordenada de linha da posição inicial.
+        col (int): Coordenada de coluna da posição inicial.
+        machine_capacity (int): Capacidade máxima de armazenamento da máquina .
+        machine_inventory (int): Quantidade atual de colheita armazenada na máquina.
+        yield_seed (dict): Inventário de colheita por tipo de semente {0-5: quantidade}.
+        seeds (dict): Inventário de sementes disponíveis {0-5: quantidade}.
+        fuel_level (float): Nível atual de combustível (0-100).
+        status (str): Estado atual do agente (idle, harvesting, planting, refueling, delivering_harvest).
+        env_jid (str): JID do Environment Agent.
+        log_jids (list): Lista de JIDs dos Logistic Agents.
+        sto_jid (str): JID do Storage Agent.
+        recharge_proposals (dict): Propostas de reabastecimento recebidas.
+        awaiting_proposals (dict): Propostas de tarefas aguardando resposta.
+        logger (logging.Logger): Logger configurado para o agente.
+        
+    Note:
+        Tipos de sementes:
+            0: Tomate
+            1: Pimento
+            2: Trigo
+            3: Couve
+            4: Alface
+            5: Cenoura
+    """
     
     async def send_cfp_recharge_to_all(self, low_fuel=False, low_seeds=False, seed_type=None, required_resources=None):
-        """Função auxiliar para enviar CFP de recarga a todos os agentes logísticos."""
+        """Cria e prepara CFP de reabastecimento para envio a todos os Logistic Agents.
+        
+        Args:
+            low_fuel (bool, optional): True se o pedido é para combustível. Defaults to False.
+            low_seeds (bool, optional): True se o pedido é para sementes. Defaults to False.
+            seed_type (int, optional): Tipo de semente necessária (0-5). Defaults to None.
+            required_resources (float, optional): Quantidade de recursos necessária. Defaults to None.
+            
+        Returns:
+            tuple: (cfp_id, body) onde:
+                - cfp_id (str): Identificador único do CFP no formato "cfp_recharge_{timestamp}"
+                - body (dict): Corpo da mensagem contendo:
+                    - sender_id (str): JID do Harvester
+                    - receiver_id (str): "all" para broadcast
+                    - cfp_id (str): Identificador do CFP
+                    - task_type (str): "fuel" ou "seeds"
+                    - required_resources (float): Quantidade necessária
+                    - position (tuple): Posição atual do Harvester
+                    - seed_type (int): Tipo de semente (se aplicável)
+                    - priority (str): "Urgent"
+                    
+        Returns:
+            tuple: (None, None) se a chamada for inválida.
+            
+        Note:
+            Para combustível, required_resources é calculado como (100 - fuel_level).
+            Para sementes, required_resources deve ser fornecido como argumento.
+        """
         
         cfp_id = f"cfp_recharge_{time.time()}"
         
@@ -670,7 +995,27 @@ class HarvesterAgent(Agent):
         }
         
         return cfp_id, body
+    
+
     def __init__(self, jid, password, row, col, env_jid, log_jid,sto_jid):
+        """Inicializa o HarvesterAgent com configuração e recursos iniciais.
+        
+        Args:
+            jid (str): Jabber ID do agente.
+            password (str): Password para autenticação XMPP.
+            row (int): Coordenada de linha da posição inicial.
+            col (int): Coordenada de coluna da posição inicial.
+            env_jid (str): JID do Environment Agent.
+            log_jid (list): Lista de JIDs dos Logistic Agents.
+            sto_jid (str): JID do Storage Agent.
+            
+        Note:
+            Inicializa o agente com:
+                - 100 unidades de cada tipo de semente
+                - 100% de combustível
+                - 600 unidades de capacidade de armazenamento
+                - Status "idle"
+        """
         super().__init__(jid, password)
         
         # Configuração de Logging
@@ -720,12 +1065,45 @@ class HarvesterAgent(Agent):
     # =====================
 
     async def stop(self):
+        """Para o agente e força a entrega final da colheita.
+        
+        Adiciona um comportamento de entrega forçada antes de parar o agente,
+        garantindo que toda a colheita acumulada seja entregue ao Storage Agent
+        antes do shutdown completo.
+        
+        Note:
+            A flag stop_beha=1 força a entrega imediata independentemente
+            da quantidade acumulada.
+        """
         self.add_behaviour(HarvestYieldBehaviour(period=15,stop_beha=1))
         self.logger.info(f"{self.jid} guardou o resto da colheita no agente storage")
         await super().stop()
     
     async def send_propose_task(self, to, cfp_id, distance, fuel_cost):
-        """Envia uma proposta de tarefa ao Logistic Agent."""
+        """Envia uma proposta de tarefa ao Logistic Agent.
+        
+        Prepara e retorna uma mensagem de proposta em resposta a um CFP,
+        incluindo estimativa de tempo de execução e custo de combustível.
+        
+        Args:
+            to (str): JID do Logistic Agent destinatário.
+            cfp_id (str): Identificador único do Call for Proposal.
+            distance (int): Distância de Manhattan até a zona alvo.
+            fuel_cost (float): Custo estimado de combustível para a tarefa.
+            
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa PROPOSE_TASK
+                contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do destinatário
+                - cfp_id: Identificador do CFP
+                - eta_ticks: Tempo estimado em ticks (mínimo 1)
+                - fuel_cost: Custo de combustível
+                
+        Note:
+            O ETA é calculado como: (distance * 2 * 5 / 10) ticks
+        """
+
         eta_ticks = int(distance * 2 * 5 / 10) # 5 segundos por viagem de ida/volta, dividido por 10 (simulação de tick)
         
         body = {
@@ -739,7 +1117,24 @@ class HarvesterAgent(Agent):
         return msg
 
     async def send_reject_proposal(self, to, cfp_id):
-        """Envia uma rejeição de proposta ao Logistic Agent."""
+        """Envia uma rejeição de proposta ao Logistic Agent.
+        
+        Cria uma mensagem de rejeição em resposta a um CFP ou proposta,
+        indicando que o Harvester não pode aceitar a tarefa.
+        
+        Args:
+            to (str): JID do Logistic Agent destinatário.
+            cfp_id (str): Identificador único do CFP a ser rejeitado.
+            
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa REJECT_PROPOSAL
+                contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do destinatário
+                - cfp_id: Identificador do CFP
+                - decision: "reject"
+        """
+
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -750,7 +1145,23 @@ class HarvesterAgent(Agent):
         return msg
 
     async def send_accept_proposal(self, to, cfp_id):
-        """Envia uma aceitação de proposta ao Logistic Agent (usado para reabastecimento)."""
+        """Envia uma aceitação de proposta ao Logistic Agent.
+        
+        Utilizado principalmente no contexto de reabastecimento, esta função
+        cria uma mensagem indicando que o Harvester aceita a proposta recebida.
+        
+        Args:
+            to (str): JID do Logistic Agent destinatário.
+            cfp_id (str): Identificador único do CFP a ser aceite.
+            
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa ACCEPT_PROPOSAL
+                contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do destinatário
+                - cfp_id: Identificador do CFP
+                - decision: "accept"
+        """
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -761,7 +1172,31 @@ class HarvesterAgent(Agent):
         return msg
 
     async def send_done(self, to, cfp_id, details):
-        """Envia mensagem de conclusão de tarefa ao Logistic Agent."""
+        """Envia mensagem de conclusão de tarefa ao Logistic Agent.
+        
+        Notifica o Logistic Agent que a tarefa associada ao CFP foi
+        concluída com sucesso, incluindo detalhes sobre a execução.
+        
+        Args:
+            to (str): JID do Logistic Agent destinatário.
+            cfp_id (str): Identificador único do CFP concluído.
+            details (dict): Dicionário com detalhes da execução, podendo incluir:
+                - Para colheita:
+                    - harvested_amount (float): Quantidade colhida
+                    - fuel_used (float): Combustível consumido
+                - Para plantação:
+                    - seeds_used (int): Sementes utilizadas
+                    - fuel_used (float): Combustível consumido
+                    
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa DONE contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do destinatário
+                - cfp_id: Identificador do CFP
+                - status: "done"
+                - details: Informações detalhadas da execução
+        """
+
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -774,7 +1209,23 @@ class HarvesterAgent(Agent):
     
 
     async def send_failure(self, to, cfp_id):
-        """Envia mensagem de falha de tarefa ao Logistic Agent."""
+        """Envia mensagem de falha de tarefa ao Logistic Agent.
+        
+        Notifica o Logistic Agent que a tarefa associada ao CFP falhou
+        durante a execução ou não pode ser completada.
+        
+        Args:
+            to (str): JID do Logistic Agent destinatário.
+            cfp_id (str): Identificador único do CFP que falhou.
+            
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa FAILURE contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do destinatário
+                - cfp_id: Identificador do CFP
+                - status: "failed"
+        """
+
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -785,7 +1236,30 @@ class HarvesterAgent(Agent):
         return msg
 
     async def send_inform_harvest(self, to, amount_type_list):
-        """Envia uma mensagem inform_harvest para o agente storage."""
+        """Envia uma mensagem inform_harvest para o agente Storage.
+        
+        Notifica o Storage Agent sobre a colheita a ser entregue, incluindo
+        os tipos e quantidades de sementes colhidas.
+        
+        Args:
+            to (str): JID do Storage Agent destinatário.
+            amount_type_list (list): Lista de dicionários contendo:
+                - seed_type (int): Tipo de semente (0-5)
+                - amount (float): Quantidade colhida desse tipo
+                
+        Returns:
+            Message: Objeto de mensagem SPADE com performativa INFORM_HARVEST
+                contendo:
+                - sender_id: JID do Harvester
+                - receiver_id: JID do Storage
+                - inform_id: Identificador único da entrega
+                - amount_type: Lista de tipos e quantidades
+                - checked_at: Timestamp da criação da mensagem
+                
+        Note:
+            Esta mensagem é enviada quando o yield_seed atinge 100 unidades
+            de qualquer tipo ou durante o shutdown do agente.
+        """
         body = {
             "sender_id": str(self.jid),
             "receiver_id": str(to),
@@ -800,6 +1274,37 @@ class HarvesterAgent(Agent):
     # =====================
 
     async def setup(self):
+        """Configura e inicia todos os comportamentos do HarvesterAgent.
+        
+        Inicializa e adiciona todos os comportamentos necessários para o
+        funcionamento autónomo do agente, incluindo monitorização de recursos,
+        receção de CFPs, processamento de propostas e gestão de colheitas.
+        
+        Comportamentos adicionados:
+            1. CheckResourcesBehaviour (período: 10s):
+                - Monitoriza combustível e sementes
+                - Inicia negociação de reabastecimento quando necessário
+                
+            2. CFPTaskReceiver:
+                - Recebe CFPs de tarefas de colheita/plantação
+                - Avalia viabilidade e responde com propostas
+                
+            3. ProposalResponseReceiver:
+                - Processa aceitações/rejeições de propostas
+                - Inicia execução de tarefas aceites
+                
+            4. HarvestYieldBehaviour (período: 15s):
+                - Verifica níveis de colheita acumulada
+                - Inicia processo de entrega ao Storage
+                
+            5. InformReceivedReceiver:
+                - Recebe confirmações de entrega do Storage
+                - Atualiza inventários após confirmação
+                
+        Note:
+            Este método é chamado automaticamente pelo SPADE quando o
+            agente é iniciado.
+        """
         self.logger.info(f"[HAR] HarvesterAgent {self.jid} iniciado. Posição: {self.pos_initial}")
         
         # 1. Comportamento para verificar recursos (combustível/sementes)

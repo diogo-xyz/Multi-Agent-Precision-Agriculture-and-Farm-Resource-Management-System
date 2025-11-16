@@ -37,10 +37,87 @@ class FarmTaskPrinter(logging.Handler):
     def __init__(self):
         super().__init__()
         self.in_environment_view = False  # Flag para controlar visualização do ambiente
+        self.in_final_report = False  # Flag para relatórios finais
+        self.report_type = None  # Tipo de relatório (STOR, IRRI, FERT, DRONE, HAR)
     
     def emit(self, record):
         msg = record.getMessage()
         agent = record.name  # Nome do logger (ex: "[LOG] logistics1@localhost")
+        
+        # ========== RELATÓRIOS FINAIS DE RECURSOS ==========
+        # Deteção de início dos relatórios finais
+        if "===================================" in msg:
+            # Identifica o tipo de relatório
+            if "STOR" in msg:
+                self.in_final_report = True
+                self.report_type = "STORAGE"
+                return
+            elif "IRRI" in msg:
+                self.in_final_report = True
+                self.report_type = "IRRIGATION"
+                return
+            elif "FERT" in msg:
+                self.in_final_report = True
+                self.report_type = "FERTILIZER"
+                return
+            elif "DRONE" in msg:
+                self.in_final_report = True
+                self.report_type = "DRONE"
+                return
+            elif self.in_final_report:
+                # Fim do relatório
+                self.in_final_report = False
+                self.report_type = None
+                return
+        
+        # Se estamos dentro de um relatório final, mostra as informações
+        if self.in_final_report:
+            clean_msg = msg.strip()
+            
+            # Storage
+            if self.report_type == "STORAGE":
+                if "guardou em toda a simulação:" in clean_msg:
+                    print(f"\n📦 {clean_msg}")
+                elif any(culture in clean_msg for culture in ["Tomate:", "Pimento:", "Trigo:", "Couve:", "Alface:", "Cenoura:"]):
+                    # Extrai nome da cultura e quantidade
+                    parts = clean_msg.split(": ")
+                    if len(parts) == 2:
+                        culture = parts[0]
+                        amount = parts[1]
+                        # Emoji por tipo de cultura
+                        emoji_map = {
+                            "Tomate": "🍅",
+                            "Pimento": "🌶️",
+                            "Trigo": "🌾",
+                            "Couve": "🥬",
+                            "Alface": "🥗",
+                            "Cenoura": "🥕"
+                        }
+                        emoji = emoji_map.get(culture, "🌱")
+                        print(f"  {emoji} {culture}: {amount}")
+            
+            # Irrigation
+            elif self.report_type == "IRRIGATION":
+                if "usou" in clean_msg and "L de água" in clean_msg:
+                    print(f"💧 {clean_msg}")
+            
+            # Fertilizer
+            elif self.report_type == "FERTILIZER":
+                if "usou" in clean_msg and "KG de fertelizante" in clean_msg:
+                    print(f"🧪 {clean_msg}")
+            
+            # Drone
+            elif self.report_type == "DRONE":
+                if "usou" in clean_msg and "KG de pesticada" in clean_msg:
+                    print(f"🚁 {clean_msg}")
+            
+            return
+        
+        # Harvester guardou colheita
+        if "guardou o resto da colheita no agente storage" in msg:
+            harvester_name = msg.split(" guardou")[0]
+            print(f"📦 {harvester_name} guardou colheita no armazém")
+            return
         
         # ========== VISUALIZAÇÃO DO AMBIENTE (comando 6) ==========
         if "======================================================================" in msg and agent == "FarmEnvironmentAgent":

@@ -1,13 +1,72 @@
+"""
+Módulo Temperature para simulação de temperatura ambiente diária e anual.
+
+Este módulo implementa um modelo realista de variação de temperatura considerando
+ciclos anuais, duração do dia (dependente da latitude e época do ano) e padrões
+diários de aquecimento e arrefecimento.
+"""
+
 import numpy as np
 
 class Temperature:
+    """
+    Simula a temperatura ambiente com variação anual e diária realista.
+    
+    Esta classe modela a temperatura do ar considerando:
+    - Variação anual baseada na declinação solar
+    - Duração do dia dependente da latitude e época do ano
+    - Ciclo diário com três fases distintas:
+      * Aquecimento (nascer do sol até pico de calor)
+      * Arrefecimento lento (pico até pôr do sol)
+      * Arrefecimento noturno exponencial
+    - Ruído estocástico para simular flutuações atmosféricas
+    
+    Attributes:
+        temperature (float): Temperatura atual em graus Celsius.
+    
+    Note:
+        O modelo usa latitude fixa de 40°N (aproximadamente Portugal) e considera
+        o pico de temperatura anual em meados de julho (dia ~200).
+    """
+
     def __init__(self, day, hour):
+        """
+        Inicializa o sistema de temperatura.
+        
+        Calcula a temperatura inicial baseada no dia e hora fornecidos.
+        
+        Args:
+            day (int): Dia do ano (1-365).
+            hour (int): Hora do dia (0-23).
+        """
         self.temperature = self.update_temperature(day, hour)
 
     def day_length(self, day):
         """
-        Calcula sunrise e sunset (em horas) ao longo do ano
-        usando uma latitude fixa (~40° N, tipo Portugal)
+        Calcula os horários de nascer e pôr do sol para um dia específico.
+        
+        Utiliza cálculos astronómicos baseados na declinação solar e latitude
+        para determinar a duração do dia e os horários de nascer e pôr do sol.
+        O modelo assume latitude fixa de 40°N (típica de Portugal).
+        
+        A declinação solar varia ao longo do ano devido à inclinação axial da Terra,
+        afetando a duração do dia:
+        - Solstício de verão (~dia 172): dias mais longos
+        - Solstício de inverno (~dia 355): dias mais curtos
+        - Equinócios (~dias 80 e 265): dia ≈ noite
+        
+        Args:
+            day (int): Dia do ano (1-365).
+            
+        Returns:
+            tuple: (nascer_do_sol, pôr_do_sol) em horas (formato decimal).
+                - nascer_do_sol (float): Hora do nascer do sol (0-24).
+                - pôr_do_sol (float): Hora do pôr do sol (0-24).
+                
+        Note:
+            - Usa np.clip para evitar erros de domínio em latitudes extremas
+            - O dia de referência é ajustado para o equinócio (dia 80)
+            - Valores limitados ao intervalo [0, 24] horas
         """
         latitude = np.radians(40)  # fixa
         # Ajuste do dia de referência para o equinócio

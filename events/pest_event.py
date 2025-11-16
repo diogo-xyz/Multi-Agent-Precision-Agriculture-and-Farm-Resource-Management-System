@@ -1,3 +1,10 @@
+"""
+Módulo Pest para simulação de propagação de pragas em ambientes agrícolas.
+
+Este módulo implementa a lógica de propagação e controlo de pragas numa grelha
+2D, utilizando modelos probabilísticos de infeção e efeitos de pesticidas.
+"""
+
 import numpy as np
 from scipy.signal import convolve2d
 
@@ -5,20 +12,55 @@ from ..config import P_SPREAD
 
 class Pest:
     """
-    Simula a propagação de uma "peste" numa grelha 2D.
-    0 representa ausência de peste, 1 representa presença de peste.
+    Simula a propagação de pragas numa grelha 2D.
+    
+    Esta classe modela a dinâmica de propagação de pragas através de um sistema
+    baseado em células, onde cada célula pode estar infetada (1) ou saudável (0).
+    A propagação ocorre de forma probabilística para células vizinhas.
+    
+    Attributes:
+        pest (np.ndarray): Matriz 2D de inteiros representando o estado das pragas.
+            0 indica ausência de peste, 1 indica presença de peste.
+    
+    Note:
+        A simulação utiliza condições de contorno periódicas (toroidais) para
+        modelar um ambiente contínuo.
     """
 
     def __init__(self, rows, cols):
         """
-        Inicializa a grelha da peste.
+        Inicializa a grelha de pragas.
+        
+        Cria uma matriz 2D inicialmente sem pragas (todos os valores a 0).
+        
+        Args:
+            rows (int): Número de linhas da grelha.
+            cols (int): Número de colunas da grelha.
         """
         self.pest = np.zeros((rows, cols), dtype=int)
 
     def update_pest(self):
         """
-        Atualiza o estado da peste.
-        A peste propaga-se para vizinhos não infetados com a probabilidade p_spread.
+        Atualiza o estado das pragas através de propagação probabilística.
+        
+        A propagação segue os seguintes passos:
+        1. Identifica células atualmente infetadas
+        2. Conta vizinhos infetados para cada célula (8-vizinhança)
+        3. Calcula probabilidade de infeção baseada no número de vizinhos infetados
+        4. Aplica infeção probabilística às células saudáveis
+        
+        A probabilidade de infeção de uma célula com N vizinhos infetados é:
+        P(infetar) = 1 - (1 - P_SPREAD)^N
+        
+        onde P_SPREAD é a probabilidade de propagação por cada vizinho infetado.
+        
+        Returns:
+            int: Número total de células infetadas após a atualização.
+            
+        Note:
+            - Células infetadas permanecem infetadas (peste permanente)
+            - Utiliza condições de contorno periódicas (wrap)
+            - A convolução 2D é usada para contagem eficiente de vizinhos
         """
         # 1. Identificar as células infetadas (valor 1)
         infected_cells = (self.pest == 1)
@@ -67,20 +109,33 @@ class Pest:
         # Assumindo que a peste é permanente (uma vez 1, permanece 1):
         self.pest = self.pest | new_infections.astype(int)
 
-        # Se a peste puder desaparecer, a lógica seria mais complexa,
-        # mas para propagação simples, esta é a abordagem.
-
         # Retorna o número de novas infeções para fins de monitorização
-        #return np.sum(new_infections)
         return np.sum(self.pest)
     
     def apply_pesticide(self, row, col, neighbor_effect=0.75):
         """
-        Aplica pesticida numa célula e afeta vizinhos.
-
-        row, col: coordenadas da célula central onde se aplica o pesticida
-        neighbor_effect: probabilidade de eliminar a peste nos vizinhos (default 75%)
+        Aplica pesticida numa célula específica e afeta células vizinhas.
+        
+        O pesticida elimina completamente a peste na célula alvo e tem uma
+        probabilidade de eliminar a peste nas células vizinhas (8-vizinhança).
+        
+        Args:
+            row (int): Índice da linha da célula alvo.
+            col (int): Índice da coluna da célula alvo.
+            neighbor_effect (float, optional): Probabilidade de eliminar a peste
+                em cada célula vizinha infetada. Defaults to 0.75 (75%).
+                
+        Note:
+            - A célula central tem eliminação garantida (100%)
+            - Cada vizinho infetado é tratado independentemente
+            - Utiliza condições de contorno periódicas para identificar vizinhos
+            
+        Example:
+            - pest = Pest(10, 10)
+            - pest.apply_pesticide(5, 5, neighbor_effect=0.75)
+            # Elimina peste em (5,5) e tem 75% de chance de eliminar em cada vizinho
         """
+
         rows, cols = self.pest.shape
         
         # 1. Eliminar a peste na célula central

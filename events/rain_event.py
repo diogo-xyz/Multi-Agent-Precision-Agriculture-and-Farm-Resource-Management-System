@@ -1,3 +1,10 @@
+"""
+Módulo Rain para simulação de eventos de precipitação em ambientes agrícolas.
+
+Este módulo implementa a lógica de geração e gestão de eventos de chuva,
+considerando sazonalidade, intensidade, duração e condições de seca.
+"""
+
 import numpy as np
 
 from ..config import (
@@ -12,42 +19,136 @@ from ..config import (
 
 class Rain:
     """
-    Simula eventos de chuva com base na estação do ano, intensidade e condições de seca.
+    Simula eventos de chuva com sazonalidade e dinâmica temporal.
+    
+    Esta classe modela a ocorrência, intensidade e duração de eventos de chuva,
+    considerando:
+    - Variação sazonal das probabilidades de chuva
+    - Diferentes intensidades (fraca, normal, forte)
+    - Efeitos de condições de seca
+    - Durações variáveis e transições de estado
+    
+    Attributes:
+        rain (int): Intensidade atual da chuva.
+            0 = não está a chover
+            1 = chuva fraca
+            2 = chuva normal
+            3 = chuva forte
+        _rain_hours_remaining (float): Horas restantes do episódio de chuva atual.
+    
+    Note:
+        As probabilidades e durações são ajustadas automaticamente com base
+        na estação do ano e presença de seca.
     """
 
     def __init__(self):
+        """
+        Inicializa o sistema de chuva.
+        
+        O estado inicial é sem chuva (rain=0) e sem duração restante.
+        """
         # 0: não está a chover | 1: chuva fraca | 2: chuva normal | 3: chuva forte
         self.rain = 0
         self._rain_hours_remaining = 0.0
 
     def apply_rain(self,intensity,day):
+        """
+        Aplica um evento de chuva manual com intensidade específica.
+        
+        Este método permite forçar um evento de chuva (por exemplo, através
+        de controlo humano), definindo a intensidade e calculando uma duração
+        apropriada baseada na estação atual.
+        
+        Args:
+            intensity (int): Intensidade da chuva a aplicar (1=fraca, 2=normal, 3=forte).
+            day (int): Dia do ano para determinar a estação.
+            
+        Nota:
+            A duração é amostrada de uma distribuição exponencial com média
+            dependente da estação e intensidade.
+        """
+
         self.rain = intensity
         mean_h = MEAN_DURATION_HOURS_BASE[self.season_from_day(day)][intensity]
         self._rain_hours_remaining = max(1.0, np.random.exponential(scale=mean_h))
 
     def season_from_day(self, day: int) -> str:
         """
-        Mapa simples de dia do ano -> estação (Northern Hemisphere).
-        Mar-May = spring, Jun-Aug = summer, Sep-Nov = autumn, Dec-Feb = winter
+        Determina a estação do ano a partir do dia.
+        
+        Utiliza um mapeamento simplificado baseado no Hemisfério Norte:
+        - Primavera (spring): dias 80-171 (Março-Maio)
+        - Verão (summer): dias 172-263 (Junho-Agosto)
+        - Outono (autumn): dias 264-355 (Setembro-Novembro)
+        - Inverno (winter): dias 1-79 (Dezembro-Fevereiro)
+        
+        Args:
+            day (int): Dia do ano (1-365, considerando anos bissextos).
+            
+        Returns:
+            str: Nome da estação ('spring', 'summer', 'autumn', ou 'winter').
+            
+        Note:
+            Ajustado para considerar anos bissextos.
         """
-        # Ajustado para considerar anos bissextos (dia 60 é 1 de Março)
-        if 60 <= day <= 151:
-            return "spring"
-        elif 152 <= day <= 243:
-            return "summer"
-        elif 244 <= day <= 334:
-            return "autumn"
+
+        if 80 <= day < 172:
+            return "Spring"
+        elif 172 <= day < 264:
+            return "Summer"
+        elif 264 <= day < 355:
+            return "Autumn"
         else:
-            return "winter"
+            return "Winter"    
 
     def _short_rain_duration(self, mean_h: float) -> float:
-        """Retorna duração curta para episódios de chuva em seca."""
+        """
+        Calcula duração reduzida para episódios de chuva durante seca.
+        
+        Durante períodos de seca, os episódios de chuva tendem a ser mais curtos.
+        Este método reduz a duração média e garante um mínimo.
+        
+        Args:
+            mean_h (float): Duração média em horas para condições normais.
+            
+        Returns:
+            float: Duração ajustada em horas (mínimo 0.5 horas).
+            
+        Note:
+            A duração é reduzida pelo fator DROUGHT_DURATION_FACTOR e amostrada
+            de uma distribuição exponencial.
+        """
+
         # Reduz a média e garante um mínimo de 0.5 horas
         return max(0.5, np.random.exponential(scale=max(1.0, mean_h / DROUGHT_DURATION_FACTOR)))
 
     def update_rain(self, day: int, drought: bool, dt_hours: float = 1.0):
         """
-        Atualiza self.rain (0..3) com sazonalidade, duração e transições de intensidade.
+        Atualiza o estado da chuva considerando sazonalidade, seca e transições.
+        
+        Este método é o núcleo da simulação de chuva, gerindo:
+        1. Continuação de episódios em curso (decremento do tempo restante)
+        2. Possibilidade de parar cedo (mais provável durante seca)
+        3. Início de novos episódios quando o tempo restante expira
+        4. Ajustes de probabilidade baseados na estação e seca
+        5. Eventos extremos raros (chuvas fortes fora de época)
+        
+        O processo de transição:
+        - Se está a chover e há tempo restante: pode continuar ou parar cedo
+        - Se o tempo expirou ou não está a chover: amostra novo estado
+        - Probabilidades ajustadas pela estação e condição de seca
+        - Durações amostradas de distribuições exponenciais
+        
+        Args:
+            day (int): Dia do ano atual para determinar a estação.
+            drought (bool): Se há condições de seca ativas.
+            dt_hours (float, optional): Incremento de tempo em horas. Defaults to 1.0.
+            
+        Note:
+            - Durante seca: probabilidade de chuva reduzida, durações mais curtas,
+              maior chance de parar cedo
+            - Eventos extremos: pequena chance de chuva forte no verão
+            - Usa distribuições exponenciais para durações realistas
         """
 
         season = self.season_from_day(day)

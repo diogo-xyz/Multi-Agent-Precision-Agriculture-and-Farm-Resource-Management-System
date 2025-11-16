@@ -1,3 +1,11 @@
+"""
+Módulo DroneAgent para monitorização e gestão aérea de culturas agrícolas.
+
+Este módulo implementa um agente autónomo tipo drone que patrulha zonas agrícolas,
+monitorizando o estado das culturas, aplicando pesticidas quando necessário e
+coordenando-se com agentes de logística para reabastecimento de recursos.
+"""
+
 from spade.agent import Agent
 from spade.behaviour import PeriodicBehaviour, OneShotBehaviour,CyclicBehaviour
 from spade.template import Template
@@ -21,13 +29,40 @@ ONTOLOGY_FARM_ACTION = "farm_action"
 
 
 class DoneFailure(CyclicBehaviour):
-    """Comportamento que lida com o sucesso ou falha de recargas."""
+    """
+    Comportamento para processar confirmações e falhas de tarefas de reabastecimento.
+    
+    Este comportamento aguarda mensagens de confirmação (Done) ou falha (failure)
+    dos agentes de logística após solicitações de recarga de bateria ou
+    reabastecimento de pesticida.
+    
+    Attributes:
+        timeout_wait (float): Tempo máximo de espera por mensagens em segundos.
+    """
 
     def __init__(self, timeout_wait):
+        """
+        Inicializa o comportamento de processamento de confirmações.
+        
+        Args:
+            timeout_wait (float): Tempo de espera por mensagens em segundos.
+        """
         super().__init__()
         self.timeout_wait = timeout_wait
 
     async def run(self):
+        """
+        Processa mensagens de confirmação ou falha de reabastecimento.
+        
+        Atualiza os recursos do drone (bateria ou pesticida) em caso de sucesso,
+        ou regista o erro em caso de falha. Em ambos os casos, retorna o drone
+        ao estado 'idle'.
+        
+        Note:
+            - Confirmações (Done) atualizam os recursos do drone
+            - Falhas (failure) apenas registam o erro
+            - Performativas desconhecidas geram warnings
+        """
         # Aceder ao logger do agente para consistência
         msg = await self.receive(timeout=self.timeout_wait)
 
@@ -52,9 +87,35 @@ class DoneFailure(CyclicBehaviour):
 
 
 class CFPBehaviour(OneShotBehaviour):
-    """Comportamento que envia um CFP e espera propostas."""
+    """
+    Comportamento para enviar Call For Proposals (CFP) e selecionar a melhor proposta.
+    
+    Este comportamento implementa o protocolo FIPA Contract Net simplificado:
+    1. Envia CFP para todos os agentes de logística
+    2. Aguarda propostas durante timeout_wait
+    3. Seleciona a melhor proposta (menor ETA)
+    4. Envia accept à proposta escolhida e reject às restantes
+    
+    Attributes:
+        timeout_wait (float): Tempo de espera por propostas em segundos.
+        task_type (str): Tipo de tarefa ('battery' ou 'pesticide').
+        required_resources (float): Quantidade de recursos necessária.
+        priority (str): Prioridade da tarefa.
+        task_id (str): Identificador único da tarefa.
+        position (tuple): Posição atual do drone (row, col).
+    """
 
     def __init__(self, timeout_wait, task_type, required_resources, priority,position):
+        """
+        Inicializa o comportamento de CFP.
+        
+        Args:
+            timeout_wait (float): Tempo de espera por propostas em segundos.
+            task_type (str): Tipo de recurso solicitado ('battery' ou 'pesticide').
+            required_resources (float): Quantidade de recursos necessária.
+            priority (str): Prioridade da tarefa (ex: 'High', 'Medium', 'Low').
+            position (tuple): Posição do drone para reabastecimento (row, col).
+        """
         super().__init__()
         self.timeout_wait = timeout_wait
         self.task_type = task_type
@@ -64,6 +125,21 @@ class CFPBehaviour(OneShotBehaviour):
         self.position = position
 
     async def run(self):
+        """
+        Executa o protocolo Contract Net para solicitar reabastecimento.
+        
+        O processo segue estas etapas:
+        1. Envia CFP para todos os agentes de logística
+        2. Aguarda propostas durante timeout_wait
+        3. Se não houver propostas, retorna ao estado idle
+        4. Ordena propostas por ETA (menor primeiro)
+        5. Envia accept à melhor proposta e reject às restantes
+        
+        Note:
+            - As propostas são armazenadas em agent.awaiting_proposals
+            - Ausência de propostas retorna o agente ao estado idle
+        """
+
         self.agent.logger.info(f"[DRO][CFP] Enviando CFP {self.task_id} para {self.task_type}")
         for to_jid in self.agent.logistics_jid:
             body = {
@@ -124,10 +200,25 @@ class CFPBehaviour(OneShotBehaviour):
                 await self.send(rej_msg)
 
 class ReceiveProposalsBehaviour(CyclicBehaviour):
-    """Comportamento para receber propostas (propose) em resposta a um CFP."""
+    """
+    Comportamento para receber e armazenar propostas em resposta a CFPs.
+    
+    Este comportamento aguarda continuamente por mensagens de proposta (propose)
+    e armazena-as na estrutura awaiting_proposals do agente, organizadas por cfp_id.
+    """
     
     async def run(self):
-
+        """
+        Recebe e armazena propostas de agentes de logística.
+        
+        Propostas são organizadas por cfp_id para posterior seleção pelo
+        CFPBehaviour. Propostas para CFPs desconhecidos geram warnings.
+        
+        Note:
+            - Timeout de 2 segundos para evitar bloqueio
+            - Propostas inválidas (JSON mal formado) são registadas como erro
+            - Propostas para CFPs desconhecidos podem indicar timing issues
+        """
         msg = await self.receive(timeout=2) # Espera 2 segundos
         if msg:
             try:
@@ -143,16 +234,49 @@ class ReceiveProposalsBehaviour(CyclicBehaviour):
             except json.JSONDecodeError:
                 self.agent.logger.error(f"[DRO][RecProposals] Erro ao descodificar JSON da proposta: {msg.body}")
         
-        # Não é necessário um sleep, pois o CyclicBehaviour já tem um mecanismo de espera/sleep interno
 
 class PatrolBehaviour(PeriodicBehaviour):
-    """Comportamento de patrulha periódica."""
+    """
+    Comportamento periódico de patrulha, monitorização e atuação do drone.
+    
+    Este é o comportamento principal do drone, responsável por:
+    - Gestão de recursos (bateria e pesticida)
+    - Patrulha de zonas atribuídas
+    - Monitorização do estado das culturas
+    - Aplicação de pesticidas quando necessário
+    - Comunicação com agentes de logística e ambiente
+    
+    O comportamento segue uma máquina de estados:
+    - idle: Disponível para patrulha
+    - flying: Em movimento de patrulha
+    - charging: A aguardar reabastecimento
+    - handling_task: A executar tarefa (aplicação de pesticida)
+    """
 
     # =====================
     #   FUNÇÕES AUXILIARES DE COMUNICAÇÃO (MOVIDAS DO AGENT)
     # =====================
     async def _get_drone_data(self, row, col):
-        """Solicita dados de observação (drone) ao Environment Agent."""
+        """
+        Solicita dados de observação aérea ao Environment Agent.
+        
+        Obtém informações visíveis da célula especificada através de sensores
+        de drone (câmara/sensores ópticos).
+        
+        Args:
+            row (int): Índice da linha a observar.
+            col (int): Índice da coluna a observar.
+            
+        Returns:
+            tuple: (crop_stage, crop_type, pest_level) ou (None, None, None) em caso de erro.
+                - crop_stage (int): Estágio da cultura (0-4)
+                - crop_type (int): Tipo de cultura (0-5)
+                - pest_level (int): Nível de pragas (0 ou 1)
+                
+        Note:
+            - Timeout de 5 segundos para resposta do Environment Agent
+            - Erros de comunicação retornam (None, None, None)
+        """
         body = {
             "action": "get_drone",
             "row": row,
@@ -194,6 +318,22 @@ class PatrolBehaviour(PeriodicBehaviour):
             return None, None, None
 
     async def _inform_crop(self, row, col, state,crop_type):
+        """
+        Informa um agente de logística sobre o estado de uma cultura.
+        
+        Envia notificação sobre culturas maduras para colheita ou zonas não
+        plantadas que necessitam de plantação.
+        
+        Args:
+            row (int): Índice da linha da cultura.
+            col (int): Índice da coluna da cultura.
+            state (int): Estado da cultura (0=não plantada, 4=madura).
+            crop_type (int): Tipo de cultura (0-5), ou None se não plantada.
+            
+        Note:
+            - Seleciona aleatoriamente um agente de logística para informar
+            - Timestamp incluído para rastreabilidade
+        """
         log_jid = np.random.choice(self.agent.logistics_jid)
         """Envia uma mensagem inform_crop ao Logistics."""
         body = {
@@ -210,7 +350,25 @@ class PatrolBehaviour(PeriodicBehaviour):
         self.agent.logger.info(f"[DRO] Mensagem enviada para {log_jid} (inform_crop).")
 
     async def _apply_pesticide(self, row, col):
-        """Envia uma mensagem 'act' ao Environment Agent para aplicar pesticida."""
+        """
+        Aplica pesticida numa célula específica através do Environment Agent.
+        
+        Verifica disponibilidade de pesticida, solicita aplicação ao ambiente
+        e atualiza os recursos do drone em caso de sucesso.
+        
+        Args:
+            row (int): Índice da linha onde aplicar pesticida.
+            col (int): Índice da coluna onde aplicar pesticida.
+            
+        Returns:
+            bool: True se a aplicação foi bem-sucedida, False caso contrário.
+            
+        Note:
+            - Requer mínimo de 0.5 kg de pesticida
+            - Consome 0.5 kg de pesticida por aplicação
+            - Consome 1-3% de bateria por aplicação
+            - Timeout de 5 segundos para resposta do Environment Agent
+        """
         if self.agent.pesticide_amount < 0.5:
             self.agent.logger.warning("[DRO] Pesticida insuficiente para aplicação.")
             return False
@@ -259,6 +417,27 @@ class PatrolBehaviour(PeriodicBehaviour):
             return False
 
     async def run(self):
+        """
+        Executa um ciclo de patrulha, monitorização e atuação.
+        
+        O comportamento segue esta lógica:
+        1. Verifica se já está a recarregar (charging) - se sim, aguarda
+        2. Verifica nível de bateria - se baixo, solicita recarga via CFP
+        3. Verifica nível de pesticida - se baixo, solicita reabastecimento via CFP
+        4. Move-se para a próxima zona de patrulha (consome 0.1-1% bateria)
+        5. Obtém dados da cultura na zona atual via drone
+        6. Analisa os dados e age conforme necessário:
+           - Pragas detetadas → aplica pesticida
+           - Cultura madura → informa logística
+           - Zona não plantada → informa logística
+        7. Retorna ao estado idle e regista recursos
+        
+        Note:
+            - Bateria baixa: < 20%
+            - Pesticida baixo: < 3 kg
+            - Movimento cíclico através das zonas atribuídas
+            - Prioridade: recursos > patrulha
+        """
         # 1. Verificar recursos
         if self.agent.status == "charging":
             # Se já estiver a carregar, não faz mais nada
@@ -351,7 +530,48 @@ class PatrolBehaviour(PeriodicBehaviour):
 
 
 class DroneAgent(Agent):
+    """
+    Agente autónomo tipo drone para monitorização e gestão aérea de culturas.
+    
+    Este agente patrulha zonas agrícolas atribuídas, monitorizando o estado das
+    culturas através de sensores de drone, aplicando pesticidas quando necessário
+    e coordenando-se com agentes de logística para reabastecimento de recursos.
+    
+    Capacidades:
+    - Patrulha autónoma de zonas atribuídas
+    - Deteção de pragas e aplicação de pesticidas
+    - Identificação de culturas maduras para colheita
+    - Identificação de zonas não plantadas
+    - Gestão automática de recursos (bateria e pesticida)
+    - Coordenação com agentes de logística via Contract Net Protocol
+    
+    Attributes:
+        energy (float): Nível de bateria em percentagem (0-100%).
+        position (tuple): Posição atual do drone (row, col).
+        zones (list): Lista de tuplos (row, col) das zonas de patrulha.
+        status (str): Estado atual ('idle', 'flying', 'charging', 'handling_task').
+        pesticide_amount (float): Quantidade de pesticida disponível em kg.
+        max_pesticide_amount (float): Capacidade máxima de pesticida em kg.
+        environment_jid (str): JID do agente Environment.
+        logistics_jid (list): Lista de JIDs dos agentes Logistics.
+        used_pesticed (float): Total de pesticida usado (estatística).
+        awaiting_proposals (dict): Dicionário de propostas aguardando seleção.
+        waiting_informs (dict): Estrutura auxiliar para informações pendentes.
+    """
+
     def __init__(self, jid, password, zones, row, col,env_jid, log_jid):
+        """
+        Inicializa o DroneAgent.
+        
+        Args:
+            jid (str): Jabber ID do agente.
+            password (str): Palavra-passe para autenticação XMPP.
+            zones (list): Lista de tuplos (row, col) das zonas a patrulhar.
+            row (int): Linha da posição inicial.
+            col (int): Coluna da posição inicial.
+            env_jid (str): JID do agente Environment.
+            log_jid (list): Lista de JIDs dos agentes Logistics.
+        """
         super().__init__(jid, password)
         logger = logging.getLogger(f"[DRO] {jid}")
         logger.setLevel(logging.INFO)
@@ -377,6 +597,20 @@ class DroneAgent(Agent):
     #   SETUP
     # =====================
     async def setup(self):
+        """
+        Configura e inicia o DroneAgent.
+        
+        Adiciona os comportamentos principais:
+        1. PatrolBehaviour - Patrulha periódica (a cada 10 segundos)
+        2. ReceiveProposalsBehaviour - Receção de propostas de logística
+        3. DoneFailure (*2) - Processamento de confirmações e falhas
+        
+        Os templates filtram mensagens por performativa para routing correto.
+        
+        Note:
+            - PatrolBehaviour gere dinamicamente CFPBehaviour quando necessário
+            - Múltiplas instâncias de DoneFailure para diferentes performativas
+        """
         self.logger.info(f"DroneAgent {self.jid} iniciado. Posição: {self.position}")
 
         # Adiciona comportamentos principais
@@ -406,6 +640,12 @@ class DroneAgent(Agent):
         # quando é necessário solicitar uma recarga/reabastecimento.
 
     async def stop(self):
+        """
+        Para o agente e regista estatísticas finais.
+        
+        Regista o total de pesticida usado durante a operação antes de
+        terminar o agente.
+        """
         self.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
         self.logger.info(f"{self.jid} usou {self.used_pesticed} KG de pesticada")
         self.logger.info(f"{'=' * 35} DRONE {'=' * 35}")

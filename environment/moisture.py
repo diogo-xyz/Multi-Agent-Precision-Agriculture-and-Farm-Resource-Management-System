@@ -1,27 +1,86 @@
+"""
+Módulo Moisture para simulação da dinâmica de humidade do solo.
+
+Este módulo implementa a lógica de atualização da humidade do solo considerando
+precipitação, evaporação, absorção pelas plantas, difusão espacial, lixiviação
+e irrigação artificial.
+"""
+
 import numpy as np
 
 from ..config import MM_TO_PCT,EVAP_BASE_COEFF,EVAP_TEMP_THRESHOLD,DIFFUSION_COEF_MOISTURE,FIELD_CAPACITY,LEACH_COEFF,RAIN_NOISE, UPTAKE_RATES_MM_PER_HOUR, IDEAL_MOISTURE_TARGET, DROUGHT_TOLERANCE,IRRIG_TO_PCT
 
 class Moisture():
+    """
+    Simula a dinâmica de humidade do solo numa grelha 2D.
+    
+    Esta classe modela os processos hidrológicos do solo, incluindo:
+    - Precipitação (chuva) com variação espacial
+    - Evaporação dependente de temperatura
+    - Absorção/transpiração pelas plantas (ajustada por stress)
+    - Difusão espacial entre células vizinhas
+    - Lixiviação de água e nutrientes
+    - Irrigação artificial com difusão local
+    
+    Attributes:
+        moisture (np.ndarray): Matriz de humidade do solo (0-100%).
+    
+    Note:
+        A humidade é inicializada com valores entre 75-85% usando distribuição
+        triangular para representar condições iniciais realistas.
+    """
 
     def __init__(self, num_linhas, num_colunas):
-        # Inicializa a humidade do solo com valores triangulares aleatórios (50-70%)
+        """
+        Inicializa a matriz de humidade do solo.
+        
+        A humidade inicial segue uma distribuição triangular com pico em 80%,
+        representando condições de solo bem hidratado.
+        
+        Args:
+            num_linhas (int): Número de linhas da grelha.
+            num_colunas (int): Número de colunas da grelha.
+        """
+        # Inicializa a humidade do solo com valores triangulares aleatórios 
         self.moisture = np.random.triangular(75, 80, 85, size=(num_linhas, num_colunas))
 
     def _rain_mm_per_hour(self, nivel_chuva):
         """
-        Mapeia o nível de chuva (0-3) para precipitação em mm/h.
-        0: Sem chuva (0.0 mm/h)
-        1: Chuva leve (4.0 mm/h)
-        2: Chuva moderada (20.0 mm/h)
-        3: Chuva forte (60.0 mm/h)
+        Converte o nível de chuva para precipitação em milímetros por hora.
+        
+        Args:
+            nivel_chuva (int): Nível de intensidade da chuva (0-3).
+            
+        Returns:
+            float: Precipitação em mm/h.
+                0 = Sem chuva (0.0 mm/h)
+                1 = Chuva leve (1.0 mm/h)
+                2 = Chuva moderada (3.0 mm/h)
+                3 = Chuva forte (5.0 mm/h)
         """
         return {0: 0.0, 1: 1, 2: 3, 3: 5}.get(nivel_chuva)
 
     def _calculate_stress_plant(self, humidade_atual, tipo_planta):
         """
-        Calcula o fator de stress da planta (0.0 a 1.0) baseado na humidade atual
-        e nas necessidades da planta. 1.0 = sem stress, 0.0 = stress máximo.
+        Calcula o fator de stress hídrico da planta.
+        
+        O stress é calculado com base no desvio da humidade atual em relação
+        à humidade ideal da planta. Dentro da tolerância, não há stress.
+        Fora da tolerância, o stress aumenta linearmente.
+        
+        Args:
+            humidade_atual (np.ndarray): Matriz de humidade do solo (0-100%).
+            tipo_planta (np.ndarray): Matriz com tipos de plantas (0-5).
+            
+        Returns:
+            np.ndarray: Matriz com fatores de stress (0.0-1.0).
+                1.0 = sem stress (dentro da tolerância)
+                0.0 = stress máximo (desvio = 2 * tolerância)
+                
+        Note:
+            - O stress afeta tanto situações de seca quanto excesso de água
+            - Cada tipo de planta tem humidade ideal e tolerância específicas
+            - O cálculo usa desvio absoluto para considerar ambos os extremos
         """
         target = IDEAL_MOISTURE_TARGET[tipo_planta]
         tolerancia = DROUGHT_TOLERANCE[tipo_planta]
@@ -42,13 +101,37 @@ class Moisture():
 
     def update_moisture(self, rain, temperature, nutrients, crop_stage, crop_type, dt_hours=1.0):
         """
-        Atualiza self.moisture (0-100) em função de:
-        - nivel_chuva (0..3)
-        - temperatura (único valor, °C)
-        - nutrients (para lixiviação)
-        - crop_stage (matriz de inteiros 0-3)
-        - crop_type (matriz de inteiros 0-5)
-        - dt_hours: quantas horas avança neste step 
+        Atualiza a humidade do solo considerando todos os processos hidrológicos.
+        
+        Este método integra múltiplos processos numa atualização coerente:
+        1. Precipitação (chuva) com variação espacial estocástica
+        2. Evaporação dependente de temperatura e disponibilidade de água
+        3. Absorção/transpiração pelas plantas (ajustada por estágio, tipo, temperatura e stress)
+        4. Difusão espacial em 8-vizinhança
+        5. Lixiviação de excesso de água (acima da capacidade de campo)
+        6. Limitação aos valores válidos (0-100%)
+        
+        A lixiviação causa também perda proporcional de nutrientes.
+        
+        Args:
+            rain (int): Nível de chuva (0-3).
+            temperature (float): Temperatura do ar em °C.
+            nutrients (np.ndarray): Matriz de nutrientes do solo (0-100%).
+            crop_stage (np.ndarray): Matriz de estágios das culturas (0-4).
+            crop_type (np.ndarray): Matriz de tipos de plantas (0-5).
+            dt_hours (float, optional): Incremento temporal em horas. Defaults to 1.0.
+            
+        Returns:
+            tuple: (nova_humidade, novos_nutrientes)
+                - nova_humidade (np.ndarray): Matriz atualizada de humidade (0-100%)
+                - novos_nutrientes (np.ndarray): Matriz atualizada de nutrientes (0-100%)
+                
+        Note:
+            - Evaporação limitada pela água disponível (solo seco evapora menos)
+            - Absorção pelas plantas considera stress hídrico (reduz uptake em condições adversas)
+            - Difusão usa condições de contorno periódicas (toroidais)
+            - Lixiviação ocorre apenas quando humidade > FIELD_CAPACITY
+            - Variação espacial na precipitação usa distribuição normal com média 0
         """
 
         # 1) Precipitação (Chuva) -> mm/h -> % pontos
@@ -139,11 +222,27 @@ class Moisture():
 
     def apply_irrigation(self, row, col, flow_rate_lph):
         """
-        Aplica água na célula (row, col) e difunde a humidade para os vizinhos.
-
-        :param row: Índice da linha da célula a ser irrigada.
-        :param col: Índice da coluna da célula a ser irrigada.
-        :param flow_rate_lph: Caudal de água aplicado (Litros por hora).
+        Aplica irrigação numa célula específica com difusão para vizinhos.
+        
+        A irrigação é aplicada localmente e depois difundida para células vizinhas,
+        simulando a propagação natural da água no solo através de difusão.
+        
+        O processo segue estas etapas:
+        1. Conversão do caudal (L/h) para incremento de humidade (%)
+        2. Aplicação inicial na célula alvo
+        3. Cálculo da difusão espacial em 8-vizinhança
+        4. Aplicação da difusão
+        5. Limitação aos valores válidos (0-100%)
+        
+        Args:
+            row (int): Índice da linha da célula a irrigar.
+            col (int): Índice da coluna da célula a irrigar.
+            flow_rate_lph (float): Caudal de água aplicado em litros.
+            
+        Note:
+            - A conversão assume que 1 L/h aplicado a 1m² por 1h resulta em 1mm de água
+            - A difusão usa o mesmo coeficiente (DIFFUSION_COEF_MOISTURE) que a atualização normal
+            - Condições de contorno periódicas (toroidais) são aplicadas
         """
         
         # 1. Conversão do Caudal para Aumento de Humidade (%)

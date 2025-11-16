@@ -1,3 +1,11 @@
+"""
+Módulo Nutrients para simulação da dinâmica de nutrientes do solo.
+
+Este módulo implementa a lógica de atualização de nutrientes do solo considerando
+consumo pelas plantas, mineralização natural, perda por pragas, difusão espacial
+e fertilização artificial.
+"""
+
 import numpy as np
 
 from ..config import (
@@ -12,18 +20,74 @@ from ..config import (
 )
 
 class Nutrients():
+    """
+    Simula a dinâmica de nutrientes do solo numa grelha 2D.
+    
+    Esta classe modela os processos de ciclo de nutrientes no solo, incluindo:
+    - Consumo/absorção pelas plantas (ajustado por condições ambientais)
+    - Mineralização natural (dependente de humidade e temperatura)
+    - Perda por atividade de pragas de solo
+    - Difusão espacial entre células vizinhas
+    - Fertilização artificial com difusão local
+    
+    Attributes:
+        nutrients (np.ndarray): Matriz de nutrientes do solo (0-100%).
+    
+    Note:
+        Os nutrientes são inicializados com valores entre 75-85% usando distribuição
+        triangular para representar solo fértil.
+    """
 
     def __init__(self, rows, cols):
+        """
+        Inicializa a matriz de nutrientes do solo.
+        
+        Os nutrientes iniciais seguem uma distribuição triangular com pico em 80%,
+        representando condições de solo bem fertilizado.
+        
+        Args:
+            rows (int): Número de linhas da grelha.
+            cols (int): Número de colunas da grelha.
+        """
         # Inicializa com valores aleatórios, como no original
         self.nutrients = np.random.triangular(75,80,85, size=(rows, cols))
 
     def update_nutrients(self, drought, temperature, moisture, crop_type, crop_stage, peste, dt_hours = 1.0):
         """
-        Atualiza self.nutrients (escala 0..100) em função de:
-        - consumo pelas plantas (depende do tipo e estágio da planta, humidade e temperatura)
-        - mineralização (pequeno input natural, depende de humidade e temperatura)
-        - perda por pragas de solo (self.soil_pests)
-        - difusão espacial suave (redistribuição)
+        Atualiza os nutrientes do solo considerando todos os processos biogeoquímicos.
+        
+        Este método integra múltiplos processos numa atualização coerente:
+        1. Consumo pelas plantas (uptake) - ajustado por tipo, estágio, humidade e temperatura
+        2. Mineralização natural - input contínuo dependente de condições ambientais
+        3. Perda por pragas de solo - degradação adicional causada por organismos nocivos
+        4. Difusão espacial em 8-vizinhança
+        5. Limitação aos valores válidos (0-100%)
+        
+        O consumo pelas plantas é o processo mais complexo, considerando:
+        - Taxa base proporcional ao consumo de água
+        - Fator de humidade (ótimo na humidade ideal da planta)
+        - Fator de temperatura (ótimo a ~25°C, usando curva em sino)
+        - Fator de seca global (redução adicional durante períodos secos)
+        
+        Args:
+            drought (int): Estado de seca (0=inativo, 1=ativo).
+            temperature (float): Temperatura do ar em °C.
+            moisture (np.ndarray): Matriz de humidade do solo (0-100%).
+            crop_type (np.ndarray): Matriz de tipos de plantas (0-5).
+            crop_stage (np.ndarray): Matriz de estágios das culturas (0-4).
+            peste (np.ndarray): Matriz de pragas (0 ou 1).
+            dt_hours (float, optional): Incremento temporal em horas. Defaults to 1.0.
+            
+        Returns:
+            np.ndarray: Matriz atualizada de nutrientes (0-100%).
+            
+        Note:
+            - Consumo limitado aos nutrientes disponíveis (não negativo)
+            - Mineralização ótima: temperatura ~30°C, humidade 50-80%
+            - Temperatura ótima para uptake: ~25°C (curva em sino, mínimo a 5°C e 45°C)
+            - Fator mínimo de 0.1 para temperatura evita uptake zero em extremos
+            - Seca global reduz uptake em 20% adicional (drought_factor=0.8)
+            - Difusão usa condições de contorno periódicas (toroidais)
         """
         
         # ----- 1) consumo pelas plantas (uptake) -----
@@ -161,12 +225,28 @@ class Nutrients():
 
     def apply_fertilize(self, row, col, fertilizer_kg):
         """
-        Aplica fertilizante na célula (row, col) e difunde os nutrientes para os vizinhos.
-
-        :param row: Índice da linha da célula a ser fertilizada.
-        :param col: Índice da coluna da célula a ser fertilizada.
-        :param fertilizer_kg: Quantidade de fertilizante aplicada (em kg).
-        :param dt_hours: Duração da aplicação em horas (padrão 1.0).
+        Aplica fertilizante numa célula específica com difusão para vizinhos.
+        
+        A fertilização é aplicada localmente e depois difundida para células vizinhas,
+        simulando a propagação natural dos nutrientes no solo através de difusão.
+        
+        O processo segue estas etapas:
+        1. Conversão da quantidade (kg) para incremento de nutrientes (%)
+        2. Aplicação inicial na célula alvo
+        3. Cálculo da difusão espacial em 8-vizinhança
+        4. Aplicação da difusão
+        5. Limitação aos valores válidos (0-100%)
+        
+        Args:
+            row (int): Índice da linha da célula a fertilizar.
+            col (int): Índice da coluna da célula a fertilizar.
+            fertilizer_kg (float): Quantidade de fertilizante aplicada em quilogramas.
+            
+        Note:
+            - A conversão usa o fator KG_TO_PCT para mapear kg para percentagem
+            - A difusão usa o mesmo coeficiente (DIFFUSION_COEF_NUTRIENTS) que a atualização normal
+            - Condições de contorno periódicas (toroidais) são aplicadas
+            - O efeito é imediato (não depende de dt_hours)
         """
         
         # 1. Conversão da Quantidade de Fertilizante para Aumento de Nutrientes (%)
