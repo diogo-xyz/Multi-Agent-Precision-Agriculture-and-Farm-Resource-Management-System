@@ -363,7 +363,7 @@ async def main():
                 field
             )
         )
-    
+
     # ===  Criar agentes de colheita (harvesters) ===
     pos_agents = [[-1, -1], [-1, 6], [6, -1], [6, 6]]
     for i in range(4):
@@ -378,7 +378,7 @@ async def main():
                 STORAGE_JID[0]
             )
         )
-    
+
     # === Criar agentes de irrigação ===
     for i in range(4):
         irrigations.append(
@@ -404,7 +404,7 @@ async def main():
                 pos_agents[i][1]
             )
         )
-    
+
     # ===  Iniciar agentes principais e operacionais (exceto sensores e drones) ===
     await asyncio.gather(
         human_agent.start(),
