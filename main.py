@@ -1,3 +1,9 @@
+"""Sistema Multi-Agente para Gestão de Fazenda Inteligente.
+
+Este módulo inicializa e coordena todos os agentes do sistema de agricultura
+inteligente, incluindo gestão de ambiente, logística, colheita, irrigação,
+fertilização, sensores de solo e drones de monitorização.
+"""
 import sys
 import os
 import asyncio
@@ -32,15 +38,42 @@ from TB_Sistemas.environment.field import Field
 
 # ========== HANDLER CUSTOMIZADO PARA TERMINAL ==========
 class FarmTaskPrinter(logging.Handler):
-    """Handler customizado para mostrar apenas eventos importantes da farm no terminal"""
+    """Handler customizado para exibir eventos importantes da fazenda no terminal.
     
+    Este handler filtra e formata mensagens de log para apresentar apenas
+    informações relevantes sobre tarefas, recursos e estados dos agentes
+    no terminal, enquanto todos os logs detalhados são guardados em ficheiro.
+    
+    Attributes:
+        in_environment_view (bool): Flag que indica se está a exibir visualização
+            completa do ambiente.
+        in_final_report (bool): Flag que indica se está a exibir relatórios finais
+            de recursos.
+        report_type (str): Tipo de relatório sendo exibido ("STORAGE", "IRRIGATION",
+            "FERTILIZER", "DRONE", ou None).
+    """
     def __init__(self):
+        """Inicializa o handler com flags de controlo de visualização."""
         super().__init__()
         self.in_environment_view = False  # Flag para controlar visualização do ambiente
         self.in_final_report = False  # Flag para relatórios finais
         self.report_type = None  # Tipo de relatório (STOR, IRRI, FERT, DRONE, HAR)
     
     def emit(self, record):
+        """Processa e exibe mensagens de log filtradas com formatação customizada.
+        
+        Filtra mensagens de log e exibe apenas eventos importantes relacionados com:
+        - Relatórios finais de recursos (armazenamento, irrigação, fertilização, drones)
+        - Visualização do ambiente (comando 6)
+        - Pedidos ao Environment Agent
+        - Pedidos e conclusões de recarga
+        - Criação, atribuição e execução de tarefas
+        - Falhas e avisos de recursos críticos
+        - Avanço temporal do ambiente (ticks)
+        
+        Args:
+            record (logging.LogRecord): Registo de log a processar e exibir.
+        """
         msg = record.getMessage()
         agent = record.name  # Nome do logger (ex: "[LOG] logistics1@localhost")
         
@@ -334,6 +367,31 @@ logger = logging.getLogger("MainStarter")
 
 
 async def main():
+    """Função principal que inicializa e coordena todos os agentes do sistema.
+    
+    Inicializa o ambiente da fazenda (Field) e todos os agentes do sistema
+    multi-agente, incluindo:
+    - 1 Human Agent (interface humano)
+    - 1 Storage Agent (armazenamento)
+    - 1 Environment Agent (gestão do ambiente)
+    - 4 Logistics Agents (logística e recargas)
+    - 4 Harvester Agents (colheita e plantação)
+    - 4 Irrigation Agents (irrigação)
+    - 4 Fertilizer Agents (fertilização)
+    - 6 Soil Sensor Agents (sensores de solo)
+    - 6 Drone Agents (monitorização do estado da colheita e pragas)
+    
+    Os agentes são inicializados em grupos específicos por ordem de dependência.
+    O loop principal mantém o sistema ativo até interrupção manual (Ctrl+C)
+    ou término do Environment Agent.
+    
+    Raises:
+        KeyboardInterrupt: Quando o utilizador interrompe a execução (Ctrl+C).
+    
+    Note:
+        Em caso de término (normal ou forçado), todos os agentes são parados
+        de forma segura com timeout de 5 segundos por agente.
+    """
     field = Field()
     # ===  Inicializar agentes principais ===
     human_agent = HumanAgent(HUMAN_JID[0], HUMAN_PASS[0], ENV_JID[0])
