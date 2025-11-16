@@ -16,7 +16,7 @@ class Field:
     """
 
     def __init__(self):
-        self.day = 200
+        self.day = 5 # Dia do ano (0-364) 
         self.hours = 9
 
         self.temperature = Temperature(self.day,self.hours)
