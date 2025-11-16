@@ -81,7 +81,7 @@ class Field:
             - A ordem de atualização é importante para manter consistência
             - Cada subsistema recebe os estados atualizados dos outros quando necessário
         """
-        self.hours = (self.hours + 1) % 24
+        self.hours = (self.hours + TICK_HOURS) % 24
         self.day = (self.day % 365) + (1 if self.hours == 0 else 0)
     
         self.temperature.temperature = self.temperature.update_temperature(self.day,self.hours)

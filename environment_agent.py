@@ -114,7 +114,7 @@ class EnvironmentTicker(PeriodicBehaviour):
         """
 
         #logger.info(f"{'=' * 35} ENV {'=' * 35}")
-        if self.agent.numb_ticks >= 10000: 
+        if self.agent.numb_ticks >= 10: 
             logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
             self.kill()
             asyncio.create_task(self.agent.stop())
@@ -399,7 +399,7 @@ class FarmEnvironmentAgent(Agent):
                 
         super().__init__(jid, password, verify_security=verify_security)
         self.field = Field
-        self.ticker_period = 20 # 20 segundos por "tick" de simulação (pode ser ajustado)
+        self.ticker_period = 10 # 20 segundos por "tick" de simulação (pode ser ajustado)
         self.numb_ticks = 0
 
     async def setup(self):
