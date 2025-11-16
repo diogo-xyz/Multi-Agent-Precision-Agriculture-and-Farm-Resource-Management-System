@@ -93,14 +93,14 @@ class Rain:
         """
 
         if 80 <= day < 172:
-            return "Spring"
+            return "spring"
         elif 172 <= day < 264:
-            return "Summer"
+            return "summer"
         elif 264 <= day < 355:
-            return "Autumn"
+            return "autumn"
         else:
-            return "Winter"    
-
+            return "winter"    
+        
     def _short_rain_duration(self, mean_h: float) -> float:
         """
         Calcula duração reduzida para episódios de chuva durante seca.
