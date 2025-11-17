@@ -1,7 +1,7 @@
 import numpy as np
 # Variáveis de Simulação
 
-TICK_HOURS = 1
+TICK_HOURS = 2
 ROWS = 6
 COLS = 6
 
@@ -112,10 +112,10 @@ P_SPREAD = 0.1 # Probabilidade de um vizinho ser infetado por uma célula com pe
 # Alface: 0.01, 0.05, 0.22, 0.08 (Rápido crescimento, alto consumo na vegetação)
 # Cenoura: 0.01, 0.03, 0.12, 0.07 (Baixo a moderado)
 UPTAKE_RATES_MM_PER_HOUR = np.array([
-    [0.01, 0.01, 0.01, 0.01, 0.01, 0.01],  # Semente
-    [0.05, 0.04, 0.03, 0.04, 0.05, 0.03],  # Germinar
-    [0.25, 0.20, 0.15, 0.18, 0.22, 0.12],  # Vegetação
-    [0.15, 0.12, 0.10, 0.10, 0.08, 0.07]   # Maduro
+    [0.02, 0.02, 0.02, 0.02, 0.02, 0.02],  # Semente
+    [0.10, 0.08, 0.06, 0.08, 0.10, 0.06],  # Germinar
+    [0.50, 0.40, 0.30, 0.36, 0.44, 0.24],  # Vegetação
+    [0.30, 0.24, 0.20, 0.20, 0.16, 0.14]   # Maduro
 ])
 
 # Humidade Ideal (Target) por Tipo de Planta (%)
@@ -161,12 +161,12 @@ NUTRIENT_CONCENTRATION_FACTOR = 0.1
 # Formato: [Semente, Germinar, Vegetação, Maduro]
 # Valores base em horas (podem ser ajustados)
 STAGE_DURATIONS = {
-    0: [48, 72, 168, 240],    # Tomate: 2d, 3d, 7d, 10d
-    1: [48, 72, 168, 240],    # Pimento: 2d, 3d, 7d, 10d
-    2: [24, 48, 336, 480],    # Trigo: 1d, 2d, 14d, 20d
-    3: [36, 60, 144, 192],    # Couve: 1.5d, 2.5d, 6d, 8d
-    4: [24, 48, 120, 168],    # Alface: 1d, 2d, 5d, 7d
-    5: [48, 72, 240, 336],    # Cenoura: 2d, 3d, 10d, 14d
+    0: [24, 36, 84, 120],    # Tomate: 1d, 1.5d, 3.5d, 5d
+    1: [24, 36, 84, 120],    # Pimento: 1d, 1.5d, 3.5d, 5d
+    2: [12, 24, 168, 240],   # Trigo: 0.5d, 1d, 7d, 10d
+    3: [18, 30, 72, 96],     # Couve: 0.75d, 1.25d, 3d, 4d
+    4: [12, 24, 60, 84],     # Alface: 0.5d, 1d, 2.5d, 3.5d
+    5: [24, 36, 120, 168],   # Cenoura: 1d, 1.5d, 5d, 7d
 }
 
 
