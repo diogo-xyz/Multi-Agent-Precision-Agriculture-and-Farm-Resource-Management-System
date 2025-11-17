@@ -114,8 +114,13 @@ class EnvironmentTicker(PeriodicBehaviour):
         """
 
         #logger.info(f"{'=' * 35} ENV {'=' * 35}")
-        if self.agent.numb_ticks >= 10: 
+        if self.agent.numb_ticks >=  2: 
             logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
+            logger.info(f"{'=' * 35} ENV {'=' * 35}")
+            logger.info("Morreram as seguintes quantidades de plantas:")
+            for seed, amount in self.agent.field.crop.dead_crop.items():
+                logger.info(f"{self.agent.numb_to_string[seed]}: {amount}")
+            logger.info(f"{'=' * 35} ENV {'=' * 35}")
             self.kill()
             asyncio.create_task(self.agent.stop())
             return
@@ -401,6 +406,15 @@ class FarmEnvironmentAgent(Agent):
         self.field = Field
         self.ticker_period = 10 # 20 segundos por "tick" de simulação (pode ser ajustado)
         self.numb_ticks = 0
+
+        self.numb_to_string = {
+            0: "Tomate",
+            1: "Pimento",
+            2: "Trigo",
+            3: "Couve",
+            4: "Alface",
+            5: "Cenoura"
+        }
 
     async def setup(self):
         """

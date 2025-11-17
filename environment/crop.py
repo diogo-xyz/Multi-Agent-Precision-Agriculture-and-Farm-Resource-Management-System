@@ -73,6 +73,16 @@ class Crop():
         # Dias desde que atingiu maturação (para controlar apodrecimento)
         self.crop_days_mature = np.zeros((rows, cols), dtype=float)
         
+        # Plantas que apodreceram 
+        self.dead_crop ={
+            0: 0, # 0: Tomate
+            1: 0, # 1: Pimento
+            2: 0, # 2: Trigo
+            3: 0, # 3: Couve
+            4: 0, # 4: Alface
+            5: 0  # 5: Cenoura
+        }
+
     def plant_seed(self, row, col, plant_type):
         """
         Planta uma semente numa posição específica.
@@ -347,11 +357,16 @@ class Crop():
         dead_mask = (self.crop_health <= 0.0) & has_plant
         
         if np.any(dead_mask):
+            # Contabilizar plantas mortas por tipo
+            for plant_type in range(6):
+                self.dead_crop[plant_type] += np.sum((self.crop_type == plant_type) & dead_mask)
+            # Remover plantas mortas    
             self.crop_stage[dead_mask] = 0
             self.crop_type[dead_mask] = 0
             self.crop_health[dead_mask] = 0.0
             self.crop_hours_remaining[dead_mask] = 0.0
             self.crop_days_mature[dead_mask] = 0.0
+
         
         # --- 6. Atualizar crescimento (progressão de estágios) ---
         growing_mask = has_plant & (self.crop_stage < 4) & (self.crop_health > 0)
