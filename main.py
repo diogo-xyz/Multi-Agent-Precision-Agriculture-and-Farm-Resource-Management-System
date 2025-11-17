@@ -50,20 +50,20 @@ class FarmTaskPrinter(logging.Handler):
         in_final_report (bool): Flag que indica se está a exibir relatórios finais
             de recursos.
         report_type (str): Tipo de relatório sendo exibido ("STORAGE", "IRRIGATION",
-            "FERTILIZER", "DRONE", ou None).
+            "FERTILIZER", "DRONE", "ENVIRONMENT", ou None).
     """
     def __init__(self):
         """Inicializa o handler com flags de controlo de visualização."""
         super().__init__()
         self.in_environment_view = False  # Flag para controlar visualização do ambiente
         self.in_final_report = False  # Flag para relatórios finais
-        self.report_type = None  # Tipo de relatório (STOR, IRRI, FERT, DRONE, HAR)
+        self.report_type = None  # Tipo de relatório (STOR, IRRI, FERT, DRONE, HAR, ENV)
     
     def emit(self, record):
         """Processa e exibe mensagens de log filtradas com formatação customizada.
         
         Filtra mensagens de log e exibe apenas eventos importantes relacionados com:
-        - Relatórios finais de recursos (armazenamento, irrigação, fertilização, drones)
+        - Relatórios finais de recursos (recursos pedridos, armazenamento, irrigação, fertilização, drones, ambiente)
         - Visualização do ambiente (comando 6)
         - Pedidos ao Environment Agent
         - Pedidos e conclusões de recarga
@@ -96,6 +96,10 @@ class FarmTaskPrinter(logging.Handler):
             elif "DRONE" in msg:
                 self.in_final_report = True
                 self.report_type = "DRONE"
+                return
+            elif "ENV" in msg:
+                self.in_final_report = True
+                self.report_type = "ENVIRONMENT"
                 return
             elif self.in_final_report:
                 # Fim do relatório
@@ -143,6 +147,28 @@ class FarmTaskPrinter(logging.Handler):
             elif self.report_type == "DRONE":
                 if "usou" in clean_msg and "KG de pesticada" in clean_msg:
                     print(f"🚁 {clean_msg}")
+            
+            # Environment - Plantas mortas
+            elif self.report_type == "ENVIRONMENT":
+                if "Morreram as seguintes quantidades de plantas:" in clean_msg:
+                    print(f"\n💀 {clean_msg}")
+                elif any(culture in clean_msg for culture in ["Tomate:", "Pimento:", "Trigo:", "Couve:", "Alface:", "Cenoura:"]):
+                    # Extrai nome da cultura e quantidade
+                    parts = clean_msg.split(": ")
+                    if len(parts) == 2:
+                        culture = parts[0]
+                        amount = parts[1]
+                        # Emoji por tipo de cultura
+                        emoji_map = {
+                            "Tomate": "🍅",
+                            "Pimento": "🌶️",
+                            "Trigo": "🌾",
+                            "Couve": "🥬",
+                            "Alface": "🥗",
+                            "Cenoura": "🥕"
+                        }
+                        emoji = emoji_map.get(culture, "🌱")
+                        print(f"  {emoji} {culture}: {amount}")
             
             return
         

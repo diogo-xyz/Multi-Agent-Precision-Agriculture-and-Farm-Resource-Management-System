@@ -114,7 +114,7 @@ class EnvironmentTicker(PeriodicBehaviour):
         """
 
         #logger.info(f"{'=' * 35} ENV {'=' * 35}")
-        if self.agent.numb_ticks >=  2: 
+        if self.agent.numb_ticks >=  10: 
             logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
             logger.info(f"{'=' * 35} ENV {'=' * 35}")
             logger.info("Morreram as seguintes quantidades de plantas:")
@@ -456,3 +456,12 @@ class FarmEnvironmentAgent(Agent):
 
 
         logger.info("FarmEnvironmentAgent iniciado com sucesso.")
+
+    
+    async def stop(self):
+        logger.info(f"{'=' * 35} ENV {'=' * 35}")
+        logger.info("Morreram as seguintes quantidades de plantas:")
+        for seed, amount in self.field.crop.dead_crop.items():
+            logger.info(f"{self.numb_to_string[seed]}: {amount}")
+        logger.info(f"{'=' * 35} ENV {'=' * 35}")
+        await super().stop()
