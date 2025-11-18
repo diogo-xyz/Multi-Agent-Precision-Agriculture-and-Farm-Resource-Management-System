@@ -1,7 +1,7 @@
 import numpy as np
 # Variáveis de Simulação
 
-TICK_HOURS = 2
+TICK_HOURS = 1
 ROWS = 6
 COLS = 6
 
@@ -128,9 +128,9 @@ IDEAL_MOISTURE_TARGET = np.array([
     77.5,  # Tomate (média de 70-85)
     77.5,  # Pimento (média de 70-85)
     67.5,  # Trigo (média de 60-75)
-    92.5,  # Couve (média de 70-85)
+    89.5,  # Couve (média de 70-85)
     77.5,  # Alface (média de 70-85)
-    92.5   # Cenoura (média de 65-80)
+    89.5   # Cenoura (média de 65-80)
 ])
 
 # Tolerância à Seca (Desvio Máximo Aceitável da Humidade Ideal)
@@ -143,6 +143,28 @@ DROUGHT_TOLERANCE = np.array([
     10.0,  # Alface (Baixa tolerância)
     12.0   # Cenoura (Média-Baixa tolerância)
 ])
+
+
+# Definições por estação/tipo (valores escolhidos para exemplo)
+# summer: Tomate, Pimento
+# winter: Couve, Cenoura
+# any_season: Alface, Trigo
+IDEAL_TEMP_TARGET = {
+    0: 26.0,  # Tomate (summer)
+    1: 26.0,  # Pimento (summer)
+    2: 18.0,  # Trigo (any)
+    3: 12.0,  # Couve (winter)
+    4: 18.0,  # Alface (any)
+    5: 12.0   # Cenoura (winter)
+}
+TEMP_TOLERANCES = {
+    0: 10.0,  # Tomate
+    1: 10.0,  # Pimento
+    2: 13.3,  # Trigo
+    3: 8.3,   # Couve
+    4: 13.3,  # Alface
+    5: 8.3    # Cenoura
+}
 
 
 # Consumo de Nutrientes (Uptake) por Estágio e Tipo de Planta
@@ -161,11 +183,11 @@ NUTRIENT_CONCENTRATION_FACTOR = 0.1
 # Formato: [Semente, Germinar, Vegetação, Maduro]
 # Valores base em horas (podem ser ajustados)
 STAGE_DURATIONS = {
-    0: [24, 36, 84, 120],     # Tomate: 1d, 1.5d, 3.5d, 5d
-    1: [24, 36, 84, 120],     # Pimento: 1d, 1.5d, 3.5d, 5d
+    0: [24, 36, 84, 120],    # Tomate: 1d, 1.5d, 3.5d, 5d
+    1: [24, 36, 84, 120],    # Pimento: 1d, 1.5d, 3.5d, 5d
     2: [12, 24, 168, 240],    # Trigo: 0.5d, 1d, 7d, 10d
-    3: [18, 30, 72, 96],      # Couve: 0.75d, 1.25d, 3d, 4d
-    4: [12, 24, 60, 84],      # Alface: 0.5d, 1d, 2.5d, 3.5d
+    3: [18, 30, 72, 96],    # Couve: 0.75d, 1.25d, 3d, 4d
+    4: [12, 24, 60, 84],    # Alface: 0.5d, 1d, 2.5d, 3.5d
     5: [24, 36, 120, 168],    # Cenoura: 1d, 1.5d, 5d, 7d
 }
 
