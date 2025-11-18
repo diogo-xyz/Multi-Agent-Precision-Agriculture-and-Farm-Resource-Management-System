@@ -614,7 +614,7 @@ class DroneAgent(Agent):
         self.logger.info(f"DroneAgent {self.jid} iniciado. Posição: {self.position}")
 
         # Adiciona comportamentos principais
-        patrol_b = PatrolBehaviour(period=10)  # patrulha a cada 10 ticks
+        patrol_b = PatrolBehaviour(period=5)  # patrulha a cada 10 ticks
         self.add_behaviour(patrol_b)
 
         # 2. Comportamento de Receção de Propostas (CFP)
@@ -633,8 +633,8 @@ class DroneAgent(Agent):
 
         # Adiciona o comportamento DoneFailure para esperar pelo resultado
 
-        self.add_behaviour(DoneFailure(timeout_wait=5), template=template_done)
-        self.add_behaviour(DoneFailure(timeout_wait=5), template=template_fail)
+        self.add_behaviour(DoneFailure(timeout_wait=3), template=template_done)
+        self.add_behaviour(DoneFailure(timeout_wait=3), template=template_fail)
 
         # O DoneFailure e o CFPBehaviour são adicionados dinamicamente pelo PatrolBehaviour
         # quando é necessário solicitar uma recarga/reabastecimento.
