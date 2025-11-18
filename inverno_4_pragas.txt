@@ -1,0 +1,183 @@
+
+======================================================================
+📅 Dia: 15      Hora: 8
+🌡️  Temperatura: 1.45
+🌧️  Chuva: 0 | Horas restantes: 2.68
+
+💧 Humidade:
+  95.20  95.33  95.22  95.32  95.13  95.21
+  95.33  95.32  95.19  95.17  95.31  95.23
+  95.34  95.32  95.11  95.11  95.31  95.33
+  95.34  95.22  95.18  95.18  95.20  95.34
+  95.23  95.33  95.31  95.20  95.33  95.33
+  95.20  95.29  95.33  95.20  95.32  95.32
+
+🧪 Nutrientes:
+  71.00  71.48  78.36  79.85  72.26  73.41
+  68.32  74.42  82.01  77.47  69.38  70.53
+  73.71  74.52  82.69  75.16  74.70  70.32
+  71.02  74.74  79.84  81.06  69.88  73.16
+  74.21  74.44  79.95  78.20  74.83  64.02
+  74.29  71.60  74.94  81.59  74.87  73.43
+
+🌱 Estágio da Cultura:
+  3.00   0.00   4.00   0.00   3.00   4.00
+  0.00   1.00   3.00   3.00   1.00   4.00
+  1.00   0.00   3.00   3.00   1.00   1.00
+  0.00   4.00   4.00   4.00   3.00   0.00
+  4.00   0.00   1.00   4.00   0.00   1.00
+  4.00   2.00   0.00   3.00   0.00   0.00
+
+🌾 Tipo de Cultura:
+  5.00   0.00   3.00   0.00   3.00   3.00
+  0.00   2.00   5.00   5.00   3.00   5.00
+  3.00   0.00   3.00   3.00   4.00   3.00
+  0.00   3.00   5.00   5.00   5.00   0.00
+  3.00   0.00   1.00   5.00   0.00   4.00
+  5.00   3.00   0.00   5.00   0.00   0.00
+
+💚 Saúde da Cultura:
+  96.19   0.00  92.19   0.00  96.19  96.19
+  0.00  92.40  96.19  96.19  97.29  96.19
+  97.29   0.00 100.00  88.19  94.33  97.29
+  0.00 100.00  96.19 100.00  88.19   0.00
+  100.00   0.00 100.00  92.19   0.00  82.85
+  100.00  92.19   0.00 100.00   0.00   0.00
+
+🐛 Pragas:
+  1.00   1.00   1.00   0.00   1.00   1.00
+  1.00   1.00   1.00   1.00   1.00   1.00
+  1.00   0.00   1.00   1.00   1.00   1.00
+  1.00   1.00   1.00   0.00   0.00   1.00
+  0.00   1.00   1.00   1.00   0.00   1.00
+  1.00   1.00   1.00   0.00   0.00   0.00
+======================================================================
+
+
+
+=====================================================================
+🌍 VISUALIZAÇÃO DO AMBIENTE
+======================================================================
+📅 Dia: 35      Hora: 8
+🌡️  Temperatura: 2.84
+🌧️  Chuva: 0 | Horas restantes: 0.00
+
+💧 Humidade:
+  98.95  99.00  99.00  98.97  99.00  99.00
+  98.96  99.00  99.00  99.00  98.95  99.00
+  99.00  98.93  99.00  99.00  99.00  98.96
+  99.00  98.93  99.00  99.00  98.93  99.00
+  99.00  99.00  99.00  98.95  98.95  99.00
+  99.00  99.00  98.95  99.00  98.95  99.00
+
+🧪 Nutrientes:
+  78.10  79.16  84.27  71.85  82.36  79.88
+  78.91  80.10  85.49  72.97  83.15  81.17
+  78.64  80.10  86.60  72.41  83.76  81.08
+  78.00  80.21  87.44  71.60  83.63  79.60
+  77.84  80.21  87.89  71.19  84.28  80.00
+  78.29  80.76  89.35  71.60  85.74  80.51
+
+🌱 Estágio da Cultura:
+  3.00   1.00   0.00   4.00   0.00   1.00
+  4.00   1.00   0.00   0.00   3.00   1.00
+  0.00   3.00   1.00   0.00   0.00   4.00
+  0.00   3.00   1.00   0.00   3.00   0.00
+  1.00   0.00   1.00   3.00   3.00   0.00
+  1.00   0.00   3.00   0.00   3.00   1.00
+
+🌾 Tipo de Cultura:
+  5.00   0.00   0.00   5.00   0.00   5.00
+  3.00   3.00   0.00   0.00   5.00   2.00
+  0.00   3.00   2.00   0.00   0.00   3.00
+  0.00   3.00   5.00   0.00   3.00   0.00
+  2.00   0.00   0.00   5.00   5.00   0.00
+  0.00   0.00   5.00   0.00   5.00   3.00
+
+💚 Saúde da Cultura:
+  92.35  88.00   0.00  88.37   0.00  95.58
+  95.58  88.37   0.00   0.00  88.37  44.03
+  0.00  88.37 100.00   0.00   0.00 100.00
+  0.00  88.37  92.35   0.00  88.37   0.00
+  100.00   0.00  30.03  88.37  88.37   0.00
+  100.00   0.00  88.37   0.00  95.58  95.58
+
+🐛 Pragas:
+  1.00   1.00   1.00   1.00   1.00   1.00
+  1.00   1.00   1.00   1.00   1.00   0.00
+  1.00   1.00   1.00   1.00   1.00   0.00
+  1.00   1.00   1.00   1.00   1.00   1.00
+  1.00   1.00   1.00   1.00   1.00   1.00
+  1.00   1.00   1.00   1.00   1.00   1.00
+======================================================================
+
+a partir do dia 36 os drones fiicaram sem recursos.
+
+
+💀 Morreram as seguintes quantidades de plantas:
+  🍅 Tomate: 6
+  🌶️ Pimento: 4
+  🌾 Trigo: 16
+  🥬 Couve: 0
+  🥗 Alface: 13
+  🥕 Cenoura: 0
+
+💀 Morreram as seguintes quantidades de plantas:
+  🍅 Tomate: 6
+  🌶️ Pimento: 4
+  🌾 Trigo: 16
+  🥬 Couve: 0
+  🥗 Alface: 13
+  🥕 Cenoura: 0
+Stopping human@localhost...
+Stopping logistics1@localhost...
+Stopping logistics2@localhost...
+Stopping logistics3@localhost...
+Stopping logistics4@localhost...
+Stopping harvester1@localhost...
+Stopping harvester2@localhost...
+Stopping harvester3@localhost...
+Stopping harvester4@localhost...
+Stopping storage@localhost...
+
+📦 storage@localhost guardou em toda a simulação:
+  🍅 Tomate: 0
+  🌶️ Pimento: 0
+  🌾 Trigo: 0
+  🥬 Couve: 5.481451215108048
+  🥗 Alface: 0
+  🥕 Cenoura: 0.94
+Stopping irrig1@localhost...
+💧 irrig1@localhost usou 0 L de água
+Stopping irrig2@localhost...
+💧 irrig2@localhost usou 0 L de água
+Stopping irrig3@localhost...
+💧 irrig3@localhost usou 0 L de água
+Stopping irrig4@localhost...
+💧 irrig4@localhost usou 0 L de água
+Stopping fert1@localhost...
+🧪 fert1@localhost usou 68 KG de fertelizante
+Stopping fert2@localhost...
+🧪 fert2@localhost usou 72 KG de fertelizante
+Stopping fert3@localhost...
+🧪 fert3@localhost usou 0 KG de fertelizante
+Stopping fert4@localhost...
+🧪 fert4@localhost usou 0 KG de fertelizante
+Stopping soil1@localhost...
+Stopping soil2@localhost...
+Stopping soil3@localhost...
+Stopping soil4@localhost...
+Stopping soil5@localhost...
+Stopping soil6@localhost...
+Stopping drone1@localhost...
+🚁 drone1@localhost usou 0.5 KG de pesticada
+Stopping drone2@localhost...
+🚁 drone2@localhost usou 1.5 KG de pesticada
+Stopping drone3@localhost...
+🚁 drone3@localhost usou 0.5 KG de pesticada
+Stopping drone4@localhost...
+🚁 drone4@localhost usou 2.5 KG de pesticada
+Stopping drone5@localhost...
+🚁 drone5@localhost usou 0 KG de pesticada
+Stopping drone6@localhost...
+🚁 drone6@localhost usou 1.0 KG de pesticada

@@ -1,7 +1,7 @@
 import numpy as np
 # Variáveis de Simulação
 
-TICK_HOURS = 1
+TICK_HOURS = 2
 ROWS = 6
 COLS = 6
 
