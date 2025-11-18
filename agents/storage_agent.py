@@ -15,7 +15,7 @@ class InformHarvestReceiver(CyclicBehaviour):
     
     Este behaviour aguarda mensagens do tipo INFORM_HARVEST enviadas por
     Harvester Agents, processa a informação de colheita recebida, atualiza
-    o armazenamento de sementes e envia uma confirmação de receção.
+    o armazenamento da colheita e envia uma confirmação de receção.
     """
     async def run(self):
         """Executa o ciclo de receção e processamento de mensagens de colheita.
@@ -68,7 +68,7 @@ class StorageAgent(Agent):
     """Agente responsável pelo armazenamento de colheitas agrícolas.
     
     O StorageAgent recebe informações de colheita de outros agentes (Harvester),
-    armazena as quantidades de diferentes tipos de sementes e mantém um registo
+    armazena as quantidades colhidas de diferentes tipos de sementes e mantém um registo
     total da produção durante a simulação.
     
     Attributes:

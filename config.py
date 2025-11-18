@@ -145,6 +145,28 @@ DROUGHT_TOLERANCE = np.array([
 ])
 
 
+# Definições por estação/tipo (valores escolhidos para exemplo)
+# summer: Tomate, Pimento
+# winter: Couve, Cenoura
+# any_season: Alface, Trigo
+IDEAL_TEMP_TARGET = {
+    0: 26.0,  # Tomate (summer)
+    1: 26.0,  # Pimento (summer)
+    2: 18.0,  # Trigo (any)
+    3: 12.0,  # Couve (winter)
+    4: 18.0,  # Alface (any)
+    5: 12.0   # Cenoura (winter)
+}
+TEMP_TOLERANCES = {
+    0: 10.0,  # Tomate
+    1: 10.0,  # Pimento
+    2: 13.3,  # Trigo
+    3: 8.3,   # Couve
+    4: 13.3,  # Alface
+    5: 8.3    # Cenoura
+}
+
+
 # Consumo de Nutrientes (Uptake) por Estágio e Tipo de Planta
 # Os valores são fictícios, mas seguem a lógica de que o consumo deve ser proporcional ao consumo de água (UPTAKE_RATES_MM_PER_HOUR)
 # e deve ser uma matriz 4x6 (Estágios x Tipos de Planta)
