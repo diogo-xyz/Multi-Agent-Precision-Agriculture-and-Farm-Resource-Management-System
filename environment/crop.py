@@ -13,7 +13,9 @@ from ..config import (
     DROUGHT_TOLERANCE,
     STAGE_DURATIONS,
     DAYS_BEFORE_ROT,
-    ROT_RATE
+    ROT_RATE,
+    TEMP_TOLERANCES,
+    IDEAL_TEMP_TARGET
 )
 
 class Crop():
@@ -208,35 +210,50 @@ class Crop():
         
         return stress
 
-    def _calculate_temperature_stress(self, temperature):
+    def _calculate_temperature_stress(self, temperature, crop_type_matrix):
         """
-        Calcula o stress térmico das plantas baseado na temperatura do ar.
-        
-        A temperatura ideal para as plantas está entre 15-30°C. Fora deste
-        intervalo, o stress aumenta linearmente até temperaturas extremas
-        (5°C ou 40°C).
-        
+        Calcula o stress térmico das plantas baseado na temperatura do ar,
+        agora adaptado por tipo de planta (semelhante ao cálculo da humidade).
+
+        Cada tipo de planta tem uma temperatura alvo e uma tolerância.
+        O stress é 1.0 dentro da tolerância e diminui linearmente fora dela.
+
         Args:
-            temperature (float): Temperatura do ar em graus Celsius.
-            
+            temperature (float or np.ndarray): Temperatura do ar em °C. Pode ser
+                um escalar (aplicado a toda a grelha) ou uma matriz com shape
+                (rows, cols).
+            crop_type_matrix (np.ndarray): Matriz com tipos de plantas.
+
         Returns:
-            float: Fator de stress (0.0-1.0).
-                1.0 = sem stress (15-30°C)
-                0.0 = stress máximo (≤5°C ou ≥40°C)
-                
-        Note:
-            Este valor é aplicado uniformemente a todas as células da grelha.
+            np.ndarray: Matriz com fatores de stress (0.0-1.0) por célula.
         """
-        # Temperatura ideal: 15-30°C
-        # Stress aumenta fora desse intervalo
-        if 15 <= temperature <= 30:
-            return 1.0  # Sem stress
-        elif temperature < 15:
-            # Stress por frio (5°C = stress máximo)
-            return max(0.0, (temperature - 5.0) / 10.0)
+
+        # Normalizar temperature para matriz se for escalar
+        if np.isscalar(temperature):
+            temp_mat = np.full((self.rows, self.cols), float(temperature))
         else:
-            # Stress por calor (40°C = stress máximo)
-            return max(0.0, (40.0 - temperature) / 10.0)
+            temp_mat = np.array(temperature, dtype=float)
+            if temp_mat.shape != (self.rows, self.cols):
+                raise ValueError("temperature matrix must have shape (rows, cols)")
+
+        stress = np.ones((self.rows, self.cols), dtype=float)
+
+        for r in range(self.rows):
+            for c in range(self.cols):
+                if self.crop_stage[r, c] > 0:  # Só calcula se houver planta
+                    plant_type = int(crop_type_matrix[r, c])
+                    target = IDEAL_TEMP_TARGET.get(plant_type, 18.0)
+                    tol = TEMP_TOLERANCES.get(plant_type, 6.0)
+
+                    deviation = abs(temp_mat[r, c] - target)
+
+                    if deviation <= tol:
+                        stress[r, c] = 1.0
+                    else:
+                        excess = deviation - tol
+                        stress[r, c] = max(0.0, 1.0 - (excess / tol))
+
+        return stress
 
     def _calculate_pest_damage(self, pest_matrix):
         """
@@ -303,7 +320,7 @@ class Crop():
         # --- 1. Calcular fatores de stress ---
         moisture_stress = self._calculate_moisture_stress(moisture, self.crop_type)
         nutrient_stress = self._calculate_nutrient_stress(nutrients)
-        temp_stress = self._calculate_temperature_stress(temperature)
+        temp_stress = self._calculate_temperature_stress(temperature, self.crop_type)
         pest_damage = self._calculate_pest_damage(pest_matrix)
         
         # --- 2. Atualizar saúde das plantas ---
