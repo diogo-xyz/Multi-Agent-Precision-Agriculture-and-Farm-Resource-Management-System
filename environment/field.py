@@ -48,8 +48,8 @@ class Field:
         Cria instâncias de todos os gestores de subsistemas (temperatura, humidade,
         nutrientes, culturas, pragas e chuva) e define o estado temporal inicial.
         """
-        self.day = 200
-        self.hours = 9
+        self.day = 5
+        self.hours = 10
 
         self.temperature = Temperature(self.day,self.hours)
         self.moisture = Moisture(ROWS,COLS)
