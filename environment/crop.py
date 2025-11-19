@@ -212,21 +212,30 @@ class Crop():
 
     def _calculate_temperature_stress(self, temperature, crop_type_matrix):
         """
-        Calcula o stress térmico das plantas baseado na temperatura do ar,
-        agora adaptado por tipo de planta (semelhante ao cálculo da humidade).
+        Calcula o fator de stress térmico para cada célula da grelha, com base na
+        temperatura do ar e no tipo de planta presente.
 
-        Cada tipo de planta tem uma temperatura alvo e uma tolerância.
-        O stress é 1.0 dentro da tolerância e diminui linearmente fora dela.
+        O stress é calculado individualmente por célula, considerando que:
+        - Cada tipo de planta possui uma temperatura ideal (target).
+        - Cada tipo de planta possui uma tolerância térmica (tol).
+        - Se a temperatura local estiver dentro da tolerância, o stress = 1.0.
+        - Se estiver fora, o stress decresce linearmente até 0.0, proporcionalmente
+            ao excesso acima da tolerância.
 
         Args:
-            temperature (float or np.ndarray): Temperatura do ar em °C. Pode ser
-                um escalar (aplicado a toda a grelha) ou uma matriz com shape
-                (rows, cols).
-            crop_type_matrix (np.ndarray): Matriz com tipos de plantas.
+            temperature (float): emperatura do em °C. 
+            crop_type_matrix (np.ndarray):
+                Matriz com o tipo de planta em cada célula, usada para determinar
+                os valores de temperatura ideal e tolerância de cada espécie.
 
         Returns:
-            np.ndarray: Matriz com fatores de stress (0.0-1.0) por célula.
+            np.ndarray:
+                Matriz (rows, cols) contendo o fator de stress térmico para cada
+                célula, variando entre 0.0 e 1.0. O cálculo só é aplicado às células
+                onde existe uma planta (crop_stage > 0); caso contrário, o stress
+                permanece 1.0.
         """
+
 
         # Normalizar temperature para matriz se for escalar
         if np.isscalar(temperature):

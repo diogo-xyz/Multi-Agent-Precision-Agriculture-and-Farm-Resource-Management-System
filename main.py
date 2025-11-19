@@ -322,6 +322,24 @@ class FarmTaskPrinter(logging.Handler):
                     print(f"{emoji} {agent} vai executar: {task_name} em {location}")
                 except:
                     pass
+                
+        # Quando um harvester está ocupado e ignora proposta
+        elif "[PROPOSAL]" in msg and "aceite, mas o agente está ocupado" in msg:
+            try:
+                # Extrai a tarefa atual do agente
+                current_task = msg.split("está ocupado (")[1].split(")")[0]
+                
+                # Emoji por tipo de tarefa
+                task_emoji = {
+                    "plant": "🌱",
+                    "harvest": "🚜",
+                    "irrigation": "💧",
+                    "fertilize": "🧪"
+                }.get(current_task, "⚙️")
+                
+                print(f"⏸️ {agent} está ocupado ({task_emoji} {current_task}) - Proposta ignorada")
+            except:
+                print(f"⏸️ {agent} está ocupado - Proposta ignorada")
         
         # ========== EXECUÇÃO E CONCLUSÃO DE TAREFAS ==========
         elif "[PLANT]" in msg and "concluída" in msg.lower():
