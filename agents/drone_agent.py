@@ -614,7 +614,7 @@ class DroneAgent(Agent):
         self.logger.info(f"DroneAgent {self.jid} iniciado. Posição: {self.position}")
 
         # Adiciona comportamentos principais
-        patrol_b = PatrolBehaviour(period=5)  # patrulha a cada 10 ticks
+        patrol_b = PatrolBehaviour(period=5)  # patrulha a cada 5 ticks
         self.add_behaviour(patrol_b)
 
         # 2. Comportamento de Receção de Propostas (CFP)
