@@ -152,7 +152,7 @@ class ReceiveDataBehaviour(OneShotBehaviour):
         template.set_metadata("performative", "inform")
         template.set_metadata("ontology", ONTOLOGY_FARM_DATA)
         
-        msg = await self.receive(timeout=5)
+        msg = await self.receive(timeout=20)
         
         if not msg:
             self.agent.logger.error("Não foi recebida resposta do Environment Agent após o scan.")
@@ -402,12 +402,15 @@ class RequestRecharge(OneShotBehaviour):
                 try:
                     content = json.loads(msg.body)
                     if content.get("cfp_id") == self.cfp_id:
-                        proposals.append({
+                        if content.get("eta_ticks") is None:
+                            self.agent.logger.error(f"Proposta inválida recebida de {msg.sender}: ETA em falta. Conteúdo: {msg.body}")
+                        else:
+                            proposals.append({
                             "sender": str(msg.sender),
-                            "eta": content.get("eta_ticks", float('inf')),
+                            "eta": content.get("eta_ticks"),
                             "resources": content.get("resources", 0)
-                        })
-                        self.agent.logger.info(f"Proposta de recarga recebida de {msg.sender}: ETA={content.get('eta_ticks')}")
+                            })
+                            self.agent.logger.info(f"Proposta de recarga recebida de {msg.sender}: ETA={content.get('eta_ticks')}")
                 except json.JSONDecodeError:
                     self.agent.logger.error(f"Erro ao descodificar proposta de recarga: {msg.body}")
             

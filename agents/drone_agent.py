@@ -298,7 +298,7 @@ class PatrolBehaviour(PeriodicBehaviour):
         await self.send(msg)
         
         # Espera pela resposta com timeout
-        reply = await self.receive(timeout=5)
+        reply = await self.receive(timeout=10)
         if reply:
             try:
                 content = json.loads(reply.body)
@@ -393,7 +393,7 @@ class PatrolBehaviour(PeriodicBehaviour):
         await self.send(msg)
 
         # Espera pela resposta com timeout
-        reply = await self.receive( timeout=5)
+        reply = await self.receive(timeout=10)
         if reply:
             try:
                 content = json.loads(reply.body)
@@ -467,7 +467,7 @@ class PatrolBehaviour(PeriodicBehaviour):
             #self.agent.logger.info(f"{'=' * 35} DRONE {'=' * 35}")
             self.agent.add_behaviour(
                 CFPBehaviour(
-                    timeout_wait=2,
+                    timeout_wait=3,
                     task_type="pesticide",
                     required_resources=self.agent.max_pesticide_amount - self.agent.pesticide_amount,
                     priority="High",

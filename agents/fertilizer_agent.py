@@ -97,7 +97,7 @@ class CheckRechargeBehaviour(PeriodicBehaviour):
         low_energy = self.agent.energy < 15 # 15% de 100 é 15
 
         if low_fertilize:
-            self.agent.logger.info(f"[FERT] Fertilizante baixo: {self.agent.fertilize_capacity}L. A solicitar recarga de fertilizante...")
+            self.agent.logger.info(f"[FERT] Fertilizante baixo: {self.agent.fertilize_capacity} KG. A solicitar recarga de fertilizante...")
             self.agent.status = "charging"
             
             # Envia CFP para todos os Logistics e inicia o comportamento de recolha de propostas
@@ -160,7 +160,7 @@ class ReceiveCFPTaskBehaviour(CyclicBehaviour):
         template = Template()
         template.set_metadata("performative", PERFORMATIVE_CFP_TASK)
         
-        msg = await self.receive(timeout=5)
+        msg = await self.receive(timeout=10)
         if msg:
             try:
                 content = json.loads(msg.body)
@@ -268,13 +268,12 @@ class ReceiveProposalResponseBehaviour(CyclicBehaviour):
         template_reject.set_metadata("performative", PERFORMATIVE_REJECT_PROPOSAL)
         
         # Receber qualquer uma das performatives
-        msg = await self.receive(timeout=5)
+        msg = await self.receive(timeout=10)
         if msg:
             performative = msg.get_metadata("performative")
             try:
                 content = json.loads(msg.body)
                 cfp_id = content.get("cfp_id")
-                
                 if cfp_id not in self.agent.awaiting_proposals:
                     self.agent.logger.warning(f"[FERT] Resposta recebida para CFP_ID desconhecido: {cfp_id}")
                     return
@@ -390,7 +389,7 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
         reply_template.set_metadata("performative", PERFORMATIVE_INFORM)
         reply_template.set_metadata("ontology", ONTOLOGY_FARM_ACTION)
         
-        env_reply = await self.receive(timeout=10)
+        env_reply = await self.receive(timeout=20)
         if env_reply:
             try:
                 reply_content = json.loads(env_reply.body)
@@ -495,12 +494,15 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 try:
                     content = json.loads(msg.body)
                     if content.get("cfp_id") == self.cfp_id:
-                        self.proposals.append({
-                            "sender": str(msg.sender),
-                            "eta_ticks": content.get("eta_ticks"),
-                            "resources": content.get("resources")
-                        })
-                        self.agent.logger.info(f"[FERT] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
+                        if content.get("eta_ticks") is None:
+                            self.agent.logger.warning(f"[FERT] Proposta de recarga inválida recebida de {str(msg.sender)}: ETA em falta.")
+                        else:  
+                            self.proposals.append({
+                                "sender": str(msg.sender),
+                                "eta_ticks": content.get("eta_ticks"),
+                                "resources": content.get("resources")
+                            })
+                            self.agent.logger.info(f"[FERT] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
                 except json.JSONDecodeError:
                     self.agent.logger.error(f"[FERT] Erro ao descodificar JSON da proposta de recarga: {msg.body}")
 
@@ -870,7 +872,7 @@ class FertilizerAgent(Agent):
         """
         
         # Gera um ID único para o CFP de recarga
-        cfp_id = f"recharge_{self.jid}_{time.time()}"
+        cfp_id = f"recharge_{time.time()}"
         
         # Determina o tipo de recurso necessário e a quantidade (inteiro)
         if low_fertilize:

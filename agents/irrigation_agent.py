@@ -358,7 +358,7 @@ class ExecuteTaskBehaviour(OneShotBehaviour):
         reply_template.set_metadata("performative", PERFORMATIVE_INFORM)
         reply_template.set_metadata("ontology", ONTOLOGY_FARM_ACTION)
         
-        env_reply = await self.receive(timeout=10)
+        env_reply = await self.receive(timeout=20)
         
         if env_reply:
             try:
@@ -450,18 +450,21 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
             template = Template()
             template.set_metadata("performative", PERFORMATIVE_PROPOSE_RECHARGE)
             
-            msg = await self.receive(timeout=1) # Espera 1 segundo de cada vez
+            msg = await self.receive(timeout=2) # Espera 2 segundos de cada vez
             
             if msg:
                 try:
                     content = json.loads(msg.body)
                     if content.get("cfp_id") == self.cfp_id:
-                        self.proposals.append({
-                            "sender": str(msg.sender),
-                            "eta_ticks": content.get("eta_ticks"),
-                            "resources": content.get("resources")
-                        })
-                        self.agent.logger.info(f"[IRRI] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
+                        if content.get("eta_ticks") is None:
+                            self.agent.logger.warning(f"[IRRI] Proposta inválida recebida de {str(msg.sender)}: ETA ausente.")
+                        else:
+                            self.proposals.append({
+                                "sender": str(msg.sender),
+                                "eta_ticks": content.get("eta_ticks"),
+                                "resources": content.get("resources")
+                            })
+                            self.agent.logger.info(f"[IRRI] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
                 except json.JSONDecodeError:
                     self.agent.logger.error(f"[IRRI] Erro ao descodificar JSON da proposta de recarga: {msg.body}")
             
@@ -486,8 +489,10 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 self.agent.logger.info(f"[IRRI] Proposta de {proposal['sender']} ACEITE.")
                 
                 # Iniciar o comportamento de execução da recarga
+                template = Template()
+                template.set_metadata("performative", PERFORMATIVE_DONE)
                 execute_recharge_b = ExecuteRechargeBehaviour(best_proposal,self.cfp_id)
-                self.agent.add_behaviour(execute_recharge_b)
+                self.agent.add_behaviour(execute_recharge_b,template=template)
                 
             else:
                 # Rejeitar
@@ -552,8 +557,6 @@ class ExecuteRechargeBehaviour(CyclicBehaviour):
             return
 
         # Template para receber DONE do LogisticAgent
-        template = Template()
-        template.set_metadata("performative", PERFORMATIVE_DONE)
 
         msg = await self.receive(timeout=5)
         

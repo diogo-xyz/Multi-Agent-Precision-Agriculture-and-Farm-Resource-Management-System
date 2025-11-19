@@ -434,12 +434,15 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                 try:
                     content = json.loads(msg.body)
                     if content.get("cfp_id") == self.cfp_id:
-                        self.proposals.append({
-                            "sender": str(msg.sender),
-                            "eta_ticks": content.get("eta_ticks"),
-                            "resources": content.get("resources")
-                        })
-                        self.agent.logger.info(f"[RECHARGE] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
+                        if content.get("eta_ticks") is None:
+                            self.agent.logger.info(f"[RECHARGE] Proposta recebida de {str(msg.sender)} com ETA Falta.")
+                        else:
+                            self.proposals.append({
+                                "sender": str(msg.sender),
+                                "eta_ticks": content.get("eta_ticks"),
+                                "resources": content.get("resources")
+                            })
+                            self.agent.logger.info(f"[RECHARGE] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
                 except json.JSONDecodeError:
                     self.agent.logger.error(f"[RECHARGE] Erro ao descodificar JSON da proposta de recarga: {msg.body}")
 
@@ -643,7 +646,9 @@ class ProposalResponseReceiver(CyclicBehaviour):
                         self.agent.logger.error(f"[PROPOSAL] Tipo de tarefa desconhecido após aceitação: {proposal_data['task_type']}")
                         return
                     
-                    self.agent.add_behaviour(b)
+                    template = Template()
+                    template.set_metadata("performative", PERFORMATIVE_INFORM)
+                    self.agent.add_behaviour(b,template=template)
                     
                 elif decision == "reject":
                     self.agent.logger.info(f"[PROPOSAL] Proposta {cfp_id} REJEITADA para {proposal_data['task_type']}.")
@@ -732,7 +737,7 @@ class HarvestExecutionBehaviour(OneShotBehaviour):
             await self.send(msg_env)
             
             # Esperar pela resposta do Environment Agent
-            msg_reply = await self.receive(timeout=10)
+            msg_reply = await self.receive(timeout=20)
             
             if msg_reply and msg_reply.get_metadata("performative") == PERFORMATIVE_INFORM:
                 reply_content = json.loads(msg_reply.body)
@@ -852,8 +857,7 @@ class PlantExecutionBehaviour(OneShotBehaviour):
             await self.send(msg_env)
             
             # Esperar pela resposta do Environment Agent
-            msg_reply = await self.receive(timeout=10)
-            
+            msg_reply = await self.receive(timeout=20)
             if msg_reply and msg_reply.get_metadata("performative") == PERFORMATIVE_INFORM:
                 reply_content = json.loads(msg_reply.body)
                 if reply_content.get("status") == "success":
