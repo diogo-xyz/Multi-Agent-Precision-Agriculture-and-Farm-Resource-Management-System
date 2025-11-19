@@ -497,7 +497,7 @@ class ReceiveRechargeProposalsBehaviour(OneShotBehaviour):
                     if content.get("cfp_id") == self.cfp_id:
                         self.proposals.append({
                             "sender": str(msg.sender),
-                            "eta_ticks": content.get("eta_ticks"),
+                            "eta_ticks": content.get("eta_ticks"), #se eta for none da erro aqui
                             "resources": content.get("resources")
                         })
                         self.agent.logger.info(f"[FERT] Proposta recebida de {str(msg.sender)}. ETA: {content.get('eta_ticks')}.")
