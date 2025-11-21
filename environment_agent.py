@@ -114,7 +114,7 @@ class EnvironmentTicker(PeriodicBehaviour):
         """
 
         #logger.info(f"{'=' * 35} ENV {'=' * 35}")
-        if self.agent.numb_ticks >=  540: 
+        if self.agent.numb_ticks >=  100: 
             logger.info("Limite de ticks atingido. Parando EnvironmentTicker.")
             logger.info(f"{'=' * 35} ENV {'=' * 35}")
             logger.info("Morreram as seguintes quantidades de plantas:")

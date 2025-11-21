@@ -369,7 +369,7 @@ task_printer.setLevel(logging.INFO)
 
 # Handler para ficheiro (guarda logs em disco)
 file_handler = RotatingFileHandler(
-    "agentes_inverno_controlo.log",
+    "agentes_verao_ag.log",
     maxBytes=10_000_000,
     backupCount=3,
     encoding="utf-8"

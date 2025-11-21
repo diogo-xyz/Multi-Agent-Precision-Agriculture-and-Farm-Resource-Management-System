@@ -181,7 +181,7 @@ class AutoRechargeBehaviour(CyclicBehaviour):
             
             # Recursos que não são sementes
             resources_to_recharge = ["water", "fertilizer", "battery", "pesticide", "fuel"]
-            recharge_amount = 10 # Valor fixo de recarga (conforme o pedido)
+            recharge_amount = 0 # Valor fixo de recarga (conforme o pedido)
             
             # 1. Recarregar recursos não-sementes
             for resource in resources_to_recharge:
@@ -867,19 +867,19 @@ class LogisticsAgent(Agent):
         self.status = "idle"  # idle, moving, handling_task, await
 
         # Armazenamento de Recursos
-        self.water_storage = 1000  # initial water storage
-        self.fertilizer_storage = 1000  # initial fertilizer storage
-        self.battery_storage = 1000  # initial battery storage
-        self.pesticide_storage = 1000  # initial pesticide storage
-        self.fuel_storage = 1000  # initial fuel storage
+        self.water_storage = 0  # initial water storage
+        self.fertilizer_storage = 0  # initial fertilizer storage
+        self.battery_storage = 0  # initial battery storage
+        self.pesticide_storage = 0  # initial pesticide storage
+        self.fuel_storage = 0  # initial fuel storage
 
         self.seed_storage =  {
-            0: 1000, # 0: Tomate 
-            1: 1000, # 1: Pimento
-            2: 1000, # 2: Trigo
-            3: 1000, # 3: Couve
-            4: 1000, # 4: Alface
-            5: 1000  # 5: Cenoura
+            0: 0, # 0: Tomate 
+            1: 0, # 1: Pimento
+            2: 0, # 2: Trigo
+            3: 0, # 3: Couve
+            4: 0, # 4: Alface
+            5: 0  # 5: Cenoura
         }
         
         # Estado de gestão de tarefas
